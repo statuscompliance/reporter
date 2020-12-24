@@ -27,14 +27,15 @@ const config = require("./configurations");
 var apm = require('elastic-apm-node').start({
   // Override service name from package.json
   // Allowed characters: a-z, A-Z, 0-9, -, _, and space
-  serviceName: 'Governify-Reporter',
+  serviceName: 'Reporter',
   serviceNodeName: 'Reporter',
   captureBody: 'all',
   transactionMaxSpans: -1,
   usePathAsTransactionName: true,
   abortedErrorThreshold: 0,
   distributedTracingOrigins: ['*'],
-  active: config.apisense.enabled
+  active: config.telemetry.enabled,
+  server: config.telemetry.server
 })
 
 const http = require('http'); // Use http if your app will be behind a proxy.

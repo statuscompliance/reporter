@@ -12,10 +12,11 @@ production:
     level: info
     file: './logs/prod-logs.log' #Where log file will be saved. Date will be concatenated before the name.
     maxSize: 10000000 #(10MB) Maximum file log size, if one file reaches it, a new file is created.
-    maxFiles: 30 # Max Files that can be created per day reaching the maxSize.
+    maxFiles: 10 # Max Files that can be created per day reaching the maxSize.
 
-  apisense:
-    enabled: false
+  telemetry:
+    enabled: $_[TELEMETRY_ENABLED]$_[^TELEMETRY_ENABLED]false$_[/TELEMETRY_ENABLED]
+    server: $_[TELEMETRY_SERVER]$_[^TELEMETRY_SERVER]governify-telemetry:8200$_[/TELEMETRY_SERVER]
   
   demo: true
   port: 80
@@ -64,10 +65,11 @@ development:
     level: debug
     file: './logs/dev-logs.log' #Where log file will be saved. Date will be concatenated before the name.
     maxSize: 10000000 #(10MB) Maximum file log size, if one file reaches it, a new file is created.
-    maxFiles: 30 # Max Files that can be created per day reaching the maxSize.
+    maxFiles: 10 # Max Files that can be created per day reaching the maxSize.
   
-  apisense:
-    enabled: false
+  telemetry:
+    enabled: $_[TELEMETRY_ENABLED]$_[^TELEMETRY_ENABLED]false$_[/TELEMETRY_ENABLED]
+    server: $_[TELEMETRY_SERVER]$_[^TELEMETRY_SERVER]localhost:8200$_[/TELEMETRY_SERVER]
   demo: true
   port: 8085
   influx:
@@ -114,9 +116,10 @@ testing:
     level: debug
     file: './logs/test-logs.log' #Where log file will be saved. Date will be concatenated before the name.
     maxSize: 10000000 #(10MB) Maximum file log size, if one file reaches it, a new file is created.
-    maxFiles: 30 # Max Files that can be created per day reaching the maxSize.
-  apisense:
-    enabled: false
+    maxFiles: 10 # Max Files that can be created per day reaching the maxSize.
+  telemetry:
+    enabled: $_[TELEMETRY_ENABLED]$_[^TELEMETRY_ENABLED]false$_[/TELEMETRY_ENABLED]
+    server: $_[TELEMETRY_SERVER]$_[^TELEMETRY_SERVER]localhost:8200$_[/TELEMETRY_SERVER]
   demo: true
   port: 8085
   influx:
