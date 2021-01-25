@@ -43,7 +43,7 @@ module.exports = {
  * @return {Object} options The object which defines the option that is given to the swagger router component.
  * @alias module:swagger.getRouterOption
  * */
-function _getRouterOption (version) {
+function _getRouterOption(version) {
   return {
     swaggerUi: '/swaggerV' + version + '.json',
     controllers: './src/backend/controllers/v' + version
@@ -56,7 +56,7 @@ function _getRouterOption (version) {
  * @return {Object} swaggerDoc The object which represent the swagger document.
  * @alias module:swagger.getSwaggerDoc
  * */
-function _getSwaggerDoc (version) {
+function _getSwaggerDoc(version) {
   var spec = fs.readFileSync('./src/backend/api/swaggerV' + version + '.yaml', 'utf8');
   return jsyaml.safeLoad(spec);
 }
@@ -69,7 +69,7 @@ function _getSwaggerDoc (version) {
  * @return {Express} app for chaining
  * @alias module:swagger.initializeMiddleware
  * */
-function _initializeMiddleware (app, swaggerDocs, callback) {
+function _initializeMiddleware(app, swaggerDocs, callback) {
   swaggerDocs.forEach(function (swaggerDoc, index) {
     swaggerTools.initializeMiddleware(swaggerDoc, function (middleware) {
       // Interpret Swagger resources and attach metadata to request must be first in swagger-tools middleware chain
@@ -79,7 +79,7 @@ function _initializeMiddleware (app, swaggerDocs, callback) {
       app.use(middleware.swaggerValidator());
 
       // Route validated requests to appropriate controller
-      app.use(middleware.swaggerRouter(module.exports.getRouterOption(index + 1)));
+      app.use(middleware.swaggerRouter(module.exports.getRouterOption(swaggerDoc.info.version)));
 
       // Serve the Swagger documents and Swagger UI
       app.use(middleware.swaggerUi({
