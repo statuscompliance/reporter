@@ -26,6 +26,8 @@ const atoms = {
             "defaults": {
                 "custom": {},
                 "mappings": [],
+                "max": 100,
+                "min": 0,
                 "thresholds": {
                     "mode": "absolute",
                     "steps": [
@@ -128,6 +130,8 @@ const atoms = {
             "defaults": {
                 "custom": {},
                 "mappings": [],
+                "max": 100,
+                "min": 0,
                 "thresholds": {
                     "mode": "absolute",
                     "steps": [
@@ -869,7 +873,7 @@ const atoms = {
         "timeShift": null
     },
     "htmlLink": {
-        "content": "<script>\n setTimeout(function(){document.getElementById('daySelector').style.filter = 'invert(1)'; document.styleSheets[0].insertRule('::-webkit-calendar-picker-indicator {filter: invert(1);}',1);},1000);\n</script>\n <div style=\"font-size: 34px; color: black; max-width: 90%\">\n<center>\n###TITLE###\n\n</center>\n\n</div>\n<div style=\"font-size: 34px; color: black; margin-top: -60px; max-width: 15%; float: right;  margin-right: 20px;\">\n<button style=\"font-size: 18px; color: #000000\" onclick=\"location.href = location.href.replace('###OLDVIEW###', '###NEWVIEW###')\">\n###BUTTONTEXT###\n</button>\n</div>",
+        "content": "<script>\n setTimeout(function(){document.getElementById('daySelector').style.filter = 'invert(1)'; document.styleSheets[0].insertRule('::-webkit-calendar-picker-indicator {filter: invert(1);}',1);},1000);\n</script>\n <div style=\"font-size: 34px; color: white; max-width: 90%;text-shadow: 1px 0 0 #000, -1px 0 0 #000, 0 1px 0 #000, 0 -1px 0 #000, .5px .5px #000, -.5px -.5px 0 #000, .5px -.5px 0 #000, -.5px .5px 0 #000;;\">\n<center>\n###TITLE###\n\n</center>\n\n</div>\n<div style=\"font-size: 34px; color: black; margin-top: -60px; max-width: 15%; float: right;  margin-right: 20px;\">\n<button style=\"font-size: 18px; color: #000000\" onclick=\"location.href = location.href.replace('###OLDVIEW###', '###NEWVIEW###')\">\n###BUTTONTEXT###\n</button>\n</div>",
         "datasource": null,
         "fieldConfig": {
             "defaults": {
@@ -1617,6 +1621,7 @@ function modifyJSON(jsonDashboard, agreement, dashboardName) {
     var currentYLocation = 0;
     var currentPanelId = 0;
 
+    console.log(dashboardConfig.blocks.sort(sortBlockCompare))
     //Each block configured in the agreement should be added with its configuration to the dashboard.
     dashboardConfig.blocks.sort(sortBlockCompare).forEach(function (block) {
         var newPanels = [...blocks[block.type].panels];
