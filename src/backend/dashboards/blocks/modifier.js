@@ -227,7 +227,7 @@ const atoms = {
         "timeShift": null
     },
     "timeGraph": {
-        "title": "Time Graph",
+        "title": "###TIME_GRAPH.TITLE###",
         "type": "graph",
         "aliasColors": {},
         "bars": false,
@@ -387,7 +387,7 @@ const atoms = {
         }
     },
     "timeGraphPercent": {
-        "title": "Time Graph",
+        "title": "###TIME_GRAPH.TITLE###",
         "type": "graph",
         "aliasColors": {},
         "bars": false,
@@ -607,7 +607,7 @@ const atoms = {
         }
     },
     "timeGraphPercentNotZero": {
-        "title": "Time Graph",
+        "title": "###TIME_GRAPH.TITLE###",
         "type": "graph",
         "aliasColors": {},
         "bars": false,
@@ -1715,6 +1715,9 @@ function modifyJSON(jsonDashboard, agreement, dashboardName) {
         } else if (block.type === "gauge-not-zero") {
             newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###METRIC.NOTZERO###/g, block.config['not-zero-metric']));
         }
+
+        const timeGraphTitle = block.config['time-graph-title'] ? block.config['time-graph-title'] : 'Time Graph';
+        newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###TIME_GRAPH.TITLE###/g, timeGraphTitle));
 
         newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###AGREEMENT.SCOPE.CLASS###/g, agreement.context.definitions.scopes.development.class.default));
 
