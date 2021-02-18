@@ -931,7 +931,68 @@ const atoms = {
         "title": "",
         "type": "text"
 
-    }
+    },
+    "htmlLinkGithub": {
+        "content": "<script>\n setTimeout(function(){document.getElementById('daySelector').style.filter = 'invert(1)'; document.styleSheets[0].insertRule('::-webkit-calendar-picker-indicator {filter: invert(1);}',1);},1000);\n</script>\n <div style=\"font-size: 34px; color: white; max-width: 80%;text-shadow: 1px 0 0 #000, -1px 0 0 #000, 0 1px 0 #000, 0 -1px 0 #000, .5px .5px #000, -.5px -.5px 0 #000, .5px -.5px 0 #000, -.5px .5px 0 #000;;\">\n<center>\n###TITLE###\n\n</center>\n\n</div>\n<div style=\"font-size: 34px; color: black; margin-top: -60px; max-width: 30%; float: right;  margin-right: 20px;\">\n<a href=\"https://www.github.com/%%%GITHUB_SLUG%%%\" target=\"_blank\"><button style=\"font-size: 18px; color: #000000\">\nGitHub Repo\n</button></a>\n<button style=\"font-size: 18px; color: #000000\" onclick=\"location.href = location.href.replace('###OLDVIEW###', '###NEWVIEW###')\">\n###BUTTONTEXT###\n</button>\n</div>",
+        "datasource": null,
+        "fieldConfig": {
+            "defaults": {
+                "custom": {}
+            },
+            "overrides": []
+        },
+        "gridPos": {
+            "h": 2,
+            "w": 24,
+            "x": 0,
+            "y": 0
+        },
+        "id": 30,
+        "mode": "html",
+        "targets": [
+            {
+                "groupBy": [
+                    {
+                        "params": [
+                            "$__interval"
+                        ],
+                        "type": "time"
+                    },
+                    {
+                        "params": [
+                            "null"
+                        ],
+                        "type": "fill"
+                    }
+                ],
+                "orderByTime": "ASC",
+                "policy": "default",
+                "refId": "A",
+                "resultFormat": "time_series",
+                "select": [
+                    [
+                        {
+                            "params": [
+                                "value"
+                            ],
+                            "type": "field"
+                        },
+                        {
+                            "params": [],
+                            "type": "mean"
+                        }
+                    ]
+                ],
+                "tags": []
+            }
+        ],
+        "timeFrom": null,
+        "timeShift": null,
+        "title": "",
+        "type": "text"
+
+    },
+
 }
 
 function addAtom(atom, width = 24, height = 9, options = {}) {
@@ -1595,6 +1656,14 @@ const blocks = {
         panels: [
             addAtom("htmlLink", 24, 2)
         ]
+    },
+    "title-button-view-changer-github": {
+        config: {
+            height: 4
+        },
+        panels: [
+            addAtom("htmlLinkGithub", 24, 2)
+        ]
     }
 }
 
@@ -1616,6 +1685,7 @@ const escapeRegExp = (string) => {
 
 function modifyJSON(jsonDashboard, agreement, dashboardName) {
     let modifiedDashboard = { ...jsonDashboard };
+    var agreementId = agreement.context.definitions.scopes.development.project.default;
     var dashboardConfig = agreement.context.definitions.dashboards[dashboardName].config;
     var currentXLocation = 0;
     var currentYLocation = 0;
@@ -1632,11 +1702,16 @@ function modifyJSON(jsonDashboard, agreement, dashboardName) {
             newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###METRIC.XAXIS###/g, block.config['x-axis-metric']));
             newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###METRIC.YAXIS###/g, block.config['y-axis-metric']));
             newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###METRIC.NOTZERO###/g, block.config['not-zero-metric']));
-        } else if (block.type === "title-button-view-changer") {
+        } else if (block.type === "title-button-view-changer" || block.type === "title-button-view-changer-github") {
             newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###TITLE###/g, block.config['title']));
             newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###BUTTONTEXT###/g, block.config['button-text']));
             newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###OLDVIEW###/g, block.config['old-view']));
             newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###NEWVIEW###/g, block.config['new-view']));
+            if(block.type === "title-button-view-changer-github") {
+                var githubSlug = agreementId.split('GH-')[1];
+                newPanels = JSON.parse(JSON.stringify(newPanels).replace(/%%%GITHUB_SLUG%%%/g, githubSlug.split('_')[0] + '/' + githubSlug.split('_')[1]));
+            }
+            
         } else if (block.type === "gauge-not-zero") {
             newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###METRIC.NOTZERO###/g, block.config['not-zero-metric']));
         }
