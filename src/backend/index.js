@@ -141,6 +141,8 @@ function _deploy(configurations, callback) {
 
   // list of swagger documents, one for each version of the api.
   var swaggerDocs = [
+    swaggerUtils.getSwaggerDoc(1),
+    swaggerUtils.getSwaggerDoc(2),
     swaggerUtils.getSwaggerDoc(4)
   ];
   // initialize swagger middleware for each swagger documents.
