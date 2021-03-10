@@ -1024,13 +1024,6 @@ const atoms = {
     },
     "htmlLink": {
         "content": "<script>\n setTimeout(function(){document.getElementById('daySelector').style.filter = 'invert(1)'; document.styleSheets[0].insertRule('::-webkit-calendar-picker-indicator {filter: invert(1);}',1);},1000);\n</script>\n <div style=\"font-size: 34px; color: white; max-width: 90%;text-shadow: 1px 0 0 #000, -1px 0 0 #000, 0 1px 0 #000, 0 -1px 0 #000, .5px .5px #000, -.5px -.5px 0 #000, .5px -.5px 0 #000, -.5px .5px 0 #000;;\">\n<center>\n###TITLE###\n\n</center>\n\n</div>\n<div style=\"font-size: 34px; color: black; margin-top: -60px; max-width: 15%; float: right;  margin-right: 20px;\">\n<button style=\"font-size: 18px; color: #000000\" onclick=\"location.href = location.href.replace('###OLDVIEW###', '###NEWVIEW###')\">\n###BUTTONTEXT###\n</button>\n</div>",
-        "datasource": null,
-        "fieldConfig": {
-            "defaults": {
-                "custom": {}
-            },
-            "overrides": []
-        },
         "gridPos": {
             "h": 2,
             "w": 24,
@@ -1039,58 +1032,11 @@ const atoms = {
         },
         "id": 30,
         "mode": "html",
-        "targets": [
-            {
-                "groupBy": [
-                    {
-                        "params": [
-                            "$__interval"
-                        ],
-                        "type": "time"
-                    },
-                    {
-                        "params": [
-                            "null"
-                        ],
-                        "type": "fill"
-                    }
-                ],
-                "orderByTime": "ASC",
-                "policy": "default",
-                "refId": "A",
-                "resultFormat": "time_series",
-                "select": [
-                    [
-                        {
-                            "params": [
-                                "value"
-                            ],
-                            "type": "field"
-                        },
-                        {
-                            "params": [],
-                            "type": "mean"
-                        }
-                    ]
-                ],
-                "tags": []
-            }
-        ],
-        "timeFrom": null,
-        "timeShift": null,
-        "title": "",
         "type": "text"
 
     },
     "htmlLinkGithub": {
         "content": "<script>\n setTimeout(function(){document.getElementById('daySelector').style.filter = 'invert(1)'; document.styleSheets[0].insertRule('::-webkit-calendar-picker-indicator {filter: invert(1);}',1);},1000);\n</script>\n <div style=\"padding-left: 19%;font-size: 34px; color: white; max-width: 80%;text-shadow: 1px 0 0 #000, -1px 0 0 #000, 0 1px 0 #000, 0 -1px 0 #000, .5px .5px #000, -.5px -.5px 0 #000, .5px -.5px 0 #000, -.5px .5px 0 #000;;\">\n<center>\n###TITLE###\n\n</center>\n\n</div>\n<div style=\"font-size: 34px; color: black; margin-top: -55px; max-width: 30%; float: right;  margin-right: 10px;\">\n<a href=\"https://www.github.com/%%%GITHUB_SLUG%%%\" target=\"_blank\"><button style=\"font-size: 18px; color: #000000\">\nGitHub Repo\n</button></a>\n<button style=\"font-size: 18px; color: #000000\" onclick=\"location.href = location.href.replace('###OLDVIEW###', '###NEWVIEW###')\">\n###BUTTONTEXT###\n</button>\n</div>",
-        "datasource": null,
-        "fieldConfig": {
-            "defaults": {
-                "custom": {}
-            },
-            "overrides": []
-        },
         "gridPos": {
             "h": 2,
             "w": 24,
@@ -1099,48 +1045,7 @@ const atoms = {
         },
         "id": 30,
         "mode": "html",
-        "targets": [
-            {
-                "groupBy": [
-                    {
-                        "params": [
-                            "$__interval"
-                        ],
-                        "type": "time"
-                    },
-                    {
-                        "params": [
-                            "null"
-                        ],
-                        "type": "fill"
-                    }
-                ],
-                "orderByTime": "ASC",
-                "policy": "default",
-                "refId": "A",
-                "resultFormat": "time_series",
-                "select": [
-                    [
-                        {
-                            "params": [
-                                "value"
-                            ],
-                            "type": "field"
-                        },
-                        {
-                            "params": [],
-                            "type": "mean"
-                        }
-                    ]
-                ],
-                "tags": []
-            }
-        ],
-        "timeFrom": null,
-        "timeShift": null,
-        "title": "",
         "type": "text"
-
     }
 }
 
@@ -1822,7 +1727,7 @@ const blocks = {
     },
     "title-button-view-changer": {
         config: {
-            height: 4
+            height: 2
         },
         panels: [
             addAtom("htmlLink", 24, 2)
@@ -1830,7 +1735,7 @@ const blocks = {
     },
     "title-button-view-changer-github": {
         config: {
-            height: 4
+            height: 2
         },
         panels: [
             addAtom("htmlLinkGithub", 24, 2)
