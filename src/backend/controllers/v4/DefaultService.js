@@ -357,7 +357,7 @@ function process(res, type, agreementId, month, format, kpiParam, serviceLine, a
 
       // Remove periods with bill closed.
       request.get({
-        url: agreement.context.infrastructure.registry + '/bills/' + agreement.id,
+        url: agreement.context.infrastructure.internal.registry + '/bills/' + agreement.id,
         json: true
       }, function (err, httpResponse, response) {
         if (err) {
