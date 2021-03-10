@@ -386,6 +386,156 @@ const atoms = {
             "alignLevel": null
         }
     },
+    "timeGraphMember": {
+        "title": "###TIME_GRAPH.TITLE###",
+        "type": "graph",
+        "aliasColors": {},
+        "bars": false,
+        "dashLength": 10,
+        "dashes": false,
+        "datasource": "InfluxDB",
+        "fieldConfig": {
+            "defaults": {
+                "custom": {},
+                "mappings": [],
+                "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                        {
+                            "color": "green",
+                            "value": null
+                        },
+                        {
+                            "color": "red",
+                            "value": 80
+                        }
+                    ]
+                }
+            },
+            "overrides": []
+        },
+        "fill": 1,
+        "fillGradient": 0,
+        "gridPos": {
+            "h": 9,
+            "w": 20,
+            "x": 4,
+            "y": 1
+        },
+        "hiddenSeries": false,
+        "id": 4,
+        "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+        },
+        "lines": true,
+        "linewidth": 1,
+        "nullPointMode": "null",
+        "options": {
+            "dataLinks": []
+        },
+        "percentage": false,
+        "pluginVersion": "7.0.0",
+        "pointradius": 2,
+        "points": true,
+        "renderer": "flot",
+        "seriesOverrides": [],
+        "spaceLength": 10,
+        "stack": false,
+        "steppedLine": false,
+        "targets": [
+            {
+                "groupBy": [
+                    {
+                        "params": [
+                          "scope_member"
+                        ],
+                        "type": "tag"
+                      }
+                ],
+                "measurement": "metrics_values",
+                "orderByTime": "ASC",
+                "policy": "autogen",
+                "refId": "A",
+                "resultFormat": "time_series",
+                "select": [
+                    [
+                        {
+                            "params": [
+                                "guaranteeValue"
+                            ],
+                            "type": "field"
+                        }
+                    ]
+                ],
+                "tags": [
+                    {
+                        "key": "agreement",
+                        "operator": "=",
+                        "value": "###AGREEMENT.ID###"
+                    },
+                    {
+                        "condition": "AND",
+                        "key": "id",
+                        "operator": "=",
+                        "value": "###GUARANTEE.NAME###"
+                    }
+                ]
+            }
+        ],
+        "thresholds": [
+            {
+                "colorMode": "critical",
+                "fill": true,
+                "line": false,
+                "op": "lt",
+                "value": "###GUARANTEE.THRESHOLD###",
+                "yaxis": "left"
+            }
+        ],
+        "timeFrom": null,
+        "timeRegions": [],
+        "timeShift": null,
+        "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+        },
+        "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+        },
+        "yaxes": [
+            {
+                "format": "short",
+                "label": null,
+                "logBase": 1,
+                "max": null,
+                "min": null,
+                "show": true
+            },
+            {
+                "format": "short",
+                "label": null,
+                "logBase": 1,
+                "max": null,
+                "min": null,
+                "show": true
+            }
+        ],
+        "yaxis": {
+            "align": false,
+            "alignLevel": null
+        }
+    },
     "timeGraphPercent": {
         "title": "###TIME_GRAPH.TITLE###",
         "type": "graph",
@@ -856,12 +1006,12 @@ const atoms = {
                 ],
                 "tags": [
                     {
-                        //      "key": "scope_class",
-                        //      "operator": "=",
-                        //      "value": "###AGREEMENT.SCOPE.CLASS###"
-                        //    },
-                        //     {
-                        //    "condition": "AND",
+                        "key": "scope_class",
+                        "operator": "=",
+                        "value": "###AGREEMENT.SCOPE.CLASS###"
+                    },
+                    {
+                        "condition": "AND",
                         "key": "id",
                         "operator": "=",
                         "value": "###GUARANTEE.NAME###"
@@ -933,7 +1083,7 @@ const atoms = {
 
     },
     "htmlLinkGithub": {
-        "content": "<script>\n setTimeout(function(){document.getElementById('daySelector').style.filter = 'invert(1)'; document.styleSheets[0].insertRule('::-webkit-calendar-picker-indicator {filter: invert(1);}',1);},1000);\n</script>\n <div style=\"font-size: 34px; color: white; max-width: 80%;text-shadow: 1px 0 0 #000, -1px 0 0 #000, 0 1px 0 #000, 0 -1px 0 #000, .5px .5px #000, -.5px -.5px 0 #000, .5px -.5px 0 #000, -.5px .5px 0 #000;;\">\n<center>\n###TITLE###\n\n</center>\n\n</div>\n<div style=\"font-size: 34px; color: black; margin-top: -60px; max-width: 30%; float: right;  margin-right: 20px;\">\n<a href=\"https://www.github.com/%%%GITHUB_SLUG%%%\" target=\"_blank\"><button style=\"font-size: 18px; color: #000000\">\nGitHub Repo\n</button></a>\n<button style=\"font-size: 18px; color: #000000\" onclick=\"location.href = location.href.replace('###OLDVIEW###', '###NEWVIEW###')\">\n###BUTTONTEXT###\n</button>\n</div>",
+        "content": "<script>\n setTimeout(function(){document.getElementById('daySelector').style.filter = 'invert(1)'; document.styleSheets[0].insertRule('::-webkit-calendar-picker-indicator {filter: invert(1);}',1);},1000);\n</script>\n <div style=\"padding-left: 19%;font-size: 34px; color: white; max-width: 80%;text-shadow: 1px 0 0 #000, -1px 0 0 #000, 0 1px 0 #000, 0 -1px 0 #000, .5px .5px #000, -.5px -.5px 0 #000, .5px -.5px 0 #000, -.5px .5px 0 #000;;\">\n<center>\n###TITLE###\n\n</center>\n\n</div>\n<div style=\"font-size: 34px; color: black; margin-top: -55px; max-width: 30%; float: right;  margin-right: 10px;\">\n<a href=\"https://www.github.com/%%%GITHUB_SLUG%%%\" target=\"_blank\"><button style=\"font-size: 18px; color: #000000\">\nGitHub Repo\n</button></a>\n<button style=\"font-size: 18px; color: #000000\" onclick=\"location.href = location.href.replace('###OLDVIEW###', '###NEWVIEW###')\">\n###BUTTONTEXT###\n</button>\n</div>",
         "datasource": null,
         "fieldConfig": {
             "defaults": {
@@ -991,8 +1141,7 @@ const atoms = {
         "title": "",
         "type": "text"
 
-    },
-
+    }
 }
 
 function addAtom(atom, width = 24, height = 9, options = {}) {
@@ -1608,6 +1757,28 @@ const blocks = {
         }]
 
     },
+    "time-graph2": {
+        config: {
+            height: 8,
+        },
+        panels: [
+            
+            addAtom("rowTitle"),
+            addAtom("timeGraph")
+        ]
+
+    },
+    "time-graph2-member": {
+        config: {
+            height: 8,
+        },
+        panels: [
+            
+            addAtom("rowTitle"),
+            addAtom("timeGraphMember")
+        ]
+
+    },
     "gauge-time-correlation": {
         config: {
             height: 8,
@@ -1707,11 +1878,10 @@ function modifyJSON(jsonDashboard, agreement, dashboardName) {
             newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###BUTTONTEXT###/g, block.config['button-text']));
             newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###OLDVIEW###/g, block.config['old-view']));
             newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###NEWVIEW###/g, block.config['new-view']));
-            if(block.type === "title-button-view-changer-github") {
+            if (block.type === "title-button-view-changer-github") {
                 var githubSlug = agreementId.split('GH-')[1];
                 newPanels = JSON.parse(JSON.stringify(newPanels).replace(/%%%GITHUB_SLUG%%%/g, githubSlug.split('_')[0] + '/' + githubSlug.split('_')[1]));
             }
-            
         } else if (block.type === "gauge-not-zero") {
             newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###METRIC.NOTZERO###/g, block.config['not-zero-metric']));
         }
