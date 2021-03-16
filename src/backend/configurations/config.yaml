@@ -35,14 +35,14 @@ production:
     loop: true
     timer: 10000
   v1:
-    agreementURL: 'http://registry$_[SERVICES_PREFIX]$_[^SERVICES_PREFIX]galibo$_[/SERVICES_PREFIX]$_[DNS_SUFFIX]$_[^DNS_SUFFIX].governify.io$_[/DNS_SUFFIX]/api/v6/agreements/'
-    statesURL: 'http://registry$_[SERVICES_PREFIX]$_[^SERVICES_PREFIX]galibo$_[/SERVICES_PREFIX]$_[DNS_SUFFIX]$_[^DNS_SUFFIX].governify.io$_[/DNS_SUFFIX]/api/v6/states/'
+    agreementURL: 'http://registry/api/v6/agreements/'
+    statesURL: 'http://registry/api/v6/states/'
   v2:
-    agreementURL: 'http://registry$_[SERVICES_PREFIX]$_[^SERVICES_PREFIX]galibo$_[/SERVICES_PREFIX]$_[DNS_SUFFIX]$_[^DNS_SUFFIX].governify.io$_[/DNS_SUFFIX]/api/v6/agreements/'
-    statesURL: 'http://registry$_[SERVICES_PREFIX]$_[^SERVICES_PREFIX]galibo$_[/SERVICES_PREFIX]$_[DNS_SUFFIX]$_[^DNS_SUFFIX].governify.io$_[/DNS_SUFFIX]/api/v6/states/'
+    agreementURL: 'http://registry/api/v6/agreements/'
+    statesURL: 'http://registry/api/v6/states/'
   v4:
-    agreementURL: 'http://registry$_[SERVICES_PREFIX]$_[^SERVICES_PREFIX]galibo$_[/SERVICES_PREFIX]$_[DNS_SUFFIX]$_[^DNS_SUFFIX].governify.io$_[/DNS_SUFFIX]/api/v6/agreements/'
-    statesURL: 'http://registry$_[SERVICES_PREFIX]$_[^SERVICES_PREFIX]galibo$_[/SERVICES_PREFIX]$_[DNS_SUFFIX]$_[^DNS_SUFFIX].governify.io$_[/DNS_SUFFIX]/api/v6/states/'
+    agreementURL: 'http://registry/api/v6/agreements/'
+    statesURL: 'http://registry/api/v6/states/'
   registryMaxRetries: 5
   timeBetweenRequests: 500
   public_config: # This config will be exposed to front-end
