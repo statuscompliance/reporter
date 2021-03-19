@@ -20,6 +20,7 @@ const atoms = {
     },
     "gaugeLast5Days": {
         "title": "Last 5 days mean percentage",
+        "guarantee": "###GUARANTEE.NAME###",
         "type": "gauge",
         "datasource": "InfluxDB",
         "fieldConfig": {
@@ -124,6 +125,7 @@ const atoms = {
     },
     "gaugeLast5DaysNotZero": {
         "title": "Last 5 days mean percentage",
+        "guarantee": "###GUARANTEE.NAME###",
         "type": "gauge",
         "datasource": "InfluxDB",
         "fieldConfig": {
@@ -228,6 +230,7 @@ const atoms = {
     },
     "timeGraph": {
         "title": "###TIME_GRAPH.TITLE###",
+        "guarantee": "###GUARANTEE.NAME###",
         "type": "graph",
         "aliasColors": {},
         "bars": false,
@@ -388,6 +391,7 @@ const atoms = {
     },
     "timeGraphMember": {
         "title": "###TIME_GRAPH.TITLE###",
+        "guarantee": "###GUARANTEE.NAME###",
         "type": "graph",
         "aliasColors": {},
         "bars": false,
@@ -538,6 +542,7 @@ const atoms = {
     },
     "timeGraphPercent": {
         "title": "###TIME_GRAPH.TITLE###",
+        "guarantee": "###GUARANTEE.NAME###",
         "type": "graph",
         "aliasColors": {},
         "bars": false,
@@ -758,6 +763,7 @@ const atoms = {
     },
     "timeGraphPercentNotZero": {
         "title": "###TIME_GRAPH.TITLE###",
+        "guarantee": "###GUARANTEE.NAME###",
         "type": "graph",
         "aliasColors": {},
         "bars": false,
@@ -929,6 +935,7 @@ const atoms = {
     "scatter": {
         "title": "Correlation for all teams",
         "type": "isagroup-scatterplot",
+        "guarantee": "###GUARANTEE.NAME###",
         "datasource": "InfluxDB",
         "description": "",
         "fieldConfig": {
