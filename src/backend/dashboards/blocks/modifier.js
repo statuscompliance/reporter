@@ -863,7 +863,7 @@ const atoms = {
                     "groupBy": [],
                     "orderByTime": "ASC",
                     "policy": "autogen",
-                    "query": "SELECT MEAN(\"guaranteeValue\") FROM \"autogen\".\"metrics_values\" WHERE (\"scope_class\" = '###AGREEMENT.SCOPE.CLASS###' AND \"id\" = '###GUARANTEE.NAME###' AND \"###METRIC.NOTZERO###\" != 0) AND $timeFilter GROUP BY time($__interval)",
+                    "query": "SELECT MEAN(\"guaranteeValue\") FROM \"autogen\".\"metrics_values\" WHERE (\"scope_class\" = '###AGREEMENT.SCOPE.CLASS###' AND \"id\" = '###GUARANTEE.NAME###' AND \"###METRIC.NOTZERO###\" != 0) AND $timeFilter GROUP BY time(24h)",
                     "rawQuery": true,
                     "refId": "B",
                     "resultFormat": "time_series",
