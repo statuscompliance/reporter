@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
 'use strict';
 
-const request = require('request');
 const json2csv = require('json2csv');
 const Promise = require('bluebird');
 const JSONStream = require('JSONStream');
@@ -295,14 +294,12 @@ function checkUpdates(contractId) {
   }
 }
 
-function process(res, type, agreementId, month, format, kpiParam, serviceLine, activity, periodsToProcess, retry, override) {
+async function process(res, type, agreementId, month, format, kpiParam, serviceLine, activity, periodsToProcess, retry, override) {
   if (!override) {
     loopParams.agreements[agreementId].isProcessFinished = false;
   }
 
-  var agreement;
-  var agreementURL = config.v1.agreementURL + agreementId;
-  var guaranteesStateURL = config.v1.statesURL + agreementId + '/guarantees' + (kpiParam ? '/' + kpiParam : '');
+
   var metricsStateURL = config.v1.statesURL + agreementId + '/metrics/';
 
   logger.ctl('New request to get ' + type + ' data for agreement = ' + agreementId);
@@ -310,171 +307,373 @@ function process(res, type, agreementId, month, format, kpiParam, serviceLine, a
   try {
     logger.ctl('Getting agreements from agreements-registry with contractId = ' + agreementId);
 
-    request.get({
-      url: agreementURL,
-      json: true
-    }, function (err, httpResponse, response) {
-      if (err) {
-        logger.error('Error while retrieving agreement: ' + err.toString().substr(0, 400));
-        return res.status(500).json({
-          code: 500,
-          message: err.toString()
-        });
-      }
-
-      if (httpResponse.statusCode !== 200) {
-        logger.error('Error while retrieving agreement: ' + JSON.stringify(response, null, 2).substr(0, 400));
-        return res.status(httpResponse.statusCode).json(response);
-      }
-
-      logger.ctl('OK agreement has been retrieved');
-      agreement = response;
-
-      logger.ctl('Retrieving ' + type + ' info from: ' + guaranteesStateURL);
-
-      logger.ctlState('### Streaming mode ###');
-      var streamingResult = new stream.Readable({
-        objectMode: true
+    let agreementRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/agreements' + contractId).catch(err => {
+      logger.error('Error while retrieving agreement: ' + err.toString().substr(0, 400));
+      return res.status(500).json({
+        code: 500,
+        message: err.toString()
       });
-      setUpStreamingResult(agreementId, streamingResult, type, format, res);
+    });
+    let agreement = agreementRequest.data;
 
-      logger.info('PeriodsToProcess:' + JSON.stringify(periodsToProcess));
-      var periods;
+    logger.ctl('OK agreement has been retrieved');
+    agreement = response;
 
-      if (periodsToProcess && periodsToProcess != null) {
-        if (Array.isArray(periodsToProcess)) {
-          periods = periodsToProcess;
-        } else {
-          periods = [];
-          periods.push(periodsToProcess);
-        }
+
+    logger.ctlState('### Streaming mode ###');
+    var streamingResult = new stream.Readable({
+      objectMode: true
+    });
+    setUpStreamingResult(agreementId, streamingResult, type, format, res);
+
+    logger.info('PeriodsToProcess:' + JSON.stringify(periodsToProcess));
+    var periods;
+
+    if (periodsToProcess && periodsToProcess != null) {
+      if (Array.isArray(periodsToProcess)) {
+        periods = periodsToProcess;
       } else {
-        periods = utils.getPeriods(agreement, {
-          initial: agreement.context.validity.initial,
-          end: agreement.context.validity.end
+        periods = [];
+        periods.push(periodsToProcess);
+      }
+    } else {
+      periods = utils.getPeriods(agreement, {
+        initial: agreement.context.validity.initial,
+        end: agreement.context.validity.end
+      });
+    }
+
+    // Remove periods with bill closed.
+    let billsRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/bills/' + agreement.id).catch(err => {
+      logger.error('Error while retrieving bills: ' + err.toString().substr(0, 400));
+      return res.status(500).json({
+        code: 500,
+        message: err.toString()
+      });
+    });
+    let bills = billsRequest.data;
+    bills.forEach(bill => {
+      if (bill.state === 'closed') {
+        periods.slice().forEach(function (per) {
+          if (per.from === bill.period.from && per.to === bill.period.to) {
+            periods.splice(periods.indexOf(per), 1);
+            logger.info('The period: ' + JSON.stringify(per) + ' will not be calculated because is bill is closed.');
+          }
         });
       }
+    })
 
-      // Remove periods with bill closed.
-      request.get({
-        url: agreement.context.infrastructure.internal.registry + '/bills/' + agreement.id,
-        json: true
-      }, function (err, httpResponse, response) {
-        if (err) {
-          logger.error('Error while retrieving bills: ' + err.toString().substr(0, 400));
-          return res.status(500).json({
-            code: 500,
-            message: err.toString()
+    logger.ctl('Periods for requests %s', JSON.stringify(periods, null, 2));
+
+    var pendingPeriods = periods.slice(0);
+
+    Promise.each(periods, (period, index) => {
+      return new Promise((resolve, reject) => {
+        if (!loopParams.isStopped(agreementId) || override) {
+
+          logger.ctl((index + 1) + ' Requests ' + type + ' from: %s', JSON.stringify(url, null, 2));
+
+          // createSocketFunctions(url, period, agreement, agreementURL, guaranteesStateURL, metricsStateURL, resolve, reject);
+
+          var requestStream = governify.infrastructure.getService('internal.registry').request({
+            method: 'get',
+            url: '/v6/states/' + agreementId + '/guarantees' + (kpiParam ? '/' + kpiParam : '') + '?from=' + period.from + '&to=' + period.to,
+            responseType: 'stream'
           });
-        }
-
-        if (httpResponse.statusCode !== 200) {
-          logger.error('Error while retrieving bills: ' + JSON.stringify(response, null, 2).substr(0, 400));
-          return res.status(httpResponse.statusCode).json(response);
-        } else {
-          response.forEach(function (bill) {
-            if (bill.state === 'closed') {
-              periods.slice().forEach(function (per) {
-                if (per.from === bill.period.from && per.to === bill.period.to) {
-                  periods.splice(periods.indexOf(per), 1);
-                  logger.info('The period: ' + JSON.stringify(per) + ' will not be calculated because is bill is closed.');
-                }
+          requestStream.on('response', response => {
+            if (response.code && response.code !== 200) {
+              logger.error(
+                'Error while retrieving ' + type + ' info: ' + response.message
+              );
+              return reject({
+                code: response.code,
+                message: response
               });
-            }
-          });
-        }
-
-        logger.ctl('Periods for requests %s', JSON.stringify(periods, null, 2));
-
-        var pendingPeriods = periods.slice(0);
-
-        Promise.each(periods, (period, index) => {
-          return new Promise((resolve, reject) => {
-            if (!loopParams.isStopped(agreementId) || override) {
-              var url = guaranteesStateURL + '?from=' + period.from + '&to=' + period.to;
-              logger.ctl((index + 1) + ' Requests ' + type + ' from: %s', JSON.stringify(url, null, 2));
-
-              // createSocketFunctions(url, period, agreement, agreementURL, guaranteesStateURL, metricsStateURL, resolve, reject);
-
-              var requestStream = request.get(url);
-              requestStream.on('response', response => {
-                if (response.code && response.code !== 200) {
-                  logger.error(
-                    'Error while retrieving ' + type + ' info: ' + response.message
+            } else {
+              logger.ctl('Connection with Registry established');
+              var contractDate = moment.utc();
+              logger.ctl('Receiving guarantees information...');
+              var dataReceivedCheck = false;
+              requestStream
+                .pipe(JSONStream.parse())
+                .on('data', guaranteeStates => {
+                  dataReceivedCheck = true;
+                  logger.ctl(
+                    '(Scoped) Guarantees States received: ' + guaranteeStates.length
                   );
-                  return reject({
-                    code: response.code,
-                    message: response
-                  });
-                } else {
-                  logger.ctl('Connection with Registry established');
-                  var contractDate = moment.utc();
-                  logger.ctl('Receiving guarantees information...');
-                  var dataReceivedCheck = false;
-                  requestStream
-                    .pipe(JSONStream.parse())
-                    .on('data', guaranteeStates => {
-                      dataReceivedCheck = true;
-                      logger.ctl(
-                        '(Scoped) Guarantees States received: ' + guaranteeStates.length
-                      );
-                      // Remove period already calculated from pending periods, and restart retry counter.
-                      var indexP = pendingPeriods.indexOf(period);
-                      if (indexP > -1) {
-                        pendingPeriods.splice(indexP, 1);
-                      }
-                      retry = 0;
-                      // Process each guaranteeState
-                      Promise.each(guaranteeStates, function (
-                        scopedGuaranteeState,
-                        index,
-                        length
-                      ) {
-                        return new Promise(function (resolve, reject) {
-                          if (type === 'Services') {
-                            if (
-                              (!kpiParam || kpiParam === scopedGuaranteeState.id) &&
-                              (!serviceLine ||
-                                serviceLine === scopedGuaranteeState.scope.serviceLine) &&
-                              (!activity || activity === scopedGuaranteeState.scope.activity)
-                            ) {
-                              logger.ctl('Processing KPI: ' + (index + 1) + '/' + length);
+                  // Remove period already calculated from pending periods, and restart retry counter.
+                  var indexP = pendingPeriods.indexOf(period);
+                  if (indexP > -1) {
+                    pendingPeriods.splice(indexP, 1);
+                  }
+                  retry = 0;
+                  // Process each guaranteeState
+                  Promise.each(guaranteeStates, function (
+                    scopedGuaranteeState,
+                    index,
+                    length
+                  ) {
+                    return new Promise(function (resolve, reject) {
+                      if (type === 'Services') {
+                        if (
+                          (!kpiParam || kpiParam === scopedGuaranteeState.id) &&
+                          (!serviceLine ||
+                            serviceLine === scopedGuaranteeState.scope.serviceLine) &&
+                          (!activity || activity === scopedGuaranteeState.scope.activity)
+                        ) {
+                          logger.ctl('Processing KPI: ' + (index + 1) + '/' + length);
 
-                              if (
-                                scopedGuaranteeState.evidences &&
-                                scopedGuaranteeState.evidences.length > 0
-                              ) {
-                                Promise.each(scopedGuaranteeState.evidences, function (
-                                  evidence,
-                                  index,
-                                  length
-                                ) {
-                                  return new Promise(function (resolve, reject) {
-                                    logger.warning(
-                                      'guarantee to: ' + scopedGuaranteeState.period.to
-                                    );
-                                    logger.warning(
-                                      'Limit TO: ' +
+                          if (
+                            scopedGuaranteeState.evidences &&
+                            scopedGuaranteeState.evidences.length > 0
+                          ) {
+                            Promise.each(scopedGuaranteeState.evidences, function (
+                              evidence,
+                              index,
+                              length
+                            ) {
+                              return new Promise(function (resolve, reject) {
+                                logger.warning(
+                                  'guarantee to: ' + scopedGuaranteeState.period.to
+                                );
+                                logger.warning(
+                                  'Limit TO: ' +
+                                  moment
+                                    .tz(
+                                      agreement.context.validity.end,
+                                      agreement.context.validity.timeZone
+                                    )
+                                    .subtract(1, 'milliseconds')
+                                    .toISOString()
+                                );
+                                if (
+                                  (!month ||
+                                    moment(month, 'YYYYMM').isSame(
+                                      moment.tz(
+                                        scopedGuaranteeState.period.to,
+                                        agreement.context.validity.timeZone
+                                      ),
+                                      'month'
+                                    )) &&
+                                  moment
+                                    .tz(
+                                      scopedGuaranteeState.period.from,
+                                      agreement.context.validity.timeZone
+                                    )
+                                    .isSameOrAfter(
+                                      moment.tz(
+                                        agreement.context.validity.initial,
+                                        agreement.context.validity.timeZone
+                                      )
+                                    ) &&
+                                  moment
+                                    .tz(
+                                      scopedGuaranteeState.period.to,
+                                      agreement.context.validity.timeZone
+                                    )
+                                    .isSameOrBefore(
                                       moment
                                         .tz(
                                           agreement.context.validity.end,
                                           agreement.context.validity.timeZone
                                         )
                                         .subtract(1, 'milliseconds')
-                                        .toISOString()
-                                    );
+                                    )
+                                ) {
+                                  generateResponse(
+                                    agreement,
+                                    month,
+                                    contractDate,
+                                    scopedGuaranteeState,
+                                    evidence
+                                  );
+
+                                  return resolve();
+                                } else {
+                                  return resolve();
+                                }
+                              });
+                            }).then(function (results) {
+                              return resolve();
+                            });
+                          } else {
+                            logger.warning(
+                              'No evidences for KPI: ' +
+                              JSON.stringify(scopedGuaranteeState.id, null, 2)
+                            );
+                            return resolve();
+                          }
+                        }
+                      } else if (type === 'KPIs') {
+                        if (
+                          (!month ||
+                            moment(month, 'YYYYMM').isSame(
+                              moment.tz(
+                                scopedGuaranteeState.period.to,
+                                agreement.context.validity.timeZone
+                              ),
+                              'month'
+                            )) &&
+                          moment
+                            .tz(
+                              scopedGuaranteeState.period.from,
+                              agreement.context.validity.timeZone
+                            )
+                            .isSameOrAfter(
+                              moment.tz(
+                                agreement.context.validity.initial,
+                                agreement.context.validity.timeZone
+                              )
+                            ) &&
+                          moment
+                            .tz(
+                              scopedGuaranteeState.period.to,
+                              agreement.context.validity.timeZone
+                            )
+                            .isSameOrBefore(
+                              moment
+                                .tz(
+                                  agreement.context.validity.end,
+                                  agreement.context.validity.timeZone
+                                )
+                                .subtract(1, 'milliseconds')
+                            )
+                        ) {
+                          generateResponse(
+                            agreement,
+                            month,
+                            contractDate,
+                            scopedGuaranteeState
+                          );
+
+                          return resolve();
+                        } else {
+                          return resolve();
+                        }
+                      }
+                    });
+                  }).then(
+                    results => {
+                      // guarantees have been finished for this period
+                      logger.ctl(
+                        'All guarantees states for period: %s been processed',
+                        JSON.stringify(period)
+                      );
+                      logger.ctl('Receiving metrics information for this period...');
+                      var processMetrics = [];
+
+                      Promise.each(processMetrics, function (metricId) {
+                        logger.ctl('Receiving %s for this period...', metricId);
+                        return new Promise((resolve, reject) => {
+                          var priorities = ['P1', 'P2', 'P3', 'P4'];
+
+                          Promise.each(priorities, function (priority) {
+                            logger.ctl('Receiving %s for this period...', priority);
+                            return new Promise(async (resolve, reject) => {
+                              var url = metricsStateURL + metricId;
+                              logger.ctl('from %s ', url);
+
+                              var params =
+                                '?' +
+                                'scope.priority=' +
+                                String(priority) +
+                                '&scope.type=' +
+                                String('*') +
+                                '&scope.serviceLine=' +
+                                String(
+                                  agreement.context.definitions.scopes.SCO.serviceLine
+                                    .default
+                                ) +
+                                '&scope.activity=' +
+                                String(
+                                  agreement.context.definitions.scopes.SCO.activity
+                                    .default
+                                ) +
+                                '&window.type=' +
+                                String('static') +
+                                '&window.period=' +
+                                String('monthly') +
+                                '&window.initial=' +
+                                String(period.from) +
+                                '&window.timeZone=' +
+                                String(agreement.context.validity.timeZone) +
+                                '&parameters.schedule=' +
+                                agreement.terms.guarantees.filter(
+                                  g => g.id === metricId
+                                )[0].of[0].with[metricId].schedule +
+                                '&parameters.deadline=' +
+                                agreement.terms.guarantees.filter(
+                                  g => g.id === metricId
+                                )[0].of[0].with[metricId].deadline +
+                                '&log.naos.uri=' +
+                                String(agreement.context.definitions.logs.naos.uri);
+
+                              // parameters.schedule:L-DT00:00-24:00
+                              // parameters.deadline:<= 2
+                              // window.initial:2014-10-15T22:00:00.000Z
+                              // window.period:monthly
+                              // window.type:static
+                              // window.timeZone:Europe/Madrid
+                              // evidences:CHAP_TRS_evidence,issue_trs_duration,issue_pu_duration,issue_trl_duration
+                              // logs.naos.uri:http://naos.logs.chap.governify.io/api/v1
+                              // logs.naos.stateUri:http://naos.logs.chap.governify.io/api/v1/count
+                              // logs.naos.terminator.values:SDK_HIST_ACCEPT_CLOSE
+                              // logs.naos.terminator.column:ACTION
+                              // logs.naos.structure.actionColumn:SID
+                              // logs.naos.structure.timestampColumn:CREATION_DATE
+                              // logs.naos.structure.instanceIdColumn:INCIDENT_ID
+                              // config.measures:https://repo.designer.governify.io/chap/chap/GAUSS/indicators/SCO_IO.json?accessToken=710a4950250286365cf841f765a790f1
+                              // config.schedules.regular:L-DT00:00-24:00
+                              // config.holidays:null
+                              // scope.activity:Servicio Avanzado de Soporte
+                              // scope.serviceLine:Gestión de Incidencia
+                              // scope.type:*
+                              // scope.priority:P1
+
+                              var finalPath = '/api/v6/' + agreementId + '/metrics' + params;
+
+                              let metricsRequest = await governify.infrastructure.getService('internal.registry').get(finalPath).catch(err => {
+                                logger.warning(
+                                  'There was an error retrieving metric: ' +
+                                  err.toString().substr(0, 400)
+                                );
+                                return reject(
+                                  'There was an error retrieving metric: ' +
+                                  err.toString()
+                                );
+                              });
+                              let metricsStatesArray = metricsRequest.data;
+                              logger.ctl('Registry has responded');
+                              logger.ctl('---All metrics ', metricsStatesArray);
+                              logger.ctl(
+                                '----metrics length ',
+                                metricsStatesArray.length,
+                                ' type of ',
+                                typeof metricsStatesArray
+                              );
+                              if (
+                                metricsStatesArray &&
+                                Array.isArray(metricsStatesArray)
+                              ) {
+                                logger.ctl('Processing response');
+                                Promise.each(metricsStatesArray, function (
+                                  metricState,
+                                  index,
+                                  length
+                                ) {
+                                  return new Promise(function (resolve, reject) {
                                     if (
                                       (!month ||
                                         moment(month, 'YYYYMM').isSame(
                                           moment.tz(
-                                            scopedGuaranteeState.period.to,
+                                            metricState.period.to,
                                             agreement.context.validity.timeZone
                                           ),
                                           'month'
                                         )) &&
                                       moment
                                         .tz(
-                                          scopedGuaranteeState.period.from,
+                                          metricState.period.from,
                                           agreement.context.validity.timeZone
                                         )
                                         .isSameOrAfter(
@@ -485,7 +684,7 @@ function process(res, type, agreementId, month, format, kpiParam, serviceLine, a
                                         ) &&
                                       moment
                                         .tz(
-                                          scopedGuaranteeState.period.to,
+                                          metricState.period.to,
                                           agreement.context.validity.timeZone
                                         )
                                         .isSameOrBefore(
@@ -497,377 +696,132 @@ function process(res, type, agreementId, month, format, kpiParam, serviceLine, a
                                             .subtract(1, 'milliseconds')
                                         )
                                     ) {
-                                      generateResponse(
+                                      generateMetricResponse(
                                         agreement,
-                                        month,
                                         contractDate,
-                                        scopedGuaranteeState,
-                                        evidence
+                                        metricState
                                       );
-                                      // logger.ctl("Writing " + type + " in " + format + " format: " + (index + 1) + "/" + length);
-                                      // writeOutput(type, format, elementProcessed, streamingResult, function () {
-                                      //     return resolve();
-                                      // });
+
                                       return resolve();
                                     } else {
                                       return resolve();
                                     }
                                   });
                                 }).then(function (results) {
-                                  return resolve();
-                                });
-                              } else {
-                                logger.warning(
-                                  'No evidences for KPI: ' +
-                                  JSON.stringify(scopedGuaranteeState.id, null, 2)
-                                );
-                                return resolve();
-                              }
-                            }
-                          } else if (type === 'KPIs') {
-                            if (
-                              (!month ||
-                                moment(month, 'YYYYMM').isSame(
-                                  moment.tz(
-                                    scopedGuaranteeState.period.to,
-                                    agreement.context.validity.timeZone
-                                  ),
-                                  'month'
-                                )) &&
-                              moment
-                                .tz(
-                                  scopedGuaranteeState.period.from,
-                                  agreement.context.validity.timeZone
-                                )
-                                .isSameOrAfter(
-                                  moment.tz(
-                                    agreement.context.validity.initial,
-                                    agreement.context.validity.timeZone
-                                  )
-                                ) &&
-                              moment
-                                .tz(
-                                  scopedGuaranteeState.period.to,
-                                  agreement.context.validity.timeZone
-                                )
-                                .isSameOrBefore(
-                                  moment
-                                    .tz(
-                                      agreement.context.validity.end,
-                                      agreement.context.validity.timeZone
-                                    )
-                                    .subtract(1, 'milliseconds')
-                                )
-                            ) {
-                              generateResponse(
-                                agreement,
-                                month,
-                                contractDate,
-                                scopedGuaranteeState
-                              );
-                              // logger.ctl("Writing " + type + " in " + format + " format: " + (index + 1) + "/" + length);
-                              // writeOutput(type, format, elementProcessed, streamingResult, function () {
-                              //     return resolve();
-                              // });
-                              return resolve();
-                            } else {
-                              return resolve();
-                            }
-                          }
-                        });
-                      }).then(
-                        results => {
-                          // guarantees have been finished for this period
-                          logger.ctl(
-                            'All guarantees states for period: %s been processed',
-                            JSON.stringify(period)
-                          );
-                          logger.ctl('Receiving metrics information for this period...');
-                          var processMetrics = [];
-
-                          Promise.each(processMetrics, function (metricId) {
-                            logger.ctl('Receiving %s for this period...', metricId);
-                            return new Promise((resolve, reject) => {
-                              var priorities = ['P1', 'P2', 'P3', 'P4'];
-
-                              Promise.each(priorities, function (priority) {
-                                logger.ctl('Receiving %s for this period...', priority);
-                                return new Promise((resolve, reject) => {
-                                  var url = metricsStateURL + metricId;
-                                  logger.ctl('from %s ', url);
-
-                                  var params =
-                                    '?' +
-                                    'scope.priority=' +
-                                    String(priority) +
-                                    '&scope.type=' +
-                                    String('*') +
-                                    '&scope.serviceLine=' +
-                                    String(
-                                      agreement.context.definitions.scopes.SCO.serviceLine
-                                        .default
-                                    ) +
-                                    '&scope.activity=' +
-                                    String(
-                                      agreement.context.definitions.scopes.SCO.activity
-                                        .default
-                                    ) +
-                                    '&window.type=' +
-                                    String('static') +
-                                    '&window.period=' +
-                                    String('monthly') +
-                                    '&window.initial=' +
-                                    String(period.from) +
-                                    '&window.timeZone=' +
-                                    String(agreement.context.validity.timeZone) +
-                                    '&parameters.schedule=' +
-                                    agreement.terms.guarantees.filter(
-                                      g => g.id === metricId
-                                    )[0].of[0].with[metricId].schedule +
-                                    '&parameters.deadline=' +
-                                    agreement.terms.guarantees.filter(
-                                      g => g.id === metricId
-                                    )[0].of[0].with[metricId].deadline +
-                                    '&log.naos.uri=' +
-                                    String(agreement.context.definitions.logs.naos.uri);
-
-                                  // parameters.schedule:L-DT00:00-24:00
-                                  // parameters.deadline:<= 2
-                                  // window.initial:2014-10-15T22:00:00.000Z
-                                  // window.period:monthly
-                                  // window.type:static
-                                  // window.timeZone:Europe/Madrid
-                                  // evidences:CHAP_TRS_evidence,issue_trs_duration,issue_pu_duration,issue_trl_duration
-                                  // logs.naos.uri:http://naos.logs.chap.governify.io/api/v1
-                                  // logs.naos.stateUri:http://naos.logs.chap.governify.io/api/v1/count
-                                  // logs.naos.terminator.values:SDK_HIST_ACCEPT_CLOSE
-                                  // logs.naos.terminator.column:ACTION
-                                  // logs.naos.structure.actionColumn:SID
-                                  // logs.naos.structure.timestampColumn:CREATION_DATE
-                                  // logs.naos.structure.instanceIdColumn:INCIDENT_ID
-                                  // config.measures:https://repo.designer.governify.io/chap/chap/GAUSS/indicators/SCO_IO.json?accessToken=710a4950250286365cf841f765a790f1
-                                  // config.schedules.regular:L-DT00:00-24:00
-                                  // config.holidays:null
-                                  // scope.activity:Servicio Avanzado de Soporte
-                                  // scope.serviceLine:Gestión de Incidencia
-                                  // scope.type:*
-                                  // scope.priority:P1
-
-                                  var query = url + params;
-
-                                  logger.ctl('-------Doing Get request to ', query);
-
-                                  request(query, function (err, httpResponse, metricsStates) {
-                                    if (err) {
-                                      logger.warning(
-                                        'There was an error retrieving metric: ' +
-                                        err.toString().substr(0, 400)
-                                      );
-                                      return reject(
-                                        'There was an error retrieving metric: ' +
-                                        err.toString()
-                                      );
-                                    }
-
-                                    if (httpResponse.statusCode !== 200) {
-                                      logger.warning(
-                                        'Error while retrieving metric: ' +
-                                        JSON.stringify(metricsStates, null, 2)
-                                      );
-                                      return reject(
-                                        'Error while retrieving metric: ' +
-                                        JSON.stringify(metricsStates, null, 2)
-                                      );
-                                    } else {
-                                      logger.ctl('---All metrics ', metricsStates);
-                                      var metricsStatesArray = JSON.parse(metricsStates);
-                                      logger.ctl('Registry has responded');
-                                      logger.ctl(
-                                        '----metrics length ',
-                                        metricsStatesArray.length,
-                                        ' type of ',
-                                        typeof metricsStatesArray
-                                      );
-                                      if (
-                                        metricsStatesArray &&
-                                        Array.isArray(metricsStatesArray)
-                                      ) {
-                                        logger.ctl('Processing response');
-                                        Promise.each(metricsStatesArray, function (
-                                          metricState,
-                                          index,
-                                          length
-                                        ) {
-                                          return new Promise(function (resolve, reject) {
-                                            if (
-                                              (!month ||
-                                                moment(month, 'YYYYMM').isSame(
-                                                  moment.tz(
-                                                    metricState.period.to,
-                                                    agreement.context.validity.timeZone
-                                                  ),
-                                                  'month'
-                                                )) &&
-                                              moment
-                                                .tz(
-                                                  metricState.period.from,
-                                                  agreement.context.validity.timeZone
-                                                )
-                                                .isSameOrAfter(
-                                                  moment.tz(
-                                                    agreement.context.validity.initial,
-                                                    agreement.context.validity.timeZone
-                                                  )
-                                                ) &&
-                                              moment
-                                                .tz(
-                                                  metricState.period.to,
-                                                  agreement.context.validity.timeZone
-                                                )
-                                                .isSameOrBefore(
-                                                  moment
-                                                    .tz(
-                                                      agreement.context.validity.end,
-                                                      agreement.context.validity.timeZone
-                                                    )
-                                                    .subtract(1, 'milliseconds')
-                                                )
-                                            ) {
-                                              // var result = generateMetricResponse(agreement, contractDate, metricState);
-                                              // var elementProcessed = result.response;
-
-
-                                              generateMetricResponse(
-                                                agreement,
-                                                contractDate,
-                                                metricState
-                                              );
-                                              // logger.ctl("Writing " + type + " in " + format + " format: " + (index + 1) + "/" + length);
-                                              // writeOutput(type, format, elementProcessed, streamingResult, function () {
-                                              //     return resolve();
-                                              // });
-                                              return resolve();
-                                            } else {
-                                              return resolve();
-                                            }
-                                          });
-                                        }).then(function (results) {
-                                          logger.ctl(
-                                            'Finished metrics: %s, with priority: %s',
-                                            metricId,
-                                            priority
-                                          );
-                                          return resolve();
-                                        });
-                                      }
-                                    }
-                                  });
-                                });
-                              }).then(
-                                function (priorityValues) {
-                                  logger.ctl('Finished metrics: %s', metricId);
-                                  return resolve();
-                                },
-                                function (err) {
-                                  logger.warning(
-                                    'Error while retrieving ' + type + ': ' + metricId
+                                  logger.ctl(
+                                    'Finished metrics: %s, with priority: %s',
+                                    metricId,
+                                    priority
                                   );
-                                  return reject();
-                                }
-                              );
+                                  return resolve();
+                                });
+                              }
                             });
                           }).then(
-                            function (metricsValues) {
-                              logger.ctl('Finished period: %s', JSON.stringify(period));
-                              logger.ctl('Calculated metrics', metricsValues);
-                              resolve(); // promise of period
-                              // all metrics request for this period have been finished;
+                            function (priorityValues) {
+                              logger.ctl('Finished metrics: %s', metricId);
+                              return resolve();
                             },
                             function (err) {
                               logger.warning(
-                                'Error while retrieving ' +
-                                type +
-                                ': ' +
-                                JSON.stringify(err, 2)
+                                'Error while retrieving ' + type + ': ' + metricId
                               );
-                              reject(err);
+                              return reject();
                             }
                           );
+                        });
+                      }).then(
+                        function (metricsValues) {
+                          logger.ctl('Finished period: %s', JSON.stringify(period));
+                          logger.ctl('Calculated metrics', metricsValues);
+                          resolve(); // promise of period
+                          // all metrics request for this period have been finished;
                         },
-                        error => {
-                          reject(error);
+                        function (err) {
+                          logger.warning(
+                            'Error while retrieving ' +
+                            type +
+                            ': ' +
+                            JSON.stringify(err, 2)
+                          );
+                          reject(err);
                         }
                       );
-                    })
-                    .on('error', err => {
-                      logger.error('Error while retrieving ' + type + ' info: ' + err);
-                      if (!override) {
-                        loopParams.agreements[agreementId].isProcessFinished = true;
-                      }
-                      return res.status(500).json(err);
-                    })
-                    .on('end', function () {
-                      logger.info('Ended retrieving');
-                      if (!dataReceivedCheck) {
-                        if (config.registryMaxRetries >= retry) {
-                          retry++;
-                          logger.error('No data received from Registry after connection. Retrying.' + retry);
-                          setTimeout(process, 5000, res, type, agreementId, month, format, kpiParam, serviceLine, activity, pendingPeriods, retry);
-                        } else {
-                          logger.error('Max retries reached. Manual supervision is needed. The process has been stopped.');
-                          if (!override) {
-                            loopParams.agreements[agreementId].isProcessFinished = true;
-                          }
-                          return res.status(500).json(err);
-                        }
-                      }
-                    })
-                    .on('finish', function () {
-                      logger.error('Finished retrieving');
-                    });
-                }
-              });
-
-              requestStream.on('error', err => {
-                if (!retry) {
-                  retry = 0;
-                }
-                if (config.registryMaxRetries >= retry) {
-                  retry++;
-                  logger.error('Error in registry connection. Retrying.' + retry);
-                  //    createSocketFunctions(url, period, agreement, agreementURL, guaranteesStateURL, metricsStateURL, resolve, reject, retry);
-                  // process(res, type, agreementId, month, format, kpiParam, serviceLine, activity, pendingPeriods, retry);
-
-                  setTimeout(process, 5000, res, type, agreementId, month, format, kpiParam, serviceLine, activity, pendingPeriods, retry);
-                } else {
-                  logger.error('Max retries reached. Manual supervision is needed. The process has been stopped.');
+                    },
+                    error => {
+                      reject(error);
+                    }
+                  );
+                })
+                .on('error', err => {
+                  logger.error('Error while retrieving ' + type + ' info: ' + err);
                   if (!override) {
                     loopParams.agreements[agreementId].isProcessFinished = true;
                   }
                   return res.status(500).json(err);
-                }
-              });
-            } else {
-              logger.looper('Reported stopped and period ' + JSON.stringify(period) + ' will not be calculated');
+                })
+                .on('end', function () {
+                  logger.info('Ended retrieving');
+                  if (!dataReceivedCheck) {
+                    if (config.registryMaxRetries >= retry) {
+                      retry++;
+                      logger.error('No data received from Registry after connection. Retrying.' + retry);
+                      setTimeout(process, 5000, res, type, agreementId, month, format, kpiParam, serviceLine, activity, pendingPeriods, retry);
+                    } else {
+                      logger.error('Max retries reached. Manual supervision is needed. The process has been stopped.');
+                      if (!override) {
+                        loopParams.agreements[agreementId].isProcessFinished = true;
+                      }
+                      return res.status(500).json(err);
+                    }
+                  }
+                })
+                .on('finish', function () {
+                  logger.error('Finished retrieving');
+                });
             }
-          }).then((results) => {
-
-          }, (err) => {
-
           });
-        }).then((results) => {
-          // all periods has been finished
-          logger.ctl('All periods have been processed');
-          // streamingResult.push(null);
-          if (!override) {
-            loopParams.agreements[agreementId].isProcessFinished = true;
-          }
-          // res.end();
-        }, (err) => {
 
-        });
+          requestStream.on('error', err => {
+            if (!retry) {
+              retry = 0;
+            }
+            if (config.registryMaxRetries >= retry) {
+              retry++;
+              logger.error('Error in registry connection. Retrying.' + retry);
+              //    createSocketFunctions(url, period, agreement, agreementURL, guaranteesStateURL, metricsStateURL, resolve, reject, retry);
+              // process(res, type, agreementId, month, format, kpiParam, serviceLine, activity, pendingPeriods, retry);
+
+              setTimeout(process, 5000, res, type, agreementId, month, format, kpiParam, serviceLine, activity, pendingPeriods, retry);
+            } else {
+              logger.error('Max retries reached. Manual supervision is needed. The process has been stopped.');
+              if (!override) {
+                loopParams.agreements[agreementId].isProcessFinished = true;
+              }
+              return res.status(500).json(err);
+            }
+          });
+        } else {
+          logger.looper('Reported stopped and period ' + JSON.stringify(period) + ' will not be calculated');
+        }
+      }).then((results) => {
+
+      }, (err) => {
+
       });
+    }).then((results) => {
+      // all periods has been finished
+      logger.ctl('All periods have been processed');
+      // streamingResult.push(null);
+      if (!override) {
+        loopParams.agreements[agreementId].isProcessFinished = true;
+      }
+      // res.end();
+    }, (err) => {
+
     });
+
+
   } catch (error) {
     logger.error('Unexpected error: ' + error.toString().substr(0, 400));
     return res.status(500).json({
@@ -876,33 +830,6 @@ function process(res, type, agreementId, month, format, kpiParam, serviceLine, a
     });
   }
 }
-
-/* function writeOutput (type, format, data, res, callback) {
-  var header = (type == 'KPIs') ? FIELDS_KPIS : FIELDS_SERVICES;
-
-  if (!format || format === 'csv') {
-    json2csv({
-      data: [data],
-      fields: header,
-      hasCSVColumnTitle: false
-    }, function (err, csv) {
-      if (err) {
-        logger.error('Error generating CSV for type' + type);
-        return res.status(500).json({
-          code: 500,
-          message: err.toString()
-        });
-      }
-
-      logger.info('Adding data to Streaming...');
-      res.push(csv + '\n', 'utf8');
-      callback();
-    });
-  } else if (format === 'json') {
-    res.push(data);
-    callback();
-  }
-} */
 
 exports.testInflux = function () {
   var values = [];

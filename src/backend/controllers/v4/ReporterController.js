@@ -23,10 +23,10 @@ const moment = require('moment-timezone');
 
 const InfluxDB = require('../../services/influxService').InfluxDB;
 const Reporter = require('../../services/gaussReporterService/').GaussReporter;
-const config = require('../../configurations');
+const governify = require('governify-commons')
+const config = governify.configurator.getConfig('main');
 const JSONStream = require('JSONStream');
 const logger = require('../../logger');
-const request = require('request');
 const Promise = require('bluebird');
 const objectiveUtils = require('../../utils/objective-utils');
 
@@ -141,26 +141,24 @@ exports.contractsContractIdCreatePointsFromListGET = (contractId) => {
  * contractId String Contract ID
  * no response value expected for this operation
  **/
-exports.contractsContractIdCreateHistoryPOST = (contractId, period) => {
+exports.contractsContractIdCreateHistoryPOST = async (contractId, period) => {
   logger.info('Creating history for agreementID: ' + contractId);
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     logger.ctl('Getting the agreements from Registry with contractId = %s', contractId);
-    request.get({
-      url: config.v1.agreementURL + contractId,
-      json: true
-    }, (error, httpResponse, agreement) => {
-      var periods = Reporter.getPeriods(agreement, {
-        initial: agreement.context.validity.initial,
-        period: period ? period : 'monthly'
-      });
-
-      Promise.each(periods, function (period) {
-        return callRegistryAndStorePoints(config.v1.statesURL + contractId + '/guarantees' + '?from=' + period.from + '&to=' + period.to, agreement);
-      }).then(function () {
-        logger.info('Finished creating history for agreeement ' + contractId);
-        resolve();
-      });
+    let agreementRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/agreements/' + contractId);
+    let agreement = agreementRequest.data;
+    var periods = Reporter.getPeriods(agreement, {
+      initial: agreement.context.validity.initial,
+      period: period ? period : 'monthly'
     });
+
+    Promise.each(periods, function (period) {
+      return callRegistryAndStorePoints('/api/v6/states' + contractId + '/guarantees' + '?from=' + period.from + '&to=' + period.to, agreement);
+    }).then(function () {
+      logger.info('Finished creating history for agreeement ' + contractId);
+      resolve();
+    });
+
   });
 };
 
@@ -170,31 +168,28 @@ exports.contractsContractIdCreateHistoryPOST = (contractId, period) => {
  * contractId String Contract ID
  * no response value expected for this operation
  **/
-exports.contractsContractIdCreatePointsFromListPOST = (contractId, listDates) => {
+exports.contractsContractIdCreatePointsFromListPOST = async (contractId, listDates) => {
   logger.info('Creating points from List for agreementID: ' + contractId);
 
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => async function () {
     if (statusCreatePoints[contractId]) {
       resolve(); // return "A process to create Points from List is already started."
     } else {
       statusCreatePoints[contractId] = { current: 0, total: 1 };
       try {
         logger.ctl('Getting the agreements from Registry with contractId = %s', contractId);
-        request.get({
-          url: config.v1.agreementURL + contractId,
-          json: true
-        }, (error, httpResponse, agreement) => {
-          var periods = listDates.map(x => { return { from: x, to: moment(x).add(1, 'second').toISOString() }; });
-          Promise.each(periods, function (period) {
-            statusCreatePoints[contractId] = { current: statusCreatePoints[contractId].current + 1, total: periods.length };
-
-            return callRegistryAndStorePoints(config.v1.statesURL + contractId + '/guarantees' + '?from=' + period.from + '&to=' + period.to + '&newPeriodsFromGuarantees=false', agreement);
-          }).then(function () {
-            statusCreatePoints[contractId] = undefined;
-            logger.info('Finished creating history for agreeement ' + contractId);
-            resolve();
-          });
+        let agreementRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/agreements' + contractId);
+        let agreement = agreementRequest.data;
+        var periods = listDates.map(x => { return { from: x, to: moment(x).add(1, 'second').toISOString() }; });
+        Promise.each(periods, function (period) {
+          statusCreatePoints[contractId] = { current: statusCreatePoints[contractId].current + 1, total: periods.length };
+          return callRegistryAndStorePoints('/api/v6/states' + contractId + '/guarantees' + '?from=' + period.from + '&to=' + period.to + '&newPeriodsFromGuarantees=false', agreement);
+        }).then(function () {
+          statusCreatePoints[contractId] = undefined;
+          logger.info('Finished creating history for agreeement ' + contractId);
+          resolve();
         });
+
       } catch (error) {
         logger.error(error);
         statusCreatePoints[contractId] = undefined;
@@ -211,7 +206,7 @@ exports.contractsContractIdCreatePointsFromListPOST = (contractId, listDates) =>
  **/
 exports.contractsContractIdUpdateGET = (contractId) => {
   return new Promise((resolve, reject) => {
-    var urlRegistryRequest = config.v1.statesURL + contractId + '/guarantees' + '?from=' + moment().toISOString() + '&to=' + moment().add(3, 'week').toISOString() + '&newPeriodsFromGuarantees=false';
+    var urlRegistryRequest = '/api/v6/states' + contractId + '/guarantees' + '?from=' + moment().toISOString() + '&to=' + moment().add(3, 'week').toISOString() + '&newPeriodsFromGuarantees=false';
     logger.ctl('Getting the agreements from Registry with contractId = %s', contractId);
     request.get({
       url: config.v1.agreementURL + contractId,
@@ -272,11 +267,15 @@ exports.resetPOST = function (args, res, next) {
 
 var timeBetweenRequests = 0;
 
-function callRegistryAndStorePoints(urlRegistry, agreement) {
+function callRegistryAndStorePoints(path, agreement) {
   return new Promise((resolve, reject) => {
     setTimeout(function () {
       logger.ctl('URLRegistry: ' + urlRegistry);
-      var requestStream = request.get(urlRegistry);
+      var requestMetrics = governify.infrastructure.getService('internal.registry').request({
+        url: path,
+        responseType: 'stream'
+      })
+      let requestStream = requestMetrics.data;
 
       requestStream.on('response', response => {
         if (response.code && response.code !== 200) {
@@ -328,26 +327,26 @@ function callRegistryAndStorePoints(urlRegistry, agreement) {
             } catch (err) {
               logger.error('Error while processing guarantee data received. Adding to queue');
               logger.error(err);
-              return addToRequestsQueue(urlRegistry, agreement).then(() => { resolve(); });
+              return addToRequestsQueue(path, agreement).then(() => { resolve(); });
             }
           }).on('error', err => {
             if (!dataReceivedCheck) {
               logger.error('Error while getting data from registry, retrying connection:');
               setTimeout(function () {
-                return callRegistryAndStorePoints(urlRegistry, agreement).then(function () { resolve(); });
+                return callRegistryAndStorePoints(path, agreement).then(function () { resolve(); });
               }, 1500);
             }
             return res.status(500).json(err);
           }).on('end', function () {
             if (!dataReceivedCheck) {
               logger.error('Ended registry request without data , adding request to queue:');
-              return addToRequestsQueue(urlRegistry, agreement).then(() => { resolve(); });
+              return addToRequestsQueue(path, agreement).then(() => { resolve(); });
             }
           });
         }
       }).on('error', err => {
         logger.error('Request hang out, adding request to queue:');
-        return addToRequestsQueue(urlRegistry, agreement).then(() => { resolve(); });
+        return addToRequestsQueue(path, agreement).then(() => { resolve(); });
       });
     }, timeBetweenRequests);
   });
@@ -421,7 +420,7 @@ exports.contractsContractIdCreatePointsFromPeriodsPOST = (contractId, periods) =
         Promise.each(periods, function (period) {
           // statusCreatePoints[contractId] = { current: statusCreatePoints[contractId].current + 1, total: periods.length }
 
-          return callRegistryAndStorePoints(config.v1.statesURL + contractId + '/guarantees' + '?from=' + period.from + '&to=' + period.to + '&newPeriodsFromGuarantees=false', agreement);
+          return callRegistryAndStorePoints('/api/v6/states' + contractId + '/guarantees' + '?from=' + period.from + '&to=' + period.to + '&newPeriodsFromGuarantees=false', agreement);
         }).then(function () {
           // statusCreatePoints[contractId] = undefined;
           logger.info('Finished creating event collector metrics for agreeement ' + contractId);

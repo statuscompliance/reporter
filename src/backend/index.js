@@ -22,7 +22,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 /*
  * Put here your dependencies
  */
-const config = require("./configurations");
+
+const governify = require('governify-commons');
+const config = governify.configurator.getConfig('main')
 // Add this to the VERY top of the first file loaded in your app
 var apm = require('elastic-apm-node').start({
   // Override service name from package.json
@@ -37,6 +39,7 @@ var apm = require('elastic-apm-node').start({
   active: config.telemetry.enabled,
   server: config.telemetry.server
 })
+
 
 const http = require('http'); // Use http if your app will be behind a proxy.
 const https = require('https'); // Use https if your app will not be behind a proxy.
@@ -141,8 +144,6 @@ function _deploy(configurations, callback) {
 
   // list of swagger documents, one for each version of the api.
   var swaggerDocs = [
-    swaggerUtils.getSwaggerDoc(1),
-    swaggerUtils.getSwaggerDoc(2),
     swaggerUtils.getSwaggerDoc(4)
   ];
   // initialize swagger middleware for each swagger documents.

@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
 /// //////////////////////// EXT DEPENDENCIES ///////////////////////////
 const Promise = require('bluebird');
-const request = require('request');
+const governify = require('governify-commons');
 const moment = require('moment-timezone');
 const JSONStream = require('JSONStream');
 const stream = require('stream');
@@ -141,49 +141,39 @@ class Reporter {
 
   /// //////////////////////// MAIN FUNCTION ///////////////////////////
   process(periods) {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       this._;
       logger.ctl('New request to get states for the agreement = %s', this._contractId);
       try {
         logger.ctl('Getting the agreements from Registry with contractId = %s', this._contractId);
-        request.get({
-          url: this._agreementURL,
-          json: true
-        }, (error, httpResponse, response) => {
-          if (error) {
-            logger.error('Error while retrieving agreement: %s', error.toString().substr(0, 400));
-            return reject(error.toString());
-          }
+        let agreementRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/agreements/' + this._contractId).catch(err => {
+          logger.error('Error while retrieving agreement: %s', error.toString().substr(0, 400));
+          return reject(error.toString());
+        })
 
-          if (!httpResponse || typeof !httpResponse === 'undefined' || httpResponse.statusCode !== 200) {
-            logger.error('Error while retrieving agreement: %s', httpResponse ? JSON.stringify(response, null, 2).substr(0, 400) : 'undefined response');
-            return reject(response);
-          }
+        this._agreement = agreementRequest.data;
+        logger.ctl('The agreement has been retrieved successfully');
+        this._contractDate = this._agreement.context.validity.initial;
+        logger.ctl('Setting agreement and initial date: %s', this._contractDate);
 
-          logger.ctl('The agreement has been retrieved successfully');
+        logger.ctl('Retrieving info from: %s', this._guaranteesStateURL);
 
-          this._agreement = response;
-          this._contractDate = this._agreement.context.validity.initial;
-          logger.ctl('Setting agreement and initial date: %s', this._contractDate);
-
-          logger.ctl('Retrieving info from: %s', this._guaranteesStateURL);
-
-          // periods = ""; //TEMPORAL FIX
-          if (!periods || periods == null || periods == '') {
-            periods = Reporter.getPeriods(this._agreement, {
-              initial: this._agreement.context.validity.initial
-            });
-          }
-
-          logger.ctl('Periods for requests %s', JSON.stringify(periods, null, 2));
-
-          Promise.each(periods, this._calculatePeriods.bind(this)).then((results) => {
-            logger.ctl('All the periods have been processed (results length: %d)', results.length);
-            return resolve(results);
-          }).catch((error) => {
-            return reject(error);
+        // periods = ""; //TEMPORAL FIX
+        if (!periods || periods == null || periods == '') {
+          periods = Reporter.getPeriods(this._agreement, {
+            initial: this._agreement.context.validity.initial
           });
+        }
+
+        logger.ctl('Periods for requests %s', JSON.stringify(periods, null, 2));
+
+        Promise.each(periods, this._calculatePeriods.bind(this)).then((results) => {
+          logger.ctl('All the periods have been processed (results length: %d)', results.length);
+          return resolve(results);
+        }).catch((error) => {
+          return reject(error);
         });
+
       } catch (error) {
         logger.error('Unexpected error: ' + error.toString().substr(0, 400));
         return reject(error.toString());
@@ -311,7 +301,7 @@ class Reporter {
   _calculateScopedOnDemandMetric(priority) {
     // TODO: now it only supports priority calculation.
     logger.ctl('Receiving metric scope %s for this period...', priority);
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       logger.ctl('Getting scoped metric %s ', url);
 
       // FIXME
@@ -332,35 +322,31 @@ class Reporter {
 
       logger.ctl('Doing request to retrieve scoped metric to:', queryURL);
 
-      request(queryURL, (err, httpResponse, metricsStates) => {
-        if (error) {
-          logger.warning('There was an error while retrieving metric: ' + error.toString().substr(0, 400));
-          return reject('There was an error while retrieving metric: ' + error.toString());
-        }
-
-        if (!!httpResponse || typeof !httpResponse === 'undefined' || httpResponse.statusCode != 200) {
-          logger.warning('Error while retrieving metric: ' + JSON.stringify(metricsStates, null, 2));
-          return reject('Error while retrieving metric: ' + JSON.stringify(metricsStates, null, 2));
-        } else {
-          logger.ctl('All metrics %s', metricsStates);
-          const metricsStatesArray = JSON.parse(metricsStates);
-          logger.ctl('Metrics length %d type of %s', metricsStatesArray.length, typeof metricsStatesArray);
-          if (metricsStatesArray && Array.isArray(metricsStatesArray)) {
-            logger.ctl('Processing metric response');
-            Promise.each(metricsStatesArray, (metricState, index, length) => {
-              return new Promise((resolve, reject) => {
-                logger.ctl('Processing metric: %d/%d', (index + 1), length);
-                this._generateOnDemandMetricResponse(metricState).then((elementProcessed) => {
-                  return resolve(elementProcessed);
-                });
-              });
-            }).then((results) => {
-              logger.ctl('Finished metric calculation %s, with scope: %s', metricId, priority);
-              return resolve(results);
-            });
-          }
-        }
+      let metricsRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/states/' + this._contractId + '/metrics/' + metricId + params).catch(err => {
+        logger.warning('There was an error while retrieving metric: ' + err.toString().substr(0, 400));
+        return reject('There was an error while retrieving metric: ' + err.toString());
       });
+      let metricsStates = metricsRequest.data;
+
+      logger.ctl('All metrics %s', metricsStates);
+      const metricsStatesArray = JSON.parse(metricsStates);
+      logger.ctl('Metrics length %d type of %s', metricsStatesArray.length, typeof metricsStatesArray);
+      if (metricsStatesArray && Array.isArray(metricsStatesArray)) {
+        logger.ctl('Processing metric response');
+        Promise.each(metricsStatesArray, (metricState, index, length) => {
+          return new Promise((resolve, reject) => {
+            logger.ctl('Processing metric: %d/%d', (index + 1), length);
+            this._generateOnDemandMetricResponse(metricState).then((elementProcessed) => {
+              return resolve(elementProcessed);
+            });
+          });
+        }).then((results) => {
+          logger.ctl('Finished metric calculation %s, with scope: %s', metricId, priority);
+          return resolve(results);
+        });
+      }
+
+
     });
   }
 
