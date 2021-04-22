@@ -23,7 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 const Influx = require('influx');
 
 /// //////////////////////// INT DEPENDENCIES ///////////////////////////
-const config = require('../../configurations');
+const governify = require('governify-commons');
+const config = governify.configurator.getConfig('main');
 const logger = require('../../logger');
 const influxConfig = config.influx;
 

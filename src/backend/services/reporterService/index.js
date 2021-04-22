@@ -27,7 +27,7 @@ const JSONStream = require('JSONStream');
 const stream = require('stream');
 
 /// //////////////////////// INT DEPENDENCIES ///////////////////////////
-const config = require('../../configurations');
+const config = governify.configurator.getConfig('main');
 const logger = require('../../logger');
 const utils = require('../../utils');
 

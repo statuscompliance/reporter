@@ -21,7 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
 const writer = require('../../utils/writer');
 const ReporterController = require('./ReporterController');
-const config = require('../../configurations');
+const governify = require('governify-commons');
+const config = governify.configurator.getConfig('main');
 
 module.exports.contractsContractIdStartGET = function contractsContractIdStartGET(req, res, next) {
   var contractId = req.swagger.params.contractId.value;

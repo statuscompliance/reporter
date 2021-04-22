@@ -19,9 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
 'use strict';
 
-const config = require('../../configurations');
+const governify = require('governify-commons');
+const config = governify.configurator.getConfig('main');
 
-module.exports.configGET = function configGET (req, res, next) {
+module.exports.configGET = function configGET(req, res, next) {
   res.json(config.public_config);
   res.end();
 };

@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>. */
  */
 
 const governify = require('governify-commons');
-const config = governify.configurator.getConfig('main')
+const config = governify.configurator.getConfig('main');
 // Add this to the VERY top of the first file loaded in your app
 var apm = require('elastic-apm-node').start({
   // Override service name from package.json

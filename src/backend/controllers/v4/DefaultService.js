@@ -25,7 +25,8 @@ const JSONStream = require('JSONStream');
 const stream = require('stream');
 const Influx = require('influx');
 const moment = require('moment-timezone');
-const config = require('../../configurations');
+const governify = require('governify-commons');
+const config = governify.configurator.getConfig('main');
 const logger = require('../../logger');
 const utils = require('../../utils');
 

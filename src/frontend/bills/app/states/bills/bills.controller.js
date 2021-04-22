@@ -29,100 +29,103 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 
     function BillsController(billsService, $rootScope, $state, $scope, $q, $http, $timeout, $stateParams) {
 
-       
-        $rootScope.configPromise.then(function(){ //Config must be loaded
-        $scope.agreement = $stateParams.agreement;
 
-      
-        $scope.years = []
-        $scope.yearMonths = {};
-        var calculateMonths = (bills) => {
-            for(var i=bills.length-1;i>=0;i--){
-                var billl = bills[i];
-                var formatDate = bills[i].period.from.split("T")[0];
-                var year = moment(formatDate).add(1,"month").format('YYYY', 'es');
-                var month = moment(formatDate).add(1,"month").format('MMMM', 'es');
+        $rootScope.publicInfrastructurePromise.then(function () { //Config must be loaded
+            $scope.agreement = $stateParams.agreement;
 
-                month = month.charAt(0).toUpperCase() + month.slice(1);
-            
-                if($scope.yearMonths[year]){
-                    if($scope.yearMonths[year].indexOf(month)<0){
-                        $scope.yearMonths[year].push({month: month, state: bills[i].state, closeDate: bills[i].closeDate, bill: bills[i]});
+
+            $scope.years = []
+            $scope.yearMonths = {};
+            var calculateMonths = (bills) => {
+                for (var i = bills.length - 1; i >= 0; i--) {
+                    var billl = bills[i];
+                    var formatDate = bills[i].period.from.split("T")[0];
+                    var year = moment(formatDate).add(1, "month").format('YYYY', 'es');
+                    var month = moment(formatDate).add(1, "month").format('MMMM', 'es');
+
+                    month = month.charAt(0).toUpperCase() + month.slice(1);
+
+                    if ($scope.yearMonths[year]) {
+                        if ($scope.yearMonths[year].indexOf(month) < 0) {
+                            $scope.yearMonths[year].push({ month: month, state: bills[i].state, closeDate: bills[i].closeDate, bill: bills[i] });
+                        }
+                    } else {
+                        $scope.yearMonths[year] = [{ month: month, state: bills[i].state, closeDate: bills[i].closeDate, bill: bills[i] }];
+                        $scope.years.push(year);
                     }
-                }else{
-                    $scope.yearMonths[year] = [{month: month, state: bills[i].state, closeDate: bills[i].closeDate, bill: bills[i]}];
-                    $scope.years.push(year);
+
                 }
+
+                console.log($scope.yearMonths)
+
+                $scope.years;
+                $scope.firstBill = $scope.yearMonths[Object.keys($scope.yearMonths)[0]][0].month + " " + Object.keys($scope.yearMonths)[0];
+                $scope.lastBill = $scope.yearMonths[Object.keys($scope.yearMonths)[Object.keys($scope.yearMonths).length - 1]][0].month + " " + Object.keys($scope.yearMonths)[Object.keys($scope.yearMonths).length - 1];
+
+            };
+
+            $scope.closeBill = (bill) => {
+                var index = $scope.bills.indexOf(bill);
+                var closeDate = moment().toISOString();
+
+                bill.closeDate = closeDate;
+                bill.state = "closed";
+
+                $scope.bills[index] = bill;
+
+                var updatedBill = {
+                    "agreementId": $stateParams.agreement,
+                    "billId": bill.billId.toString(),
+                    "period":
+                    {
+                        "from": bill.period.from,
+                        "to": bill.period.to
+                    },
+                    "state": "closed",
+                    "closeDate": closeDate
+                }
+
+                billsService.updateBills(updatedBill).then((response) => {
+
+                    $scope.years = []
+                    $scope.yearMonths = {};
+                    calculateMonths($scope.bills);
+
+                }, (err) => {
+                    console.error(err);
+                    $scope.loadingOverrides = false;
+                    $scope.calculated = true;
+                });
 
             }
 
-            console.log($scope.yearMonths)
-
-            $scope.years;
-            $scope.firstBill = $scope.yearMonths[Object.keys($scope.yearMonths)[0]][0].month + " " + Object.keys($scope.yearMonths)[0];
-            $scope.lastBill =  $scope.yearMonths[Object.keys($scope.yearMonths)[Object.keys($scope.yearMonths).length-1]][0].month + " " + Object.keys($scope.yearMonths)[Object.keys($scope.yearMonths).length-1];
-
-        };
-
-        $scope.closeBill = (bill) => {
-            var index = $scope.bills.indexOf(bill);
-            var closeDate = moment().toISOString();
-
-            bill.closeDate = closeDate;
-            bill.state = "closed";
-
-            $scope.bills[index] = bill;
-
-            var updatedBill = {"agreementId": $stateParams.agreement,
-                            "billId": bill.billId.toString(),
-                            "period":
-                                {"from":bill.period.from,
-                                 "to":bill.period.to},
-                            "state":"closed",
-                            "closeDate": closeDate
-                            }
-
-            billsService.updateBills(updatedBill).then((response) => {
-
-                $scope.years = []
-                $scope.yearMonths = {};
-                calculateMonths($scope.bills);
-
-            }, (err) => {
-                console.error(err);
-                $scope.loadingOverrides = false;
-                $scope.calculated = true;
-            });
-
-        }
-
-        $scope.changeCloseData = (bill, month, year) => {
-            $scope.currentBill = bill;
-            $scope.currentMonth = month;
-            $scope.currentYear = year;
-        }
-        
-        
-        
-        $scope.getBills = () => {
-            billsService.getBills().then((bills) => {
-                $scope.bills = bills;
-                calculateMonths(bills);
-
-            }, (err) => {
-                console.error(err);
-                $scope.loadingOverrides = false;
-                $scope.calculated = true;
-            });
-
-        }
-
-        if ($stateParams.agreement){
-            $scope.getBills();
-        }
+            $scope.changeCloseData = (bill, month, year) => {
+                $scope.currentBill = bill;
+                $scope.currentMonth = month;
+                $scope.currentYear = year;
+            }
 
 
-    })
+
+            $scope.getBills = () => {
+                billsService.getBills().then((bills) => {
+                    $scope.bills = bills;
+                    calculateMonths(bills);
+
+                }, (err) => {
+                    console.error(err);
+                    $scope.loadingOverrides = false;
+                    $scope.calculated = true;
+                });
+
+            }
+
+            if ($stateParams.agreement) {
+                $scope.getBills();
+            }
+
+
+        })
     }
-        
+
 }());

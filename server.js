@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>. */
  */
 
 const governify = require('governify-commons');
-const config = governify.configurator.getConfig('main')
+const config = governify.configurator.getConfig('main');
 // Add this to the VERY top of the first file loaded in your app
 var apm = require('elastic-apm-node').start({
     // Override service name from package.json
@@ -57,6 +57,7 @@ const swaggerUtils = require('./src/backend/utils').swagger;
 
 const server = null;
 const app = express();
+
 
 const frontendPath = path.join(__dirname, './src/frontend');
 const serverPort = process.env.PORT || config.server.port;
@@ -116,6 +117,10 @@ app.use('/api/latest/docs', function (req, res) {
 app.use('/api/latest/api-docs', function (req, res) {
     res.redirect('/api/' + CURRENT_API_VERSION + '/api-docs');
 });
+
+app.use('/publicInfrastructure', function (req, res) {
+    res.json(governify.infrastructure.getServices().external);
+})
 
 module.exports = {
     deploy: _deploy,

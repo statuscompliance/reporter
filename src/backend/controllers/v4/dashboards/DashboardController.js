@@ -34,7 +34,7 @@ exports.dashboardGET = async (req, res, next) => {
   var agreementId = params.agreementId.value;
   var dashboardId = params.dashboardId.value;
   var boolGetBaseDashboard = params.base.value;
-  let agreementRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/agreements/' + 'agreementId');
+  let agreementRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/agreements/' + agreementId);
   let agreement = agreementRequest.data;
   try {
     var dashboardConfig = agreement.context.definitions.dashboards[dashboardId];
@@ -42,7 +42,7 @@ exports.dashboardGET = async (req, res, next) => {
     var dashboardJSON = await governify.utils.loadObjectFromFileOrURL(dashboardConfig.base);
 
     if (!boolGetBaseDashboard) {
-      var dashboardModifier = await governify.utils.requireFromFileOrUrl(dashboardConfig.modifier, dashboardConfig.modifier);
+      var dashboardModifier = await governify.utils.requireFromFileOrURL(dashboardConfig.modifier, dashboardConfig.modifier);
       //Replace all agreement variables specified in the json
       // TODO - This functions is not being currently used and has not been tested. Implement it as a standard for dashboards
       dashboardJSON = utils.textReplaceReferencesFromJSON(JSON.stringify(dashboardJSON), agreement, ">>>agreement.", "<<<")
