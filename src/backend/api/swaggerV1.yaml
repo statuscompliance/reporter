@@ -196,22 +196,6 @@ paths:
           schema:
             $ref: '#/definitions/error'
       x-swagger-router-controller: DashboardReporter
-  '/config':
-    get:
-      tags:
-        - config
-      description: Get public config
-      operationId: configGET
-      responses:
-        '200':
-          description: Success
-          schema:
-            type: object
-        '400':
-          description: Bad request
-          schema:
-            $ref: '#/definitions/error'
-      x-swagger-router-controller: ConfigController
 definitions:
   contract:
     type: object

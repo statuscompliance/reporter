@@ -1,4 +1,4 @@
-server: 
+server:
   port: 1000
   timeout: 86400000
   bodySize: 50mb
@@ -9,7 +9,7 @@ server:
   listenOnHttps: false
 log:
   level: debug
-  file: './logs/dev-logs.log' #Where log file will be saved. Date will be concatenated before the name.
+  file: "./logs/dev-logs.log" #Where log file will be saved. Date will be concatenated before the name.
   maxSize: 10000000 #(10MB) Maximum file log size, if one file reaches it, a new file is created.
   maxFiles: 10 # Max Files that can be created per day reaching the maxSize.
 
@@ -33,8 +33,3 @@ defaults:
   loop: false
   timer: 10000
 registryMaxRetries: 5
-
-public_config: # This config will be exposed to front-end
-  registry_endpoint: 'http://localhost:8081'
-  registry_apiVersion: 5
-  dashboard_url: 'http://localhost:3000'
