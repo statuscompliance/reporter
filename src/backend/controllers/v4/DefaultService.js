@@ -1407,8 +1407,7 @@ var connectAndCreateInfluxDB = () => {
   logger.ctl('Creating influxdb connection to %s', config.influx.host);
 
   // Set up influx database
-  influx = new Influx.InfluxDB(governify.infrastructure.getServiceURL('internal.database.influx-reporter'), {
-    database: config.influx.database,
+  influx = new Influx.InfluxDB(governify.infrastructure.getServiceURL('internal.database.influx-reporter') + "/" + config.influx.database, {
     schema: [{
       measurement: config.influx.measurement,
       fields: {
