@@ -38,8 +38,7 @@ var apm = require('elastic-apm-node').start({
   distributedTracingOrigins: ['*'],
   active: config.telemetry.enabled,
   server: config.telemetry.server
-})
-
+});
 
 const http = require('http'); // Use http if your app will be behind a proxy.
 const https = require('https'); // Use https if your app will not be behind a proxy.
@@ -128,7 +127,7 @@ module.exports = {
  * @param {function} callback callback function
  * @alias module:registry.deploy
  * */
-function _deploy(configurations, callback) {
+function _deploy (configurations, callback) {
   if (configurations && configurations.loggerLevel) {
     logger.transports.console.level = configurations.loggerLevel;
   }
@@ -174,7 +173,7 @@ function _deploy(configurations, callback) {
  * @param {function} callback callback function
  * @alias module:registry.undeploy
  * */
-function _undeploy(callback) {
+function _undeploy (callback) {
   /* db.close(function () {
     server.close(function () {
       logger.info('Server has been closed');

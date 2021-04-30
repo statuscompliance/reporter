@@ -288,18 +288,17 @@ exports.updatePOST = function (args, res, next, req) {
   }
 };
 
-function checkUpdates(contractId) {
+function checkUpdates (contractId) {
   if (pendingUpdate.includes(contractId)) {
     pendingUpdate.splice(pendingUpdate.indexOf(contractId), 1);
     this.contractsContractIdUpdateGET(contractId);
   }
 }
 
-async function process(res, type, agreementId, month, format, kpiParam, serviceLine, activity, periodsToProcess, retry, override) {
+async function process (res, type, agreementId, month, format, kpiParam, serviceLine, activity, periodsToProcess, retry, override) {
   if (!override) {
     loopParams.agreements[agreementId].isProcessFinished = false;
   }
-
 
   var metricsStateURL = config.v1.statesURL + agreementId + '/metrics/';
 
@@ -308,7 +307,7 @@ async function process(res, type, agreementId, month, format, kpiParam, serviceL
   try {
     logger.ctl('Getting agreements from agreements-registry with contractId = ' + agreementId);
 
-    let agreementRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/agreements' + contractId).catch(err => {
+    const agreementRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/agreements' + contractId).catch(err => {
       logger.error('Error while retrieving agreement: ' + err.toString().substr(0, 400));
       return res.status(500).json({
         code: 500,
@@ -319,7 +318,6 @@ async function process(res, type, agreementId, month, format, kpiParam, serviceL
 
     logger.ctl('OK agreement has been retrieved');
     agreement = response;
-
 
     logger.ctlState('### Streaming mode ###');
     var streamingResult = new stream.Readable({
@@ -345,14 +343,14 @@ async function process(res, type, agreementId, month, format, kpiParam, serviceL
     }
 
     // Remove periods with bill closed.
-    let billsRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/bills/' + agreement.id).catch(err => {
+    const billsRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/bills/' + agreement.id).catch(err => {
       logger.error('Error while retrieving bills: ' + err.toString().substr(0, 400));
       return res.status(500).json({
         code: 500,
         message: err.toString()
       });
     });
-    let bills = billsRequest.data;
+    const bills = billsRequest.data;
     bills.forEach(bill => {
       if (bill.state === 'closed') {
         periods.slice().forEach(function (per) {
@@ -362,7 +360,7 @@ async function process(res, type, agreementId, month, format, kpiParam, serviceL
           }
         });
       }
-    })
+    });
 
     logger.ctl('Periods for requests %s', JSON.stringify(periods, null, 2));
 
@@ -371,7 +369,6 @@ async function process(res, type, agreementId, month, format, kpiParam, serviceL
     Promise.each(periods, (period, index) => {
       return new Promise((resolve, reject) => {
         if (!loopParams.isStopped(agreementId) || override) {
-
           logger.ctl((index + 1) + ' Requests ' + type + ' from: %s', JSON.stringify(url, null, 2));
 
           // createSocketFunctions(url, period, agreement, agreementURL, guaranteesStateURL, metricsStateURL, resolve, reject);
@@ -633,7 +630,7 @@ async function process(res, type, agreementId, month, format, kpiParam, serviceL
 
                               var finalPath = '/api/v6/' + agreementId + '/metrics' + params;
 
-                              let metricsRequest = await governify.infrastructure.getService('internal.registry').get(finalPath).catch(err => {
+                              const metricsRequest = await governify.infrastructure.getService('internal.registry').get(finalPath).catch(err => {
                                 logger.warning(
                                   'There was an error retrieving metric: ' +
                                   err.toString().substr(0, 400)
@@ -643,7 +640,7 @@ async function process(res, type, agreementId, month, format, kpiParam, serviceL
                                   err.toString()
                                 );
                               });
-                              let metricsStatesArray = metricsRequest.data;
+                              const metricsStatesArray = metricsRequest.data;
                               logger.ctl('Registry has responded');
                               logger.ctl('---All metrics ', metricsStatesArray);
                               logger.ctl(
@@ -821,8 +818,6 @@ async function process(res, type, agreementId, month, format, kpiParam, serviceL
     }, (err) => {
 
     });
-
-
   } catch (error) {
     logger.error('Unexpected error: ' + error.toString().substr(0, 400));
     return res.status(500).json({
@@ -867,7 +862,7 @@ exports.testInflux = function () {
   influxInsert(values, console.log('TEST INSERTION COMPLETED'));
 };
 
-function generateResponse(agreement, month, contractDate, kpi, evidence) {
+function generateResponse (agreement, month, contractDate, kpi, evidence) {
   var guarantee = agreement.terms.guarantees.find(function (guarantee) {
     return guarantee.id === kpi.id;
   });
@@ -1103,7 +1098,7 @@ function generateResponse(agreement, month, contractDate, kpi, evidence) {
   }
 }
 
-function generateMetricResponse(agreement, contractDate, kpi, evidence) {
+function generateMetricResponse (agreement, contractDate, kpi, evidence) {
   var metric = agreement.terms.metrics[kpi.id];
 
   if (!metric) {
@@ -1249,7 +1244,7 @@ function generateMetricResponse(agreement, contractDate, kpi, evidence) {
   }
 }
 
-function checkScope(scopeObj1, scopeObj2) {
+function checkScope (scopeObj1, scopeObj2) {
   var checkPriority = true;
   var checkServiceLine = true;
   var checkActivity = true;

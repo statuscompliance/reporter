@@ -24,7 +24,7 @@ const ReporterController = require('./ReporterController');
 const governify = require('governify-commons');
 const config = governify.configurator.getConfig('main');
 
-module.exports.contractsContractIdStartGET = function contractsContractIdStartGET(req, res, next) {
+module.exports.contractsContractIdStartGET = function contractsContractIdStartGET (req, res, next) {
   var contractId = req.swagger.params.contractId.value;
   var timer = req.swagger.params.timer.value || config.defaults.timer;
   var loop = req.swagger.params.loop.value || config.defaults.loop;
@@ -49,7 +49,7 @@ module.exports.contractsContractIdStartGET = function contractsContractIdStartGE
     });
 };
 
-module.exports.contractsContractIdStopGET = function contractsContractIdStopGET(req, res, next) {
+module.exports.contractsContractIdStopGET = function contractsContractIdStopGET (req, res, next) {
   var contractId = req.swagger.params.contractId.value;
   ReporterController.contractsContractIdStopGET(contractId)
     .then((response) => {
@@ -60,7 +60,7 @@ module.exports.contractsContractIdStopGET = function contractsContractIdStopGET(
     });
 };
 
-module.exports.contractsContractIdUpdateGET = function contractsContractIdUpdateGET(req, res, next) {
+module.exports.contractsContractIdUpdateGET = function contractsContractIdUpdateGET (req, res, next) {
   var contractId = req.swagger.params.contractId.value;
 
   ReporterController.contractsContractIdUpdateGET(contractId)
@@ -72,10 +72,9 @@ module.exports.contractsContractIdUpdateGET = function contractsContractIdUpdate
     });
 };
 
-module.exports.contractsContractIdCreateHistoryPOST = function contractsContractIdCreateHistoryPOST(req, res, next) {
+module.exports.contractsContractIdCreateHistoryPOST = function contractsContractIdCreateHistoryPOST (req, res, next) {
   var contractId = req.swagger.params.contractId.value;
   var period = req.swagger.params.period.value;
-
 
   ReporterController.contractsContractIdCreateHistoryPOST(contractId, period)
     .then((response) => {
@@ -86,7 +85,7 @@ module.exports.contractsContractIdCreateHistoryPOST = function contractsContract
     });
 };
 
-module.exports.contractsContractIdCreatePointsFromPeriodsPOST = function contractsContractIdCreatePointsFromPeriodsPOST(req, res, next) {
+module.exports.contractsContractIdCreatePointsFromPeriodsPOST = function contractsContractIdCreatePointsFromPeriodsPOST (req, res, next) {
   var contractId = req.swagger.params.contractId.value;
   var periods = req.body.periods;
 
@@ -99,7 +98,7 @@ module.exports.contractsContractIdCreatePointsFromPeriodsPOST = function contrac
     });
 };
 
-module.exports.contractsContractIdCreatePointsFromListPOST = function contractsContractIdCreatePointsFromListPOST(req, res, next) {
+module.exports.contractsContractIdCreatePointsFromListPOST = function contractsContractIdCreatePointsFromListPOST (req, res, next) {
   var contractId = req.swagger.params.contractId.value;
   var list = req.body.points;
 
@@ -112,7 +111,7 @@ module.exports.contractsContractIdCreatePointsFromListPOST = function contractsC
     });
 };
 
-module.exports.contractsContractIdCreatePointsFromListGET = function contractsContractIdCreatePointsFromListGET(req, res, next) {
+module.exports.contractsContractIdCreatePointsFromListGET = function contractsContractIdCreatePointsFromListGET (req, res, next) {
   var contractId = req.swagger.params.contractId.value;
 
   ReporterController.contractsContractIdCreatePointsFromListGET(contractId)
@@ -124,6 +123,6 @@ module.exports.contractsContractIdCreatePointsFromListGET = function contractsCo
     });
 };
 
-module.exports.resetPOST = function resetPOST(req, res, next) {
+module.exports.resetPOST = function resetPOST (req, res, next) {
   ReporterController.resetPOST(req.swagger.params, res, next);
 };

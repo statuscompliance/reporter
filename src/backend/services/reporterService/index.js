@@ -45,67 +45,67 @@ const _metricsForOnDemandCalculation = Symbol();
 /// //////////////////////////////////////////////////////////// BEGIN CLASS ///////////////////////////////////////////////////////////////
 class Reporter {
   /// //////////////////////// BEGIN CONSTRUCTOR ///////////////////////////
-  constructor(persistence) {
+  constructor (persistence) {
     this._persistence = persistence;
   }
   /// //////////////////////// END CONSTRUCTOR ///////////////////////////
 
   /// //////////////////////// SETTERS ///////////////////////////
-  set isExecutionFinished(new_isExecutionFinished) {
+  set isExecutionFinished (new_isExecutionFinished) {
     this._isExecutionFinished = new_isExecutionFinished;
   }
 
-  set contractId(new_contractId) {
+  set contractId (new_contractId) {
     this._contractId = new_contractId;
     this._agreementURL = config.v1.agreementURL + new_contractId;
     this._guaranteesStateURL = config.v1.statesURL + new_contractId + '/guarantees' + (this._kpiParam ? '/' + this._kpiParam : '');
     this._metricsStateURL = config.v1.statesURL + new_contractId + '/metrics/';
   }
 
-  set kpiParam(new_kpiParam) {
+  set kpiParam (new_kpiParam) {
     this._kpiParam = new_kpiParam;
     this._guaranteesStateURL = config.v1.statesURL + this._contractId + '/guarantees' + (new_kpiParam ? '/' + new_kpiParam : '');
   }
   /// //////////////////////// END SETTERS ///////////////////////////
 
   /// //////////////////////// GETTERS ///////////////////////////
-  get agreementURL() {
+  get agreementURL () {
     return this._agreementURL;
   }
 
-  get kpiParam() {
+  get kpiParam () {
     return this._kpiParam;
   }
 
-  get isExecutionFinished() {
+  get isExecutionFinished () {
     return this._isExecutionFinished;
   }
 
-  get contractId() {
+  get contractId () {
     return this._contractId;
   }
 
-  get guaranteesStateURL() {
+  get guaranteesStateURL () {
     return this._guaranteesStateURL;
   }
 
-  get metricsStateURL() {
+  get metricsStateURL () {
     return this._metricsStateURL;
   }
 
-  get agreement() {
+  get agreement () {
     return this._agreement;
   }
 
-  get contractDate() {
+  get contractDate () {
     return this._contractDate;
   }
 
-  get persistence() {
+  get persistence () {
     return this._persistence;
   }
 
-  get metricsForOnDemandCalculation() {
+  get metricsForOnDemandCalculation () {
     return this._metricsForOnDemandCalculation;
   }
   /// //////////////////////// END GETTERS ///////////////////////////
@@ -118,7 +118,7 @@ class Reporter {
      * @return {Set} set of periods
      * @alias module:gUtils.getPeriods
      * */
-  static getPeriods(agreement, window) {
+  static getPeriods (agreement, window) {
     const periods = [];
     const Wfrom = moment.utc(moment.tz(window.initial, agreement.context.validity.timeZone));
     const Wto = window.end ? moment.utc(moment.tz(window.end, agreement.context.validity.timeZone)) : moment.utc();
@@ -140,16 +140,16 @@ class Reporter {
   /// //////////////////////// END AUX FUNCTIONS ///////////////////////////
 
   /// //////////////////////// MAIN FUNCTION ///////////////////////////
-  process(periods) {
+  process (periods) {
     return new Promise(async (resolve, reject) => {
       this._;
       logger.ctl('New request to get states for the agreement = %s', this._contractId);
       try {
         logger.ctl('Getting the agreements from Registry with contractId = %s', this._contractId);
-        let agreementRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/agreements/' + this._contractId).catch(err => {
+        const agreementRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/agreements/' + this._contractId).catch(err => {
           logger.error('Error while retrieving agreement: %s', error.toString().substr(0, 400));
           return reject(error.toString());
-        })
+        });
 
         this._agreement = agreementRequest.data;
         logger.ctl('The agreement has been retrieved successfully');
@@ -173,7 +173,6 @@ class Reporter {
         }).catch((error) => {
           return reject(error);
         });
-
       } catch (error) {
         logger.error('Unexpected error: ' + error.toString().substr(0, 400));
         return reject(error.toString());
@@ -183,7 +182,7 @@ class Reporter {
   /// //////////////////////// END MAIN FUNCTION ///////////////////////////
 
   /// //////////////////////// CORE FUNCTIONS ///////////////////////////
-  _calculatePeriods(period, index) {
+  _calculatePeriods (period, index) {
     return new Promise((resolve, reject) => {
       const url = this._guaranteesStateURL + '?from=' + period.from + '&to=' + period.to;
       logger.ctl('Request %d from %s', (index + 1), JSON.stringify(url, null, 2));
@@ -218,7 +217,7 @@ class Reporter {
     });
   }
 
-  _processGuaranteeStates(guaranteeStates) {
+  _processGuaranteeStates (guaranteeStates) {
     return new Promise((resolve, reject) => {
       logger.ctl('Scoped guarantees states received: %d', guaranteeStates.length);
       Promise.each(guaranteeStates, this._calculateScopedGuaranteeState.bind(this)).then((results) => {
@@ -245,7 +244,7 @@ class Reporter {
 
   // TODO: Remove. This method for recalculate point
 
-  _calculateScopedGuaranteeState(scopedGuaranteeState, index, length) {
+  _calculateScopedGuaranteeState (scopedGuaranteeState, index, length) {
     return new Promise((resolve, reject) => {
       if (!this._kpiParam || this._kpiParam === scopedGuaranteeState.id) {
         logger.ctl('Processing KPI: %d/%d', (index + 1), length);
@@ -261,7 +260,7 @@ class Reporter {
     });
   }
 
-  _calculateEvidence(evidence, index, length) {
+  _calculateEvidence (evidence, index, length) {
     return new Promise((resolve, reject) => {
       logger.ctl('Processing evidence: %d/%d', (index + 1), length);
       //  logger.warning("Guarantee to: %s", scopedGuaranteeState.period.to);
@@ -275,7 +274,7 @@ class Reporter {
   /// //////////////////////// END CORE FUNCTIONS ///////////////////////////
 
   /// //////////////////////// BEGIN OVERRIDABLE BUSINESS FUNCTIONS ///////////////////////////
-  _generateResponse(kpi, evidence) {
+  _generateResponse (kpi, evidence) {
     return new Promise((resolve, reject) => {
       return reject('This abstract Reporter cannot generate a response. Please consider using a specific implementation.');
     });
@@ -283,7 +282,7 @@ class Reporter {
   /// //////////////////////// END OVERRIDABLE BUSINESS FUNCTIONS ///////////////////////////
 
   /// //////////////////////// METRIC ON DEMAND FUNCTIONS ///////////////////////////
-  _calculateOnDemandMetric(metricId) {
+  _calculateOnDemandMetric (metricId) {
     logger.ctl('Receiving %s for this period...', metricId);
     return new Promise((resolve, reject) => {
       // TODO: now it only supports priority calculation.
@@ -298,7 +297,7 @@ class Reporter {
     });
   }
 
-  _calculateScopedOnDemandMetric(priority) {
+  _calculateScopedOnDemandMetric (priority) {
     // TODO: now it only supports priority calculation.
     logger.ctl('Receiving metric scope %s for this period...', priority);
     return new Promise(async (resolve, reject) => {
@@ -322,11 +321,11 @@ class Reporter {
 
       logger.ctl('Doing request to retrieve scoped metric to:', queryURL);
 
-      let metricsRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/states/' + this._contractId + '/metrics/' + metricId + params).catch(err => {
+      const metricsRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/states/' + this._contractId + '/metrics/' + metricId + params).catch(err => {
         logger.warning('There was an error while retrieving metric: ' + err.toString().substr(0, 400));
         return reject('There was an error while retrieving metric: ' + err.toString());
       });
-      let metricsStates = metricsRequest.data;
+      const metricsStates = metricsRequest.data;
 
       logger.ctl('All metrics %s', metricsStates);
       const metricsStatesArray = JSON.parse(metricsStates);
@@ -345,12 +344,10 @@ class Reporter {
           return resolve(results);
         });
       }
-
-
     });
   }
 
-  _generateOnDemandMetricResponse(metricState) {
+  _generateOnDemandMetricResponse (metricState) {
     return new Promise((resolve, reject) => {
       logger.error('_generateOnDemandMetricResponse NOT implemented yet.');
       return reject('_generateOnDemandMetricResponse NOT implemented yet.');

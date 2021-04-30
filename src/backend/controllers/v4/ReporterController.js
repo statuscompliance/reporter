@@ -23,7 +23,7 @@ const moment = require('moment-timezone');
 
 const InfluxDB = require('../../services/influxService').InfluxDB;
 const Reporter = require('../../services/gaussReporterService/').GaussReporter;
-const governify = require('governify-commons')
+const governify = require('governify-commons');
 const config = governify.configurator.getConfig('main');
 const JSONStream = require('JSONStream');
 const logger = require('../../logger');
@@ -145,11 +145,11 @@ exports.contractsContractIdCreateHistoryPOST = async (contractId, period) => {
   logger.info('Creating history for agreementID: ' + contractId);
   return new Promise(async (resolve, reject) => {
     logger.ctl('Getting the agreements from Registry with contractId = %s', contractId);
-    let agreementRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/agreements/' + contractId);
-    let agreement = agreementRequest.data;
+    const agreementRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/agreements/' + contractId);
+    const agreement = agreementRequest.data;
     var periods = Reporter.getPeriods(agreement, {
       initial: agreement.context.validity.initial,
-      period: period ? period : 'monthly'
+      period: period || 'monthly'
     });
 
     Promise.each(periods, function (period) {
@@ -158,7 +158,6 @@ exports.contractsContractIdCreateHistoryPOST = async (contractId, period) => {
       logger.info('Finished creating history for agreeement ' + contractId);
       resolve();
     });
-
   });
 };
 
@@ -178,8 +177,8 @@ exports.contractsContractIdCreatePointsFromListPOST = async (contractId, listDat
       statusCreatePoints[contractId] = { current: 0, total: 1 };
       try {
         logger.ctl('Getting the agreements from Registry with contractId = %s', contractId);
-        let agreementRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/agreements' + contractId);
-        let agreement = agreementRequest.data;
+        const agreementRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/agreements' + contractId);
+        const agreement = agreementRequest.data;
         var periods = listDates.map(x => { return { from: x, to: moment(x).add(1, 'second').toISOString() }; });
         Promise.each(periods, function (period) {
           statusCreatePoints[contractId] = { current: statusCreatePoints[contractId].current + 1, total: periods.length };
@@ -189,7 +188,6 @@ exports.contractsContractIdCreatePointsFromListPOST = async (contractId, listDat
           logger.info('Finished creating history for agreeement ' + contractId);
           resolve();
         });
-
       } catch (error) {
         logger.error(error);
         statusCreatePoints[contractId] = undefined;
@@ -208,8 +206,8 @@ exports.contractsContractIdUpdateGET = (contractId) => {
   return new Promise(async (resolve, reject) => {
     var urlRegistryRequest = '/api/v6/states/' + contractId + '/guarantees' + '?from=' + moment().toISOString() + '&to=' + moment().add(3, 'week').toISOString() + '&newPeriodsFromGuarantees=false';
     logger.ctl('Getting the agreements from Registry with contractId = %s', contractId);
-    let agreementRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/agreements/' + contractId);
-    let agreement = agreementRequest.data;
+    const agreementRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/agreements/' + contractId);
+    const agreement = agreementRequest.data;
     callRegistryAndStorePoints(urlRegistryRequest, agreement);
     // TODO: Add feedback about request. And create tasks for get status of requests
     resolve();
@@ -262,7 +260,7 @@ exports.resetPOST = function (args, res, next) {
 
 var timeBetweenRequests = 0;
 
-function callRegistryAndStorePoints(path, agreement) {
+function callRegistryAndStorePoints (path, agreement) {
   return new Promise((resolve, reject) => {
     setTimeout(async function () {
       logger.ctl('URLRegistry: ' + path);
@@ -270,13 +268,12 @@ function callRegistryAndStorePoints(path, agreement) {
         url: path,
         responseType: 'stream'
       }).catch(err => {
-        console.error('Error in registry state call: ', err)
+        console.error('Error in registry state call: ', err);
         reject(err);
-        return;
-      })
-      let requestStream = requestMetrics.data;
+      });
+      const requestStream = requestMetrics.data;
       requestStream.pipe(JSONStream.parse()).on('data', guaranteeStates => {
-        console.log('Receiving agreement states')
+        console.log('Receiving agreement states');
         try {
           for (var i in guaranteeStates) {
             var guaranteeResult = guaranteeStates[i];
@@ -296,10 +293,10 @@ function callRegistryAndStorePoints(path, agreement) {
             };
 
             for (const [key, value] of Object.entries(guaranteeResult.metrics)) {
-              influxPoint.fields["metric_" + key] = value;
+              influxPoint.fields['metric_' + key] = value;
             }
             for (const [key, value] of Object.entries(guaranteeResult.scope)) {
-              influxPoint.tags["scope_" + key] = value;
+              influxPoint.tags['scope_' + key] = value;
             }
 
             influxInsert([influxPoint], function () { });
@@ -313,17 +310,16 @@ function callRegistryAndStorePoints(path, agreement) {
           return addToRequestsQueue(path, agreement).then(() => { resolve(); });
         }
       }).on('error', err => {
-
         logger.error('Error while getting data from registry, retrying connection:');
         setTimeout(function () {
           return callRegistryAndStorePoints(path, agreement).then(function () { resolve(); });
         }, 1500);
 
         return res.status(500).json(err);
-      })
+      });
     }
 
-      , timeBetweenRequests);
+    , timeBetweenRequests);
   });
 }
 
@@ -331,7 +327,7 @@ var queue = [];
 var running = false;
 var timeBetweenQueueRequests = 20000;
 
-function addToRequestsQueue(urlRegistry, agreement) {
+function addToRequestsQueue (urlRegistry, agreement) {
   queue.push([urlRegistry, agreement]);
   timeBetweenRequests += 20000;
   timeBetweenRequests > 160000 ? timeBetweenRequests = 160000 : undefined;
@@ -343,7 +339,7 @@ function addToRequestsQueue(urlRegistry, agreement) {
   return Promise.resolve('Added to queue');
 }
 
-async function computeQueue() {
+async function computeQueue () {
   while (running) {
     logger.info('Queue lenght: [', queue.length, '] - Time Between requests: [', timeBetweenRequests, ']');
     if (queue.length === 0) {
@@ -388,8 +384,8 @@ exports.contractsContractIdCreatePointsFromPeriodsPOST = (contractId, periods) =
       statusCreatePoints[contractId] = { current: 0, total: 1 }; */
     try {
       logger.ctl('Getting the agreements from Registry with contractId = %s', contractId);
-      let agreementRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/agreements/' + contractId);
-      let agreement = agreementRequest.data;
+      const agreementRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/agreements/' + contractId);
+      const agreement = agreementRequest.data;
       Promise.each(periods, function (period) {
         // statusCreatePoints[contractId] = { current: statusCreatePoints[contractId].current + 1, total: periods.length }
 
@@ -399,7 +395,6 @@ exports.contractsContractIdCreatePointsFromPeriodsPOST = (contractId, periods) =
         logger.info('Finished creating event collector metrics for agreeement ' + contractId);
         resolve();
       });
-
     } catch (error) {
       logger.error(error);
       // statusCreatePoints[contractId] = undefined;

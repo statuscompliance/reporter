@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
 'use strict';
 
-const governify = require('governify-commons')
+const governify = require('governify-commons');
 const utils = require('../../../utils/index');
 const logger = require('../../../logger');
 
@@ -34,28 +34,24 @@ exports.dashboardGET = async (req, res, next) => {
   var agreementId = params.agreementId.value;
   var dashboardId = params.dashboardId.value;
   var boolGetBaseDashboard = params.base.value;
-  let agreementRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/agreements/' + agreementId);
-  let agreement = agreementRequest.data;
+  const agreementRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/agreements/' + agreementId);
+  const agreement = agreementRequest.data;
   try {
     var dashboardConfig = agreement.context.definitions.dashboards[dashboardId];
-    //Get the JSON file
+    // Get the JSON file
     var dashboardJSON = await governify.utils.loadObjectFromFileOrURL(dashboardConfig.base);
 
     if (!boolGetBaseDashboard) {
       var dashboardModifier = await governify.utils.requireFromFileOrURL(dashboardConfig.modifier, dashboardConfig.modifier);
-      //Replace all agreement variables specified in the json
+      // Replace all agreement variables specified in the json
       // TODO - This functions is not being currently used and has not been tested. Implement it as a standard for dashboards
-      dashboardJSON = utils.textReplaceReferencesFromJSON(JSON.stringify(dashboardJSON), agreement, ">>>agreement.", "<<<")
+      dashboardJSON = utils.textReplaceReferencesFromJSON(JSON.stringify(dashboardJSON), agreement, '>>>agreement.', '<<<');
       // Apply modifier functions of the dashboard
-      var dashboardJSON = dashboardModifier.modifyJSON(JSON.parse(dashboardJSON), agreement, dashboardId)
+      var dashboardJSON = dashboardModifier.modifyJSON(JSON.parse(dashboardJSON), agreement, dashboardId);
     }
     res.status(200).send(dashboardJSON);
-
   } catch (err) {
-    logger.error("Error getting dynamic dashboard. agreementId: " + agreementId + " dashboardId: " + dashboardId + " - ERROR: " + err)
+    logger.error('Error getting dynamic dashboard. agreementId: ' + agreementId + ' dashboardId: ' + dashboardId + ' - ERROR: ' + err);
     res.status(400).send(err);
   }
-
-
 };
-

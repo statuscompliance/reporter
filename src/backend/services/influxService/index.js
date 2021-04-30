@@ -38,7 +38,7 @@ const _tags = Symbol();
 /// //////////////////////////////////////////////////////////// BEGIN CLASS ///////////////////////////////////////////////////////////////
 class InfluxDB {
   /// //////////////////////// BEGIN CONSTRUCTOR ///////////////////////////
-  constructor(host, database, measurement, fields, tags) {
+  constructor (host, database, measurement, fields, tags) {
     for (var [key, value] of Object.entries(fields)) {
       if (key === 'Influx.FieldType.INTEGER') {
         fields[key] = Influx.FieldType.INTEGER;
@@ -59,59 +59,59 @@ class InfluxDB {
   /// //////////////////////// END CONSTRUCTOR ///////////////////////////
 
   /// //////////////////////// GETTERS ///////////////////////////
-  get host() {
+  get host () {
     return this._influx;
   }
 
-  get database() {
+  get database () {
     return this._database;
   }
 
-  get measurement() {
+  get measurement () {
     return this._measurement;
   }
 
-  get fields() {
+  get fields () {
     return this._fields;
   }
 
-  get tags() {
+  get tags () {
     return this._tags;
   }
 
-  get influx() {
+  get influx () {
     return this._influx;
   }
   /// //////////////////////// END GETTERS ///////////////////////////
 
   /// //////////////////////// SETTERS ///////////////////////////
-  set host(new_host) {
+  set host (new_host) {
     this._host = new_host;
   }
 
-  set database(new_database) {
+  set database (new_database) {
     this._database = new_database;
   }
 
-  set measurement(new_measurement) {
+  set measurement (new_measurement) {
     this._measurement = new_measurement;
   }
 
-  set fields(new_fields) {
+  set fields (new_fields) {
     this._fields = new_fields;
   }
 
-  set tags(new_tags) {
+  set tags (new_tags) {
     this.tags = new_tags;
   }
 
-  set influx(new_influx) {
+  set influx (new_influx) {
     this._influx = new_influx;
   }
   /// //////////////////////// END SETTERS ///////////////////////////
 
   /// //////////////////////// CORE FUNCTIONS ///////////////////////////
-  _createDb() {
+  _createDb () {
     this._influx.getDatabaseNames().then(names => {
       logger.ctl('Retrieving existing databases in InfluxDB', names);
       if (!names.includes(this.database)) {
@@ -127,7 +127,7 @@ class InfluxDB {
     });
   }
 
-  writeIdPriority(id, scopes, value, timestamp) {
+  writeIdPriority (id, scopes, value, timestamp) {
     var tags = {};
     tags.id = id;
     for (sc in scopes) {
@@ -148,7 +148,7 @@ class InfluxDB {
     });
   }
 
-  static getAgreementData(agreementId) {
+  static getAgreementData (agreementId) {
     this._influx = new Influx.InfluxDB(governify.infrastructure.getServiceURL('internal.database.influx-reporter'), influxConfig);
     return this._influx.getSeries({
       measurement: agreementId,
