@@ -30,7 +30,7 @@ const logger = require('../../logger');
 const Promise = require('bluebird');
 const objectiveUtils = require('../../utils/objective-utils');
 
-const influx = new InfluxDB(config.influx.host, config.influx.database, config.influx.measurement, config.influx.fields, config.influx.tags);
+const influx = new InfluxDB(governify.infrastructure.getServiceURL('internal.database.influx-reporter'), config.influx.database, config.influx.measurement, config.influx.fields, config.influx.tags);
 
 const reporter = new Reporter(influx);
 var statusCreatePoints = {};

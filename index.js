@@ -4,6 +4,8 @@ console.log('Deploy request received');
 
 let server = null;
 const governify = require('governify-commons');
+let logger;
+
 governify.init({
   configurations: [{
     name: 'main',
@@ -11,7 +13,7 @@ governify.init({
     default: true
   }]
 }).then(function () {
-  const logger = require('./src/backend/logger');
+  logger = require('./src/backend/logger');
   server = require('./server');
   server.deploy(null, function () {
     logger.info('Deploy successfully done');

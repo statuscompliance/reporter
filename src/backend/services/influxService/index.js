@@ -52,9 +52,8 @@ class InfluxDB {
     this._measurement = measurement;
     this._fields = fields;
     this._tags = tags;
-
     logger.ctl("Creating InfluxDB connection to '%s' in database '%s' and params %s", host, database, JSON.stringify(influxConfig, 2, null));
-    this._influx = new Influx.InfluxDB(influxConfig);
+    this._influx = new Influx.InfluxDB(governify.infrastructure.getServiceURL('internal.database.influx-reporter'), influxConfig);
     this._createDb();
   }
   /// //////////////////////// END CONSTRUCTOR ///////////////////////////
@@ -150,7 +149,7 @@ class InfluxDB {
   }
 
   static getAgreementData(agreementId) {
-    this._influx = new Influx.InfluxDB(influxConfig);
+    this._influx = new Influx.InfluxDB(governify.infrastructure.getServiceURL('internal.database.influx-reporter'), influxConfig);
     return this._influx.getSeries({
       measurement: agreementId,
       database: this._database
