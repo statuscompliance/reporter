@@ -86,18 +86,17 @@ function _convertPeriodToName (str) {
 // This function receives a text when variables can be declared with [startingDefinition].???.???[endDefinition] and replace them with the json content referenced
 // Example: textReplaceReferencesFromJSON(JSON.stringify(targetText), agreement, '>>>agreement.', "<<<"))
 // This function will replace all variables in text like >>>agreement.id<<< with the property id of the json
-function textReplaceReferencesFromJSON(targetText, json, startingDefinition, endDefinition) {
+function textReplaceReferencesFromJSON (targetText, json, startingDefinition, endDefinition) {
   var finalText = targetText;
-  //Returns an array of array with format [key, value], [key, value] 
-  //Key is the complete unparsed text >>>agreement.id<<<, and the value the parsed text (id)
-  let matches = [...targetText.matchAll(startingDefinition + '([^<]+)' + endDefinition)];                                                                  
+  // Returns an array of array with format [key, value], [key, value]
+  // Key is the complete unparsed text >>>agreement.id<<<, and the value the parsed text (id)
+  const matches = [...targetText.matchAll(startingDefinition + '([^<]+)' + endDefinition)];
   matches?.forEach((match) => {
-      //Variable replacement
-      finalText = finalText.replace(match[0], _.get(json, match[1]));
+    // Variable replacement
+    finalText = finalText.replace(match[0], _.get(json, match[1]));
   });
   return finalText;
 }
-
 
 /**
  * This method return a set of periods which are based on a window parameter.

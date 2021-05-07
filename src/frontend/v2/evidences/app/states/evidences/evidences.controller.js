@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 
     function EvidencesController(evidencesService, $rootScope, $state, $scope, $q, $http, $timeout, $stateParams) {
 
-        $rootScope.configPromise.then(function () { //Config must be loaded
+        $rootScope.publicInfrastructurePromise.then(function () { //Config must be loaded
 
 
             $scope.error = null;
@@ -257,11 +257,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
                     $scope.registeredOverrides = response;
                     $scope.registeredOverridesLength = response.length;
 
-                    var from = moment.tz($scope.query.period, "x", $scope.query.tz).add(1, "second").subtract(1, "month").toISOString();
-                    var to = moment.tz($scope.query.period, "x", $scope.query.tz).add(1, "second").subtract(1, "millisecond").toISOString();
-                    evidencesService.getBills(from, to).then((bill) => {
-                        $scope.openBill = bill.state === 'open' ? true : false;
-                    });
+                    // var from = moment.tz($scope.query.period, "x", $scope.query.tz).add(1, "second").subtract(1, "month").toISOString();
+                    // var to = moment.tz($scope.query.period, "x", $scope.query.tz).add(1, "second").subtract(1, "millisecond").toISOString();
+                    // evidencesService.getBills(from, to).then((bill) => {
+                    //     $scope.openBill = bill.state === 'open' ? true : false;
+                    // });
                 }, (err) => {
                     console.error(err);
                 });

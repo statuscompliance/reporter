@@ -28,11 +28,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
   run.$inject = ['$rootScope', '$http'];
 
   function run($rootScope, $http) {
-    
-    $rootScope.configPromise = $http.get("/api/v1/config").then((response) => {
-      $rootScope.config = response.data;
-            });
-  
+
+    $rootScope.publicInfrastructurePromise = $http.get("/publicInfrastructure").then((response) => {
+      $rootScope.publicInfrastructure = response.data;
+    });
+
   }
 
 })();

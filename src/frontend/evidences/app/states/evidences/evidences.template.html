@@ -1,7 +1,7 @@
 <div class="row">
     <h2 class="header gv-app-red-text light">Visualizador de evidencias</h2>
-    <a class="bills-button" ng-if="!loadingOverrides" href="/bills#!/?agreement={{query.agreement}}" target="_blank">Ver
-        Facturas</a>
+    <!-- <a class="bills-button" ng-if="!loadingOverrides" href="/bills#!/?agreement={{query.agreement}}" target="_blank">Ver
+        Facturas</a> -->
 
     <div class="row" ng-cloak>
         <div class="col s12 m12">
@@ -19,9 +19,9 @@
                                 <li>
                                     <strong>Garantía</strong>: {{query.indicator}}
                                 </li>
-                                <li>
+                                <!-- <li>
                                     <strong>Prioridad</strong>: {{query.priority}}
-                                </li>
+                                </li> -->
                             </ul>
                         </div>
                         <div class="col s6">
@@ -32,11 +32,11 @@
                                 <li>
                                     <strong>Mes/Año</strong>: {{query.periodFormated}}
                                 </li>
-                                <li>
+                                <!-- <li>
                                     <strong>Estado factura: </strong>
                                     <span style="color:green" ng-hide ng-if="openBill">Abierta</span>
                                     <span style="color:red" ng-hide ng-if="!openBill">Cerrada</span>
-                                </li>
+                                </li> -->
 
                             </ul>
                         </div>
@@ -103,14 +103,14 @@
                 </td> -->
                 <td style="text-align: center;">
                     <span ng-show="ev.{{typeEvidence}} == 'true'">---</span>
-                    <div title="{{!openBill ? 'La factura está cerrada' : ''}}"><button
+                    <div title="{{''}}"><button
                             ng-show="ev.{{typeEvidence}} == 'false' && (overrides.indexOf(ev.id)<0) && !checkRegisteredOverride(ev.id)"
                             ng-click="changeCurrentId(ev.id)" data-target="modal1"
-                            class="modal-trigger waves-effect waves-light btn"
-                            ng-disabled="loadingOverrides || !openBill">Falso positivo</button></div>
+                            class="modal-trigger waves-effect waves-light btn" ng-disabled="loadingOverrides">Falso
+                            positivo</button></div>
                     <span
                         ng-show="(ev.{{typeEvidence}} == 'false' && overrides.indexOf(ev.id)>=0 && !loadingOverrides) || ( ev.{{typeEvidence}} == 'false' && checkRegisteredOverride(ev.id))"
-                        class="">Marcado como falso positivo </br> <span class="remove-override" ng-if="openBill"
+                        class="">Marcado como falso positivo </br> <span class="remove-override"
                             ng-click="undoOverride(ev.id);">Eliminar</span></span>
                 </td>
                 <td style="text-align: center;">

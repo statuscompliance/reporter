@@ -31,8 +31,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
                     console.log(queryParam)
                     if (queryParam.agreement && queryParam.indicator && queryParam.type && queryParam.from) {
                         queryParam.indicator = queryParam.indicator;
-                        console.log($rootScope.config)
-                        var evidencesRegistryEndpoint = $rootScope.config.registry_endpoint + "/api/v" + $rootScope.config.registry_apiVersion + "/states/" + queryParam.agreement + "/filtered";
+                        console.log($rootScope.publicInfrastructure)
+                        var evidencesRegistryEndpoint = $rootScope.publicInfrastructure.registry.default + '/api/v6' + "/states/" + queryParam.agreement + "/filtered";
 
                         url = evidencesRegistryEndpoint + "?" +
                             "indicator=" + queryParam.indicator +
@@ -80,7 +80,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
                 return $q((resolve, reject) => {
                     var url;
 
-                    var url = $rootScope.config.registry_endpoint + "/api/v" + $rootScope.config.registry_apiVersion + "/bills/" + $stateParams.agreement + "?from=" + from + "&to=" + to;
+                    var url = $rootScope.publicInfrastructure.registry.default + '/api/v6' + "/bills/" + $stateParams.agreement + "?from=" + from + "&to=" + to;
 
                     console.log(url)
                     $http.get(url).then((response) => {
@@ -113,7 +113,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 
                 return $q((resolve, reject) => {
                     var url;
-                    var evidencesRegistryEndpoint = $rootScope.config.registry_endpoint + "/api/v" + $rootScope.config.registry_apiVersion + "/states/" + $stateParams.agreement + "/guarantees/";
+                    var evidencesRegistryEndpoint = $rootScope.publicInfrastructure.registry.default + '/api/v6' + "/states/" + $stateParams.agreement + "/guarantees/";
 
                     url = evidencesRegistryEndpoint + $stateParams.guarantee + "/overrides";
 
@@ -148,7 +148,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
             var getRegisteredOverrides = () => {
                 return $q((resolve, reject) => {
                     var url;
-                    var evidencesRegistryEndpoint = $rootScope.config.registry_endpoint + "/api/v" + $rootScope.config.registry_apiVersion + "/states/" + $stateParams.agreement + "/guarantees/";
+                    var evidencesRegistryEndpoint = $rootScope.publicInfrastructure.registry.default + '/api/v6' + "/states/" + $stateParams.agreement + "/guarantees/";
 
                     url = evidencesRegistryEndpoint + $stateParams.guarantee + "/overrides";
 
@@ -184,7 +184,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 
                 return $q((resolve, reject) => {
                     var url;
-                    var evidencesRegistryEndpoint = $rootScope.config.registry_endpoint + "/api/v" + $rootScope.config.registry_apiVersion + "/states/" + $stateParams.agreement + "/guarantees/";
+                    var evidencesRegistryEndpoint = $rootScope.publicInfrastructure.registry.default + '/api/v6' + "/states/" + $stateParams.agreement + "/guarantees/";
 
                     url = evidencesRegistryEndpoint + $stateParams.guarantee + "/overrides";
 

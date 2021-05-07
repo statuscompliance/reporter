@@ -19,98 +19,39 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
 'use strict';
 
-const InfluxDB = require('../../../services/influxService').InfluxDB;
-const config = require('../../../configurations');
-const objectiveUtils = require('../../../utils/objective-utils');
+const governify = require('governify-commons');
 const utils = require('../../../utils/index');
 const logger = require('../../../logger');
-const fs = require('fs');
-const vm = require('vm')
-const qs = require
 
 // const logger = require('../../../logger');
-var axios = require('axios');
+
 /**
  * Return dashboard JSON for grafana
  **/
 
-exports.dashboardGET = (req, res, next) => {
+exports.dashboardGET = async (req, res, next) => {
   var params = req.swagger.params;
   var agreementId = params.agreementId.value;
   var dashboardId = params.dashboardId.value;
   var boolGetBaseDashboard = params.base.value;
-  var registryAgreementURL = config.v2.agreementURL + agreementId;
+  const agreementRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/agreements/' + agreementId);
+  const agreement = agreementRequest.data;
+  try {
+    var dashboardConfig = agreement.context.definitions.dashboards[dashboardId];
+    // Get the JSON file
+    var dashboardJSON = await governify.utils.loadObjectFromFileOrURL(dashboardConfig.base);
 
-
-  function errorGettingAgreement(error) {
-    logger.error("Error getting agreement to generate a Dashboard. agreementId: " + agreementId + " dashboardId: " + dashboardId + " - ERROR: " + error)
-    res.status(400).send(error);
-  }
-
-  function errorGettingFile(error) {
-    logger.error("Error getting File to generate a Dashboard. agreementId: " + agreementId + " dashboardId: " + dashboardId + " - ERROR: " + error)
-    res.status(400).send(error);
-  }
-
-  async function getFile(URL) {
-    var file = '';
-    if (URL.startsWith('https://') || URL.startsWith('http://')) {
-      await axios({
-        url: URL,
-        method: 'GET',
-        json: false,
-        headers: { 'User-Agent': 'request' }
-      }).then(response => {
-        file = response.data;
-
-      }).catch(errorGettingFile)
-
-    } else {
-      file = JSON.parse(fs.readFileSync('./src/backend/dashboards/' + URL));
+    if (!boolGetBaseDashboard) {
+      var dashboardModifier = await governify.utils.requireFromFileOrURL(dashboardConfig.modifier, dashboardConfig.modifier);
+      // Replace all agreement variables specified in the json
+      // TODO - This functions is not being currently used and has not been tested. Implement it as a standard for dashboards
+      dashboardJSON = utils.textReplaceReferencesFromJSON(JSON.stringify(dashboardJSON), agreement, '>>>agreement.', '<<<');
+      // Apply modifier functions of the dashboard
+      var dashboardJSON = dashboardModifier.modifyJSON(JSON.parse(dashboardJSON), agreement, dashboardId);
     }
-    return file;
+    res.status(200).send(dashboardJSON);
+  } catch (err) {
+    logger.error('Error getting dynamic dashboard. agreementId: ' + agreementId + ' dashboardId: ' + dashboardId + ' - ERROR: ' + err);
+    res.status(400).send(err);
   }
-
-
-  function requireFromString(src, filename) {
-    var Module = module.constructor;
-    var m = new Module();
-    m._compile(src, filename);
-    return m.exports;
-  }
-
-
-  async function agreementReceived(response) {
-    try {
-      var agreement = response.data;
-      var dashboardConfig = agreement.context.definitions.dashboards[dashboardId];
-      //Get the JSON file
-      var dashboardJSON = await getFile(dashboardConfig.base);
-
-
-      if (!boolGetBaseDashboard) {
-        var dashboardModifier = requireFromString(await getFile(dashboardConfig.modifier), dashboardConfig.modifier);
-        //Replace all agreement variables specified in the json
-        dashboardJSON = utils.textReplaceReferencesFromJSON(JSON.stringify(dashboardJSON), agreement, ">>>agreement.", "<<<")
-        // Apply modifier functions of the dashboard
-        var dashboardJSON = dashboardModifier.modifyJSON(JSON.parse(dashboardJSON), agreement, dashboardId)
-      }
-      res.status(200).send(dashboardJSON);
-
-    } catch (err) {
-      logger.error("Error getting dynamic dashboard. agreementId: " + agreementId + " dashboardId: " + dashboardId + " - ERROR: " + err)
-      res.status(400).send(err);
-    }
-
-  }
-
-  //Get the agreement and generate
-  axios({
-    url: registryAgreementURL,
-    method: 'GET',
-    json: true,
-    headers: { 'User-Agent': 'request' }
-  }).then(agreementReceived).catch(errorGettingAgreement)
-
 };
-

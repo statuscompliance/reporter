@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 const jsyaml = require('js-yaml');
 const fs = require('fs');
 const path = require('path');
-const mustache = require("mustache");
+const mustache = require('mustache');
 
 /*
  * Export functions and Objects
@@ -40,12 +40,12 @@ module.exports = config;
 /*
  * Implement the functions
  */
-function _addConfiguration(uri, encoding) {
+function _addConfiguration (uri, encoding) {
   var configStringTemplate = null;
   var configString = null;
 
   if (!uri) {
-    throw new Error("Parameter URI is required");
+    throw new Error('Parameter URI is required');
   } else {
     configStringTemplate = fs.readFileSync(path.join(__dirname, uri), encoding);
   }

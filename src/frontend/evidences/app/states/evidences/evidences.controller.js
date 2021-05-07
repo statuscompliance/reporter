@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 
     function EvidencesController(evidencesService, $rootScope, $state, $scope, $q, $http, $timeout, $stateParams) {
 
-        $rootScope.configPromise.then(function () { //Config must be loaded
+        $rootScope.publicInfrastructurePromise.then(function () { //Config must be loaded
 
 
             $scope.error = null;
@@ -116,8 +116,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
                 $scope.loadingOverrides = true;
                 $scope.calculated = false;
 
-                var from = moment.tz($scope.query.period, "x", $scope.query.tz).toISOString();
-                var to = moment.tz($scope.query.period, "x", $scope.query.tz).endOf('month').toISOString();
+
+                var from = moment.tz($scope.query.period, 'x', $scope.query.tz).toISOString();
+                var to = moment.tz($scope.query.period, 'x', $scope.query.tz).add(1, "month").subtract(1, "millisecond").toISOString();
 
                 var typeEvidence = $scope.typeEvidence;
                 var data = {
@@ -158,8 +159,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
                     $scope.loadingOverrides = true;
                     $scope.calculated = false;
 
-                    var from = moment.tz($scope.query.period, "x", $scope.query.tz).toISOString();
-                    var to = moment.tz($scope.query.period, "x", $scope.query.tz).endOf('month').toISOString();
+                    var from = moment.tz($scope.query.period, 'x', $scope.query.tz).toISOString();
+                    var to = moment.tz($scope.query.period, 'x', $scope.query.tz).add(1, "month").subtract(1, "millisecond").toISOString();
 
                     var data = {
                         scope: {},
@@ -189,8 +190,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
             }
 
             $scope.checkRegisteredOverride = (id) => {
-                var from = moment.tz($scope.query.period, "x", $scope.query.tz).toISOString();
-                var to = moment.tz($scope.query.period, "x", $scope.query.tz).endOf('month').toISOString();
+                var from = moment.tz($scope.query.period, 'x', $scope.query.tz).toISOString();
+                var to = moment.tz($scope.query.period, 'x', $scope.query.tz).add(1, "month").subtract(1, "millisecond").toISOString();
 
                 var data = {
                     scope: {},
@@ -235,11 +236,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
                     $scope.registeredOverrides = response;
                     $scope.registeredOverridesLength = response.length;
 
-                    var from = moment.tz($scope.query.period, "x", $scope.query.tz).toISOString();
-                    var to = moment.tz($scope.query.period, "x", $scope.query.tz).endOf('month').toISOString();
-                    evidencesService.getBills(from, to).then((bill) => {
-                        $scope.openBill = bill.state === 'open' ? true : false;
-                    });
+                    // var from = moment.tz($scope.query.period, "x", $scope.query.tz).toISOString();
+                    // var to = moment.tz($scope.query.period, "x", $scope.query.tz).endOf('month').toISOString();
+                    // evidencesService.getBills(from, to).then((bill) => {
+                    //     $scope.openBill = bill.state === 'open' ? true : false;
+                    // });
                 }, (err) => {
                     console.error(err);
                 });
