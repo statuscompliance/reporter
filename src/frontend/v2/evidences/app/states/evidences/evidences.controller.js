@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 
     function EvidencesController(evidencesService, $rootScope, $state, $scope, $q, $http, $timeout, $stateParams) {
 
-        $rootScope.configPromise.then(function () { //Config must be loaded
+        $rootScope.publicInfrastructurePromise.then(function () { //Config must be loaded
 
 
             $scope.error = null;

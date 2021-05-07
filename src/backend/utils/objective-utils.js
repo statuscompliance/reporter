@@ -3,7 +3,7 @@ var operators = ['==', '>=', '<=', '>', '<'];
 
 // This function return the values that grafana dashboard needs to represent the data
 module.exports.graphThresholds = graphThresholds;
-function graphThresholds(threshold, operation) {
+function graphThresholds (threshold, operation) {
   var configResult = {};
   threshold = parseInt(threshold.trim());
   if (operation === '==') {
@@ -36,7 +36,7 @@ function graphThresholds(threshold, operation) {
 
 // This function returns a object with the value result, the threshold, if is fullfilled or not, and the operation used
 module.exports.calculateObjective = calculateObjective;
-function calculateObjective(objective, values) {
+function calculateObjective (objective, values) {
   var op = calculateOperator(objective);
   var objectiveLeft = objective.split(op)[0];
   var limit = objective.split(op)[1];
@@ -61,7 +61,7 @@ function calculateObjective(objective, values) {
 }
 
 module.exports.calculateOperator = calculateOperator;
-function calculateOperator(objective) {
+function calculateOperator (objective) {
   var result = {};
   for (const op of operators) {
     if (objective.split(op).length > 1) {

@@ -1,11 +1,23 @@
 'use strict';
 
-const server = require('./src/backend/index');
-const logger = require('./src/backend/logger');
+console.log('Deploy request received');
 
-logger.info('Deploy request received');
-server.deploy(null, function () {
-  logger.info('Deploy successfully done');
+let server = null;
+const governify = require('governify-commons');
+let logger;
+
+governify.init({
+  configurations: [{
+    name: 'main',
+    location: './configurations/main.' + (process.env.NODE_ENV || 'development') + '.yaml',
+    default: true
+  }]
+}).then(function (commonsMiddleware) {
+  logger = require('./src/backend/logger');
+  server = require('./server');
+  server.deploy(null, commonsMiddleware, function () {
+    logger.info('Deploy successfully done');
+  });
 });
 
 // quit on ctrl-c when running docker in terminal

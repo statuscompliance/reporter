@@ -51,13 +51,13 @@ const fs = require('fs');
 const path = require('path');
 
 // Self dependencies
-const logger = require('./logger');
-const swaggerUtils = require('./utils').swagger;
+const logger = require('./src/backend/logger');
+const swaggerUtils = require('./src/backend/utils').swagger;
 
 const server = null;
 const app = express();
 
-const frontendPath = path.join(__dirname, '../frontend');
+const frontendPath = path.join(__dirname, './src/frontend');
 const serverPort = process.env.PORT || config.server.port;
 const CURRENT_API_VERSION = 'v4';
 
@@ -116,6 +116,10 @@ app.use('/api/latest/api-docs', function (req, res) {
   res.redirect('/api/' + CURRENT_API_VERSION + '/api-docs');
 });
 
+app.use('/publicInfrastructure', function (req, res) {
+  res.json(governify.infrastructure.getServices().external);
+});
+
 module.exports = {
   deploy: _deploy,
   undeploy: _undeploy
@@ -127,7 +131,7 @@ module.exports = {
  * @param {function} callback callback function
  * @alias module:registry.deploy
  * */
-function _deploy (configurations, callback) {
+function _deploy (configurations, commonsMiddleware, callback) {
   if (configurations && configurations.loggerLevel) {
     logger.transports.console.level = configurations.loggerLevel;
   }
@@ -145,8 +149,9 @@ function _deploy (configurations, callback) {
   var swaggerDocs = [
     swaggerUtils.getSwaggerDoc(4)
   ];
-  // initialize swagger middleware for each swagger documents.
+    // initialize swagger middleware for each swagger documents.
   swaggerUtils.initializeMiddleware(app, swaggerDocs, function () {
+    app.use('/commons', commonsMiddleware);
     if (config.server.listenOnHttps) {
       https.createServer({
         key: fs.readFileSync('certs/privkey.pem'),
@@ -175,10 +180,10 @@ function _deploy (configurations, callback) {
  * */
 function _undeploy (callback) {
   /* db.close(function () {
-    server.close(function () {
-      logger.info('Server has been closed');
-      callback();
-    });
-  }); */
+      server.close(function () {
+        logger.info('Server has been closed');
+        callback();
+      });
+    }); */
   callback();
 }

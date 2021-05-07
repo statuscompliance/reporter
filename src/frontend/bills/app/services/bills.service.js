@@ -28,8 +28,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
                 return $q((resolve, reject) => {
                     var url;
                     if ($stateParams.agreement) {
-                        var url = $rootScope.config.registry_endpoint + "/api/v" + $rootScope.config.registry_apiVersion + "/bills/" + $stateParams.agreement;
-                        
+                        var url = $rootScope.publicInfrastructure.registry.default + '/api/v6' + "/bills/" + $stateParams.agreement;
+
                         console.log(url);
 
                         $http.get(url).then((response) => {
@@ -67,20 +67,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
             var updateBills = (data) => {
 
                 return $q((resolve, reject) => {
-                    var url = $rootScope.config.registry_endpoint + "/api/v" + $rootScope.config.registry_apiVersion + "/bills/" + $stateParams.agreement + "/" + data.billId;
+                    var url = $rootScope.publicInfrastructure.registry.default + '/api/v6' + "/bills/" + $stateParams.agreement + "/" + data.billId;
 
 
-                    console.log("Put bill: " +url);
+                    console.log("Put bill: " + url);
                     console.log(data)
 
-                    $http.put(url,data).then((response) => {
+                    $http.put(url, data).then((response) => {
                         try {
-                            if(response.status != 200){
+                            if (response.status != 200) {
                                 return reject({
                                     status: 500,
                                     message: 'Put bills failed'
                                 });
-                            }else{
+                            } else {
                                 return resolve(data);
                             }
                         } catch (err) {
@@ -90,7 +90,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
                             });
                         }
                     }, (response) => {
-                        if(response.status == 403){
+                        if (response.status == 403) {
                             alert("La factura no puede editarse porque está cerrada.")
                         }
                         return reject({
@@ -99,14 +99,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
                         });
                     });
 
-            });
-        }
+                });
+            }
 
-        return {
-            updateBills: updateBills,
-            getBills: getBills
-        };
-           
+            return {
+                updateBills: updateBills,
+                getBills: getBills
+            };
+
 
         });
 
