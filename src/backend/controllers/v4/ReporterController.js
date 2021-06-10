@@ -25,8 +25,8 @@ const InfluxDB = require('../../services/influxService').InfluxDB;
 const Reporter = require('../../services/gaussReporterService/').GaussReporter;
 const governify = require('governify-commons');
 const config = governify.configurator.getConfig('main');
+const logger = governify.getLogger().tag('v4-reporter-controller');
 const JSONStream = require('JSONStream');
-const logger = require('../../logger');
 const Promise = require('bluebird');
 const objectiveUtils = require('../../utils/objective-utils');
 
@@ -144,7 +144,7 @@ exports.contractsContractIdCreatePointsFromListGET = (contractId) => {
 exports.contractsContractIdCreateHistoryPOST = async (contractId, period) => {
   logger.info('Creating history for agreementID: ' + contractId);
   return new Promise(async (resolve, reject) => {
-    logger.ctl('Getting the agreements from Registry with contractId = %s', contractId);
+    logger.info('Getting the agreements from Registry with contractId = %s', contractId);
     const agreementRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/agreements/' + contractId);
     const agreement = agreementRequest.data;
     var periods = Reporter.getPeriods(agreement, {
@@ -176,7 +176,7 @@ exports.contractsContractIdCreatePointsFromListPOST = async (contractId, listDat
     } else {
       statusCreatePoints[contractId] = { current: 0, total: 1 };
       try {
-        logger.ctl('Getting the agreements from Registry with contractId = %s', contractId);
+        logger.info('Getting the agreements from Registry with contractId = %s', contractId);
         const agreementRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/agreements' + contractId);
         const agreement = agreementRequest.data;
         var periods = listDates.map(x => { return { from: x, to: moment(x).add(1, 'second').toISOString() }; });
@@ -205,7 +205,7 @@ exports.contractsContractIdCreatePointsFromListPOST = async (contractId, listDat
 exports.contractsContractIdUpdateGET = (contractId) => {
   return new Promise(async (resolve, reject) => {
     var urlRegistryRequest = '/api/v6/states/' + contractId + '/guarantees' + '?from=' + moment().toISOString() + '&to=' + moment().add(3, 'week').toISOString() + '&newPeriodsFromGuarantees=false';
-    logger.ctl('Getting the agreements from Registry with contractId = %s', contractId);
+    logger.info('Getting the agreements from Registry with contractId = %s', contractId);
     const agreementRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/agreements/' + contractId);
     const agreement = agreementRequest.data;
     callRegistryAndStorePoints(urlRegistryRequest, agreement);
@@ -216,7 +216,7 @@ exports.contractsContractIdUpdateGET = (contractId) => {
 
 exports.resetPOST = function (args, res, next) {
   try {
-    logger.ctl('Trying to reset Reporter and  Influx database!');
+    logger.info('Trying to reset Reporter and  Influx database!');
     var agreementId = args.contractId.value;
 
     // Delete influx db for the agreement
@@ -235,14 +235,14 @@ exports.resetPOST = function (args, res, next) {
 
     // Create database if it does not exist yet.
     influx.influx.getDatabaseNames().then(names => {
-      logger.ctl('DBs in influxdb', names);
+      logger.info('DBs in influxdb', names);
       if (!names.includes(config.influx.database)) {
         return influx.createDatabase(config.influx.database);
       }
     }).then(() => {
-      logger.ctl('InfluxDb: DB created');
+      logger.info('InfluxDb: DB created');
     }).catch(err => {
-      logger.ctl('Error creating Influx database!');
+      logger.info('Error creating Influx database!');
     });
 
     res.status(200).json({
@@ -263,7 +263,7 @@ var timeBetweenRequests = 0;
 function callRegistryAndStorePoints (path, agreement) {
   return new Promise((resolve, reject) => {
     setTimeout(async function () {
-      logger.ctl('URLRegistry: ' + path);
+      logger.info('URLRegistry: ' + path);
       var requestMetrics = await governify.infrastructure.getService('internal.registry').request({
         url: path,
         responseType: 'stream'
@@ -273,7 +273,7 @@ function callRegistryAndStorePoints (path, agreement) {
       });
       const requestStream = requestMetrics.data;
       requestStream.pipe(JSONStream.parse()).on('data', guaranteeStates => {
-        console.log('Receiving agreement states');
+        logger.info('Receiving agreement states');
         try {
           for (var i in guaranteeStates) {
             var guaranteeResult = guaranteeStates[i];
@@ -363,7 +363,7 @@ var influxInsert = (elements, callback) => {
     maxRetries: 50,
     requestTimeout: 600000
   }).then(callback).catch((err, data) => {
-    logger.ctl('Error Writing in db ', err);
+    logger.info('Error Writing in db ', err);
   });
 };
 
@@ -383,7 +383,7 @@ exports.contractsContractIdCreatePointsFromPeriodsPOST = (contractId, periods) =
     else {
       statusCreatePoints[contractId] = { current: 0, total: 1 }; */
     try {
-      logger.ctl('Getting the agreements from Registry with contractId = %s', contractId);
+      logger.info('Getting the agreements from Registry with contractId = %s', contractId);
       const agreementRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/agreements/' + contractId);
       const agreement = agreementRequest.data;
       Promise.each(periods, function (period) {

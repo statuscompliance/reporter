@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 'use strict';
 
 const Reporter = require('../../services/reporterService').Reporter;
-const logger = require('../../logger');
+const logger = require('governify-commons').getLogger().tag('service-gauss-reporter-index');
 
 /// //////////////////////////////////////////////////////////// BEGIN CLASS ///////////////////////////////////////////////////////////////
 class GaussReporter extends Reporter {

@@ -28,7 +28,7 @@ const stream = require('stream');
 
 /// //////////////////////// INT DEPENDENCIES ///////////////////////////
 const config = governify.configurator.getConfig('main');
-const logger = require('../../logger');
+const logger = governify.getLogger().tag('service-reporter-index');
 const utils = require('../../utils');
 
 /// //////////////////////// PRIVATE ATTRIBUTES ///////////////////////////
@@ -143,20 +143,20 @@ class Reporter {
   process (periods) {
     return new Promise(async (resolve, reject) => {
       this._;
-      logger.ctl('New request to get states for the agreement = %s', this._contractId);
+      logger.info('New request to get states for the agreement = %s', this._contractId);
       try {
-        logger.ctl('Getting the agreements from Registry with contractId = %s', this._contractId);
+        logger.info('Getting the agreements from Registry with contractId = %s', this._contractId);
         const agreementRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/agreements/' + this._contractId).catch(err => {
           logger.error('Error while retrieving agreement: %s', error.toString().substr(0, 400));
           return reject(error.toString());
         });
 
         this._agreement = agreementRequest.data;
-        logger.ctl('The agreement has been retrieved successfully');
+        logger.info('The agreement has been retrieved successfully');
         this._contractDate = this._agreement.context.validity.initial;
-        logger.ctl('Setting agreement and initial date: %s', this._contractDate);
+        logger.info('Setting agreement and initial date: %s', this._contractDate);
 
-        logger.ctl('Retrieving info from: %s', this._guaranteesStateURL);
+        logger.info('Retrieving info from: %s', this._guaranteesStateURL);
 
         // periods = ""; //TEMPORAL FIX
         if (!periods || periods == null || periods == '') {
@@ -165,10 +165,10 @@ class Reporter {
           });
         }
 
-        logger.ctl('Periods for requests %s', JSON.stringify(periods, null, 2));
+        logger.info('Periods for requests %s', JSON.stringify(periods, null, 2));
 
         Promise.each(periods, this._calculatePeriods.bind(this)).then((results) => {
-          logger.ctl('All the periods have been processed (results length: %d)', results.length);
+          logger.info('All the periods have been processed (results length: %d)', results.length);
           return resolve(results);
         }).catch((error) => {
           return reject(error);
@@ -185,7 +185,7 @@ class Reporter {
   _calculatePeriods (period, index) {
     return new Promise((resolve, reject) => {
       const url = this._guaranteesStateURL + '?from=' + period.from + '&to=' + period.to;
-      logger.ctl('Request %d from %s', (index + 1), JSON.stringify(url, null, 2));
+      logger.info('Request %d from %s', (index + 1), JSON.stringify(url, null, 2));
       const requestStream = request.get(url);
 
       requestStream.on('response', (response) => {
@@ -193,10 +193,10 @@ class Reporter {
           logger.error('Error while retrieving information from the period (%s,%s): %s', period.from, period.to, response.message);
           return reject(response.message);
         } else {
-          logger.ctl('Connection with Registry successfully established');
+          logger.info('Connection with Registry successfully established');
           const kpis = [];
 
-          logger.ctl('Receiving scoped guarantees information...');
+          logger.info('Receiving scoped guarantees information...');
 
           requestStream.pipe(JSONStream.parse()).on('error', (error) => {
             logger.error('Error while retrieving scoped guarantees information: %s', error);
@@ -219,24 +219,24 @@ class Reporter {
 
   _processGuaranteeStates (guaranteeStates) {
     return new Promise((resolve, reject) => {
-      logger.ctl('Scoped guarantees states received: %d', guaranteeStates.length);
+      logger.info('Scoped guarantees states received: %d', guaranteeStates.length);
       Promise.each(guaranteeStates, this._calculateScopedGuaranteeState.bind(this)).then((results) => {
-        logger.ctl('All the scoped guarantees states for the period been processed: %d', results.length);
+        logger.info('All the scoped guarantees states for the period been processed: %d', results.length);
         return resolve(results);
 
         if (false && this._metricsForOnDemandCalculation) { // FIXME: this feature should be modelled and defined in depth. Currently not supported
-          logger.ctl('Receiving metrics information for on-demand calculation for this period...');
+          logger.info('Receiving metrics information for on-demand calculation for this period...');
           Promise.each(this._metricsForOnDemandCalculation.names, this._calculateOnDemandMetric.bind(this)).then((metricsValues) => {
-            logger.ctl('All the metrics for on-demand calculation for the period have been processed: %d', metricsValues.length);
-            logger.ctl('Calculated metrics: ', metricsValues);
+            logger.info('All the metrics for on-demand calculation for the period have been processed: %d', metricsValues.length);
+            logger.info('Calculated metrics: ', metricsValues);
             return resolve(metricsValues);
           }, (error) => {
-            logger.warning('Error while retrieving metrics information for on-demand calculation for the period : %s', JSON.stringify(error, 2));
+            logger.warn('Error while retrieving metrics information for on-demand calculation for the period : %s', JSON.stringify(error, 2));
             return reject(error);
           });
         }
       }, (error) => {
-        logger.warning('Error while retrieving scoped guarantees states for the period: %s', JSON.stringify(error, 2));
+        logger.warn('Error while retrieving scoped guarantees states for the period: %s', JSON.stringify(error, 2));
         return reject(error);
       });
     });
@@ -247,13 +247,13 @@ class Reporter {
   _calculateScopedGuaranteeState (scopedGuaranteeState, index, length) {
     return new Promise((resolve, reject) => {
       if (!this._kpiParam || this._kpiParam === scopedGuaranteeState.id) {
-        logger.ctl('Processing KPI: %d/%d', (index + 1), length);
+        logger.info('Processing KPI: %d/%d', (index + 1), length);
         if (scopedGuaranteeState.evidences) {
           Promise.each(scopedGuaranteeState.evidences, this._calculateEvidence.bind(this)).then((results) => {
             return resolve(results);
           });
         } else {
-          logger.warning('There are no evidences for the KPI: %s', JSON.stringify(scopedGuaranteeState.id, null, 2));
+          logger.warn('There are no evidences for the KPI: %s', JSON.stringify(scopedGuaranteeState.id, null, 2));
           return resolve();
         }
       }
@@ -262,9 +262,9 @@ class Reporter {
 
   _calculateEvidence (evidence, index, length) {
     return new Promise((resolve, reject) => {
-      logger.ctl('Processing evidence: %d/%d', (index + 1), length);
-      //  logger.warning("Guarantee to: %s", scopedGuaranteeState.period.to);
-      logger.warning('Limit TO: %s', moment.tz(this._agreement.context.validity.end, this._agreement.context.validity.timeZone).subtract(1, 'milliseconds').toISOString());
+      logger.info('Processing evidence: %d/%d', (index + 1), length);
+      //  logger.warn("Guarantee to: %s", scopedGuaranteeState.period.to);
+      logger.warn('Limit TO: %s', moment.tz(this._agreement.context.validity.end, this._agreement.context.validity.timeZone).subtract(1, 'milliseconds').toISOString());
 
       this._generateResponse(this._agreement, this._month, this._contractDate, this._scopedGuaranteeState, evidence).then((elementProcessed) => {
         return resolve(elementProcessed);
@@ -283,15 +283,15 @@ class Reporter {
 
   /// //////////////////////// METRIC ON DEMAND FUNCTIONS ///////////////////////////
   _calculateOnDemandMetric (metricId) {
-    logger.ctl('Receiving %s for this period...', metricId);
+    logger.info('Receiving %s for this period...', metricId);
     return new Promise((resolve, reject) => {
       // TODO: now it only supports priority calculation.
       Promise.each(this._metricsForOnDemandCalculation.scope.priorities, this._calculateScopedOnDemandMetric.bind(this)).then((scopedMetricValues) => {
-        logger.ctl('All the scoped metrics for on-demand calculation for the period %s have been processed: %d', JSON.stringify(period), scopedMetricValues.length);
-        logger.ctl('Calculated scoped metrics: %s', scopedMetricValues);
+        logger.info('All the scoped metrics for on-demand calculation for the period %s have been processed: %d', JSON.stringify(period), scopedMetricValues.length);
+        logger.info('Calculated scoped metrics: %s', scopedMetricValues);
         return resolve(scopedMetricValues);
       }, (error) => {
-        logger.warning('Error while retrieving scoped metrics information for on-demand calculation for metric %s', metricId, JSON.stringify(error, 2));
+        logger.warn('Error while retrieving scoped metrics information for on-demand calculation for metric %s', metricId, JSON.stringify(error, 2));
         return reject(error);
       });
     });
@@ -299,9 +299,9 @@ class Reporter {
 
   _calculateScopedOnDemandMetric (priority) {
     // TODO: now it only supports priority calculation.
-    logger.ctl('Receiving metric scope %s for this period...', priority);
+    logger.info('Receiving metric scope %s for this period...', priority);
     return new Promise(async (resolve, reject) => {
-      logger.ctl('Getting scoped metric %s ', url);
+      logger.info('Getting scoped metric %s ', url);
 
       // FIXME
       const params = '?' +
@@ -319,28 +319,28 @@ class Reporter {
 
       const queryURL = (metricsStateURL + metricId + params).replace('//,/');
 
-      logger.ctl('Doing request to retrieve scoped metric to:', queryURL);
+      logger.info('Doing request to retrieve scoped metric to:', queryURL);
 
       const metricsRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/states/' + this._contractId + '/metrics/' + metricId + params).catch(err => {
-        logger.warning('There was an error while retrieving metric: ' + err.toString().substr(0, 400));
+        logger.warn('There was an error while retrieving metric: ' + err.toString().substr(0, 400));
         return reject('There was an error while retrieving metric: ' + err.toString());
       });
       const metricsStates = metricsRequest.data;
 
-      logger.ctl('All metrics %s', metricsStates);
+      logger.info('All metrics %s', metricsStates);
       const metricsStatesArray = JSON.parse(metricsStates);
-      logger.ctl('Metrics length %d type of %s', metricsStatesArray.length, typeof metricsStatesArray);
+      logger.info('Metrics length %d type of %s', metricsStatesArray.length, typeof metricsStatesArray);
       if (metricsStatesArray && Array.isArray(metricsStatesArray)) {
-        logger.ctl('Processing metric response');
+        logger.info('Processing metric response');
         Promise.each(metricsStatesArray, (metricState, index, length) => {
           return new Promise((resolve, reject) => {
-            logger.ctl('Processing metric: %d/%d', (index + 1), length);
+            logger.info('Processing metric: %d/%d', (index + 1), length);
             this._generateOnDemandMetricResponse(metricState).then((elementProcessed) => {
               return resolve(elementProcessed);
             });
           });
         }).then((results) => {
-          logger.ctl('Finished metric calculation %s, with scope: %s', metricId, priority);
+          logger.info('Finished metric calculation %s, with scope: %s', metricId, priority);
           return resolve(results);
         });
       }

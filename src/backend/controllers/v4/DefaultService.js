@@ -27,7 +27,7 @@ const Influx = require('influx');
 const moment = require('moment-timezone');
 const governify = require('governify-commons');
 const config = governify.configurator.getConfig('main');
-const logger = require('../../logger');
+const logger = governify.getLogger().tag('v4-default-service');
 const utils = require('../../utils');
 
 const currentlyUpdating = [];
@@ -112,7 +112,7 @@ exports.stopPOST = function (args, res, next) {
         message: 'Reporter execution has been stopped'
       });
     } else {
-      logger.looper('Reporter execution is already stopped for agreement ' + agreementId);
+      logger.warn('Reporter execution is already stopped for agreement ' + agreementId);
       res.status(200).json({
         code: 200,
         message: 'Reporter execution is already stopped'
@@ -135,7 +135,7 @@ exports.stopPOST = function (args, res, next) {
  */
 exports.resetPOST = function (args, res, next) {
   try {
-    logger.ctl('Trying to reset Reporter and  Influx database!');
+    logger.info('Trying to reset Reporter and  Influx database!');
     var agreementId = args.contractId.value;
 
     if (agreementId && (agreementId in loopParams.agreements)) {
@@ -160,15 +160,15 @@ exports.resetPOST = function (args, res, next) {
 
     // Create database if it does not exist yet.
     influx.getDatabaseNames().then(names => {
-      logger.ctl('DBs in influxdb', names);
+      logger.info('DBs in influxdb', names);
       if (!names.includes(config.influx.database)) {
         return influx.createDatabase(config.influx.database);
       }
     }).then(() => {
-      logger.ctl('InfluxDb: DB created');
+      logger.info('InfluxDb: DB created');
     }).catch(err => {
       logger.error(err);
-      logger.ctl('Error creating Influx database!');
+      logger.info('Error creating Influx database!');
     });
 
     res.status(200).json({
@@ -302,10 +302,10 @@ async function process (res, type, agreementId, month, format, kpiParam, service
 
   var metricsStateURL = config.v1.statesURL + agreementId + '/metrics/';
 
-  logger.ctl('New request to get ' + type + ' data for agreement = ' + agreementId);
+  logger.info('New request to get ' + type + ' data for agreement = ' + agreementId);
 
   try {
-    logger.ctl('Getting agreements from agreements-registry with contractId = ' + agreementId);
+    logger.info('Getting agreements from agreements-registry with contractId = ' + agreementId);
 
     const agreementRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/agreements' + contractId).catch(err => {
       logger.error('Error while retrieving agreement: ' + err.toString().substr(0, 400));
@@ -316,10 +316,10 @@ async function process (res, type, agreementId, month, format, kpiParam, service
     });
     let agreement = agreementRequest.data;
 
-    logger.ctl('OK agreement has been retrieved');
+    logger.info('OK agreement has been retrieved');
     agreement = response;
 
-    logger.ctlState('### Streaming mode ###');
+    logger.info('### Streaming mode ###');
     var streamingResult = new stream.Readable({
       objectMode: true
     });
@@ -362,14 +362,14 @@ async function process (res, type, agreementId, month, format, kpiParam, service
       }
     });
 
-    logger.ctl('Periods for requests %s', JSON.stringify(periods, null, 2));
+    logger.info('Periods for requests %s', JSON.stringify(periods, null, 2));
 
     var pendingPeriods = periods.slice(0);
 
     Promise.each(periods, (period, index) => {
       return new Promise((resolve, reject) => {
         if (!loopParams.isStopped(agreementId) || override) {
-          logger.ctl((index + 1) + ' Requests ' + type + ' from: %s', JSON.stringify(url, null, 2));
+          logger.info((index + 1) + ' Requests ' + type + ' from: %s', JSON.stringify(url, null, 2));
 
           // createSocketFunctions(url, period, agreement, agreementURL, guaranteesStateURL, metricsStateURL, resolve, reject);
 
@@ -388,15 +388,15 @@ async function process (res, type, agreementId, month, format, kpiParam, service
                 message: response
               });
             } else {
-              logger.ctl('Connection with Registry established');
+              logger.info('Connection with Registry established');
               var contractDate = moment.utc();
-              logger.ctl('Receiving guarantees information...');
+              logger.info('Receiving guarantees information...');
               var dataReceivedCheck = false;
               requestStream
                 .pipe(JSONStream.parse())
                 .on('data', guaranteeStates => {
                   dataReceivedCheck = true;
-                  logger.ctl(
+                  logger.info(
                     '(Scoped) Guarantees States received: ' + guaranteeStates.length
                   );
                   // Remove period already calculated from pending periods, and restart retry counter.
@@ -419,7 +419,7 @@ async function process (res, type, agreementId, month, format, kpiParam, service
                             serviceLine === scopedGuaranteeState.scope.serviceLine) &&
                           (!activity || activity === scopedGuaranteeState.scope.activity)
                         ) {
-                          logger.ctl('Processing KPI: ' + (index + 1) + '/' + length);
+                          logger.info('Processing KPI: ' + (index + 1) + '/' + length);
 
                           if (
                             scopedGuaranteeState.evidences &&
@@ -431,10 +431,10 @@ async function process (res, type, agreementId, month, format, kpiParam, service
                               length
                             ) {
                               return new Promise(function (resolve, reject) {
-                                logger.warning(
+                                logger.warn(
                                   'guarantee to: ' + scopedGuaranteeState.period.to
                                 );
-                                logger.warning(
+                                logger.warn(
                                   'Limit TO: ' +
                                   moment
                                     .tz(
@@ -495,7 +495,7 @@ async function process (res, type, agreementId, month, format, kpiParam, service
                               return resolve();
                             });
                           } else {
-                            logger.warning(
+                            logger.warn(
                               'No evidences for KPI: ' +
                               JSON.stringify(scopedGuaranteeState.id, null, 2)
                             );
@@ -553,23 +553,23 @@ async function process (res, type, agreementId, month, format, kpiParam, service
                   }).then(
                     results => {
                       // guarantees have been finished for this period
-                      logger.ctl(
+                      logger.info(
                         'All guarantees states for period: %s been processed',
                         JSON.stringify(period)
                       );
-                      logger.ctl('Receiving metrics information for this period...');
+                      logger.info('Receiving metrics information for this period...');
                       var processMetrics = [];
 
                       Promise.each(processMetrics, function (metricId) {
-                        logger.ctl('Receiving %s for this period...', metricId);
+                        logger.info('Receiving %s for this period...', metricId);
                         return new Promise((resolve, reject) => {
                           var priorities = ['P1', 'P2', 'P3', 'P4'];
 
                           Promise.each(priorities, function (priority) {
-                            logger.ctl('Receiving %s for this period...', priority);
+                            logger.info('Receiving %s for this period...', priority);
                             return new Promise(async (resolve, reject) => {
                               var url = metricsStateURL + metricId;
-                              logger.ctl('from %s ', url);
+                              logger.info('from %s ', url);
 
                               var params =
                                 '?' +
@@ -631,7 +631,7 @@ async function process (res, type, agreementId, month, format, kpiParam, service
                               var finalPath = '/api/v6/' + agreementId + '/metrics' + params;
 
                               const metricsRequest = await governify.infrastructure.getService('internal.registry').get(finalPath).catch(err => {
-                                logger.warning(
+                                logger.warn(
                                   'There was an error retrieving metric: ' +
                                   err.toString().substr(0, 400)
                                 );
@@ -641,9 +641,9 @@ async function process (res, type, agreementId, month, format, kpiParam, service
                                 );
                               });
                               const metricsStatesArray = metricsRequest.data;
-                              logger.ctl('Registry has responded');
-                              logger.ctl('---All metrics ', metricsStatesArray);
-                              logger.ctl(
+                              logger.info('Registry has responded');
+                              logger.info('---All metrics ', metricsStatesArray);
+                              logger.info(
                                 '----metrics length ',
                                 metricsStatesArray.length,
                                 ' type of ',
@@ -653,7 +653,7 @@ async function process (res, type, agreementId, month, format, kpiParam, service
                                 metricsStatesArray &&
                                 Array.isArray(metricsStatesArray)
                               ) {
-                                logger.ctl('Processing response');
+                                logger.info('Processing response');
                                 Promise.each(metricsStatesArray, function (
                                   metricState,
                                   index,
@@ -706,7 +706,7 @@ async function process (res, type, agreementId, month, format, kpiParam, service
                                     }
                                   });
                                 }).then(function (results) {
-                                  logger.ctl(
+                                  logger.info(
                                     'Finished metrics: %s, with priority: %s',
                                     metricId,
                                     priority
@@ -717,11 +717,11 @@ async function process (res, type, agreementId, month, format, kpiParam, service
                             });
                           }).then(
                             function (priorityValues) {
-                              logger.ctl('Finished metrics: %s', metricId);
+                              logger.info('Finished metrics: %s', metricId);
                               return resolve();
                             },
                             function (err) {
-                              logger.warning(
+                              logger.warn(
                                 'Error while retrieving ' + type + ': ' + metricId
                               );
                               return reject();
@@ -730,13 +730,13 @@ async function process (res, type, agreementId, month, format, kpiParam, service
                         });
                       }).then(
                         function (metricsValues) {
-                          logger.ctl('Finished period: %s', JSON.stringify(period));
-                          logger.ctl('Calculated metrics', metricsValues);
+                          logger.info('Finished period: %s', JSON.stringify(period));
+                          logger.info('Calculated metrics', metricsValues);
                           resolve(); // promise of period
                           // all metrics request for this period have been finished;
                         },
                         function (err) {
-                          logger.warning(
+                          logger.warn(
                             'Error while retrieving ' +
                             type +
                             ': ' +
@@ -800,7 +800,7 @@ async function process (res, type, agreementId, month, format, kpiParam, service
             }
           });
         } else {
-          logger.looper('Reported stopped and period ' + JSON.stringify(period) + ' will not be calculated');
+          logger.warn('Reported stopped and period ' + JSON.stringify(period) + ' will not be calculated');
         }
       }).then((results) => {
 
@@ -809,7 +809,7 @@ async function process (res, type, agreementId, month, format, kpiParam, service
       });
     }).then((results) => {
       // all periods has been finished
-      logger.ctl('All periods have been processed');
+      logger.info('All periods have been processed');
       // streamingResult.push(null);
       if (!override) {
         loopParams.agreements[agreementId].isProcessFinished = true;
@@ -859,7 +859,7 @@ exports.testInflux = function () {
   values.push(x);
   values.push(x2);
 
-  influxInsert(values, console.log('TEST INSERTION COMPLETED'));
+  influxInsert(values, logger.info('TEST INSERTION COMPLETED'));
 };
 
 function generateResponse (agreement, month, contractDate, kpi, evidence) {
@@ -1025,7 +1025,6 @@ function generateResponse (agreement, month, contractDate, kpi, evidence) {
   var year2 = Number(String(response.MES).substr(0, 4));
   var month2 = Number(String(response.MES).substr(4, 6)) - 1;
   var day = Number(String(moment.tz(kpi.period.to, agreement.context.validity.timeZone).format('YYYY-MM-DD')).substr(8, 10));
-  // logger.ctl("--------------DAY",JSON.stringify(day));
   var dateaux = moment.tz([year2, month2, day, 23, 59, 59, 999], agreement.context.validity.timeZone).format();
   var date = moment(dateaux).valueOf();
   var properties = {};
@@ -1035,10 +1034,6 @@ function generateResponse (agreement, month, contractDate, kpi, evidence) {
       properties[scopes[i].name] = scopes[i].value;
     }
   }
-
-  // logger.ctl("----------- Center,Node,Priority ",JSON.stringify(properties));
-  // logger.ctl("------DATEAUX ",dateaux);
-  // logger.ctl("----------DATE ",date,year2,month2,day,response.MES);
 
   const elements = Object.keys(kpi.metrics).map(k => {
     return {
@@ -1191,7 +1186,7 @@ function generateMetricResponse (agreement, contractDate, kpi, evidence) {
   var year2 = Number(String(response.MES).substr(0, 4));
   var month2 = Number(String(response.MES).substr(4, 6)) - 1;
   var day = Number(String(moment.tz(kpi.period.to, agreement.context.validity.timeZone).format('YYYY-MM-DD')).substr(8, 10));
-  // logger.ctl("--------------DAY",JSON.stringify(day));
+  // logger.info("--------------DAY",JSON.stringify(day));
   var dateaux = moment.tz([year2, month2, day, 23, 59, 59, 999], agreement.context.validity.timeZone).format();
   var date = moment(dateaux).valueOf();
   var properties = {};
@@ -1202,9 +1197,9 @@ function generateMetricResponse (agreement, contractDate, kpi, evidence) {
     }
   }
 
-  // logger.ctl("----------- Center,Node,Priority ",JSON.stringify(properties));
-  // logger.ctl("------DATEAUX ",dateaux);
-  // logger.ctl("----------DATE ",date,year2,month2,day,response.MES);
+  // logger.info("----------- Center,Node,Priority ",JSON.stringify(properties));
+  // logger.info("------DATEAUX ",dateaux);
+  // logger.info("----------DATE ",date,year2,month2,day,response.MES);
 
   // influxRequests.push({ id: kpi.id, priority: (properties.Priority != undefined) ? properties.Priority : "NA", node: (properties.Nodo != undefined) ? properties.Nodo : "NA", center: (properties.Centro != undefined) ? properties.Centro : "NA", value: Number(response.VALOR), timestamp: Number(date) * 1000000 })
   // insertOnInflux(kpi, properties, response, date);
@@ -1404,7 +1399,7 @@ var setUpStreamingResult = (agreementId, streamingResult, type, format, res) => 
  * Connect and create Influx database for metrics.
  */
 var connectAndCreateInfluxDB = () => {
-  logger.ctl('Creating influxdb connection to %s', config.influx.host);
+  logger.info('Creating influxdb connection to %s', config.influx.host);
 
   // Set up influx database
   influx = new Influx.InfluxDB(governify.infrastructure.getServiceURL('internal.database.influx-reporter') + "/" + config.influx.database, {
@@ -1423,15 +1418,15 @@ var connectAndCreateInfluxDB = () => {
 
   // Create database if it does not exist yet.
   influx.getDatabaseNames().then(names => {
-    logger.ctl('DBs in influxdb', names);
+    logger.info('DBs in influxdb', names);
     if (!names.includes(config.influx.database)) {
       return influx.createDatabase(config.influx.database);
     }
   }).then(() => {
-    logger.ctl('InfluxDb: DB created');
+    logger.info('InfluxDb: DB created');
   }).catch(err => {
     logger.error(err);
-    logger.ctl('Error creating Influx database!');
+    logger.info('Error creating Influx database!');
   });
 };
 
@@ -1463,14 +1458,14 @@ var loopProcess = (res, type, agreementId, month, format, kpiParam, serviceLine,
     try {
       if (!loopParams.isStopped(agreementId)) {
         if (loopParams.agreements[agreementId].isProcessFinished) {
-          logger.looper('Initializing a new process from looped process');
+          logger.warn('Initializing a new process from looped process');
           process(res, type, agreementId, month, format, kpiParam, serviceLine, activity, period, null, false);
         } else {
-          logger.looper('Execution is not finished yet. Loop process will keep trying');
+          logger.warn('Execution is not finished yet. Loop process will keep trying');
         }
       }
     } catch (err) {
-      logger.looper('Error');
+      logger.warn('Error');
       logger.error('Error on set up loop execution.' + err);
       loopParams.agreements[agreementId].isProcessFinished = true;
       return res.status(500).json(err);
@@ -1484,7 +1479,7 @@ var influxInsert = (elements, callback) => {
     maxRetries: 50,
     requestTimeout: 600000
   }).then(callback).catch((err, data) => {
-    logger.ctl('----Error Writing in db ', err);
+    logger.info('----Error Writing in db ', err);
   });
 };
 

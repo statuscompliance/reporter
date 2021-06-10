@@ -20,10 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 'use strict';
 
 const governify = require('governify-commons');
+const logger = governify.getLogger().tag('v4-dashboard-controller');
 const utils = require('../../../utils/index');
-const logger = require('../../../logger');
 
-// const logger = require('../../../logger');
 
 /**
  * Return dashboard JSON for grafana
