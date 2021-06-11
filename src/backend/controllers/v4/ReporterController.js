@@ -258,7 +258,7 @@ exports.resetPOST = function (args, res, next) {
   }
 };
 
-var timeBetweenRequests = 0;
+var timeBetweenRequests = 10000;
 
 function callRegistryAndStorePoints (path, agreement) {
   return new Promise((resolve, reject) => {
@@ -301,8 +301,7 @@ function callRegistryAndStorePoints (path, agreement) {
 
             influxInsert([influxPoint], function () { });
           }
-          timeBetweenRequests -= 40000;
-          timeBetweenRequests < 0 ? timeBetweenRequests = 0 : undefined;
+         
           resolve();
         } catch (err) {
           logger.error('Error while processing guarantee data received. Adding to queue');
@@ -358,12 +357,16 @@ async function computeQueue () {
   }
 }
 
-var influxInsert = (elements, callback) => {
+var influxInsert = (elements, callback, repetitions) => {
   influx.influx.writePoints(elements, {
     maxRetries: 50,
     requestTimeout: 600000
   }).then(callback).catch((err, data) => {
     logger.ctl('Error Writing in db ', err);
+    if (!repetitions) { repetitions = 0;}
+    if (repetitions < 10){
+      return influxInsert(elements, callback, repetitions+1)
+    }
   });
 };
 
