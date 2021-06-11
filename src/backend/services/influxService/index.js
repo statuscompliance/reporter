@@ -25,7 +25,7 @@ const Influx = require('influx');
 /// //////////////////////// INT DEPENDENCIES ///////////////////////////
 const governify = require('governify-commons');
 const config = governify.configurator.getConfig('main');
-const logger = require('../../logger');
+const logger = governify.getLogger().tag('service-influx-index');
 const influxConfig = config.influx;
 
 /// //////////////////////// PRIVATE ATTRIBUTES ///////////////////////////
@@ -52,7 +52,7 @@ class InfluxDB {
     this._measurement = measurement;
     this._fields = fields;
     this._tags = tags;
-    logger.ctl("Creating InfluxDB connection to '%s' in database '%s' and params %s", host, database, JSON.stringify(influxConfig, 2, null));
+    logger.info("Creating InfluxDB connection to '%s' in database '%s' and params %s", host, database, JSON.stringify(influxConfig, 2, null));
     this._influx = new Influx.InfluxDB(governify.infrastructure.getServiceURL('internal.database.influx-reporter') + "/" + config.influx.database, influxConfig);
     this._createDb();
   }
@@ -113,15 +113,15 @@ class InfluxDB {
   /// //////////////////////// CORE FUNCTIONS ///////////////////////////
   _createDb () {
     this._influx.getDatabaseNames().then(names => {
-      logger.ctl('Retrieving existing databases in InfluxDB', names);
+      logger.info('Retrieving existing databases in InfluxDB', names);
       if (!names.includes(this.database)) {
-        logger.ctl("Creating database '%s' in InfluxDB", this.database);
+        logger.info("Creating database '%s' in InfluxDB", this.database);
         return this.influx.createDatabase(this.database);
       } else {
-        logger.ctl("Database '%s' already exists in InfluxDB", this.database);
+        logger.info("Database '%s' already exists in InfluxDB", this.database);
       }
     }).then(() => {
-      logger.ctl("Database '%s' is ready to be used in InfluxDB", this.database);
+      logger.info("Database '%s' is ready to be used in InfluxDB", this.database);
     }).catch(error => {
       logger.error("Error creating database '%s' in InfluxDB: %s", this.database, error);
     });
