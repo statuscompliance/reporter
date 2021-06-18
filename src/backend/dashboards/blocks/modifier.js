@@ -1771,7 +1771,6 @@ function modifyJSON (jsonDashboard, agreement, dashboardName) {
   var currentYLocation = 0;
   var currentPanelId = 0;
 
-  console.log(dashboardConfig.blocks.sort(sortBlockCompare));
   // Each block configured in the agreement should be added with its configuration to the dashboard.
   dashboardConfig.blocks.sort(sortBlockCompare).forEach(function (block) {
     var newPanels = [...blocks[block.type].panels];

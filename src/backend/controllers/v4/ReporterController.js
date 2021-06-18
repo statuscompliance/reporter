@@ -157,6 +157,9 @@ exports.contractsContractIdCreateHistoryPOST = async (contractId, period) => {
     }).then(function () {
       logger.info('Finished creating history for agreeement ' + contractId);
       resolve();
+    }).catch(err=>{
+      logger.error("Calculation failed for period:", period);
+      reject("Calculation failed for period:", period)
     });
   });
 };
@@ -268,7 +271,7 @@ function callRegistryAndStorePoints (path, agreement) {
         url: path,
         responseType: 'stream'
       }).catch(err => {
-        console.error('Error in registry state call: ', err);
+        logger.error('Error in registry state call: ', err);
         reject(err);
       });
       const requestStream = requestMetrics.data;
