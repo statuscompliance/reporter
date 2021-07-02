@@ -71,6 +71,12 @@ function _deploy(configurations, commonsMiddleware, callback) {
 
   const server = null;
   const app = express();
+  
+  if (config.server.bypassCORS) {
+    logger.info("Adding 'Access-Control-Allow-Origin: *' header to every path.");
+    app.use(cors());
+  }
+  
   app.use(commonsMiddleware);
 
 
@@ -100,11 +106,6 @@ function _deploy(configurations, commonsMiddleware, callback) {
   );
 
   // Configurable server options
-
-  if (config.server.bypassCORS) {
-    logger.info("Adding 'Access-Control-Allow-Origin: *' header to every path.");
-    app.use(cors());
-  }
 
   if (config.server.useHelmet) {
     logger.info('Adding Helmet related headers.');
