@@ -77,19 +77,6 @@ function _deploy(configurations, commonsMiddleware, callback) {
     app.use(cors());
   }
   
-  app.use(commonsMiddleware);
-
-
-  const frontendPath = path.join(__dirname, './src/frontend');
-  const serverPort = process.env.PORT || config.server.port;
-  const CURRENT_API_VERSION = 'v4';
-
-  app.use(express.static(frontendPath));
-
-  // Default server options
-
-  app.use(compression());
-
   logger.info("Using '%s' as HTTP body size", config.server.bodySize);
   app.use(
     bodyParser.urlencoded({
@@ -104,6 +91,21 @@ function _deploy(configurations, commonsMiddleware, callback) {
       type: 'application/json'
     })
   );
+
+  app.use(commonsMiddleware);
+
+
+  const frontendPath = path.join(__dirname, './src/frontend');
+  const serverPort = process.env.PORT || config.server.port;
+  const CURRENT_API_VERSION = 'v4';
+
+  app.use(express.static(frontendPath));
+
+  // Default server options
+
+  app.use(compression());
+
+  
 
   // Configurable server options
 
