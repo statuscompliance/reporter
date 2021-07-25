@@ -25,6 +25,9 @@ const governify = require('governify-commons');
 const moment = require('moment-timezone');
 const JSONStream = require('JSONStream');
 const stream = require('stream');
+const RRule = require('rrule').RRule
+const RRuleSet = require('rrule').RRuleSet
+const rrulestr = require('rrule').rrulestr
 
 /// //////////////////////// INT DEPENDENCIES ///////////////////////////
 const config = governify.configurator.getConfig('main');
@@ -45,72 +48,113 @@ const _metricsForOnDemandCalculation = Symbol();
 /// //////////////////////////////////////////////////////////// BEGIN CLASS ///////////////////////////////////////////////////////////////
 class Reporter {
   /// //////////////////////// BEGIN CONSTRUCTOR ///////////////////////////
-  constructor (persistence) {
+  constructor(persistence) {
     this._persistence = persistence;
   }
   /// //////////////////////// END CONSTRUCTOR ///////////////////////////
 
   /// //////////////////////// SETTERS ///////////////////////////
-  set isExecutionFinished (new_isExecutionFinished) {
+  set isExecutionFinished(new_isExecutionFinished) {
     this._isExecutionFinished = new_isExecutionFinished;
   }
 
-  set contractId (new_contractId) {
+  set contractId(new_contractId) {
     this._contractId = new_contractId;
     this._agreementURL = config.v1.agreementURL + new_contractId;
     this._guaranteesStateURL = config.v1.statesURL + new_contractId + '/guarantees' + (this._kpiParam ? '/' + this._kpiParam : '');
     this._metricsStateURL = config.v1.statesURL + new_contractId + '/metrics/';
   }
 
-  set kpiParam (new_kpiParam) {
+  set kpiParam(new_kpiParam) {
     this._kpiParam = new_kpiParam;
     this._guaranteesStateURL = config.v1.statesURL + this._contractId + '/guarantees' + (new_kpiParam ? '/' + new_kpiParam : '');
   }
   /// //////////////////////// END SETTERS ///////////////////////////
 
   /// //////////////////////// GETTERS ///////////////////////////
-  get agreementURL () {
+  get agreementURL() {
     return this._agreementURL;
   }
 
-  get kpiParam () {
+  get kpiParam() {
     return this._kpiParam;
   }
 
-  get isExecutionFinished () {
+  get isExecutionFinished() {
     return this._isExecutionFinished;
   }
 
-  get contractId () {
+  get contractId() {
     return this._contractId;
   }
 
-  get guaranteesStateURL () {
+  get guaranteesStateURL() {
     return this._guaranteesStateURL;
   }
 
-  get metricsStateURL () {
+  get metricsStateURL() {
     return this._metricsStateURL;
   }
 
-  get agreement () {
+  get agreement() {
     return this._agreement;
   }
 
-  get contractDate () {
+  get contractDate() {
     return this._contractDate;
   }
 
-  get persistence () {
+  get persistence() {
     return this._persistence;
   }
 
-  get metricsForOnDemandCalculation () {
+  get metricsForOnDemandCalculation() {
     return this._metricsForOnDemandCalculation;
   }
   /// //////////////////////// END GETTERS ///////////////////////////
 
   /// //////////////////////// AUX FUNCTIONS ///////////////////////////
+  static getFreq(Wperiod) {
+    switch (Wperiod) {
+      case "yearly": return RRule.YEARLY
+      case "monthly": return RRule.MONTHLY
+      case "weekly": return RRule.WEEKLY
+      case "daily": return RRule.DAILY
+      case "hourly": return RRule.HOURLY
+    }
+  }
+
+  /*! Get the difference of an UTC date and the same date in a time zone
+  *  @param date, a date in UTC
+  *  @param timeZone, a timeZone supported by Intl
+  *  @return an integer that represents the difference in hours of a date in UTC and
+  *  the same date in a time zone
+  */
+  static getTimeZoneOffset(date, timeZone) {
+
+    // Abuse the Intl API to get a local ISO 8601 string for a given time zone.
+    const options = { timeZone, calendar: 'iso8601', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+    const dateTimeFormat = new Intl.DateTimeFormat(undefined, options);
+    const parts = dateTimeFormat.formatToParts(date);
+    const map = new Map(parts.map(x => [x.type, x.value]));
+    const year = map.get('year');
+    const month = map.get('month');
+    const day = map.get('day');
+    const hour = map.get('hour');
+    const minute = map.get('minute');
+    const second = map.get('second');
+    const ms = date.getMilliseconds().toString().padStart(3, '0');
+    const iso = `${year}-${month}-${day}T${hour}:${minute}:${second}.${ms}`;
+
+    // Lie to the Date object constructor that it's a UTC time.
+    const lie = new Date(iso + 'Z');
+
+    // Return the difference in timestamps, as hours
+    // Positive values are West of GMT, opposite of ISO 8601
+    // this matches the output of `Date.getTimeZoneOffset`
+    return -(lie - date) / 60 / 1000 / 60;
+  }
+
   /**
      * This method returns a set of periods which are based on a window parameter.
      * @param {AgreementModel} agreement agreement model passed
@@ -118,21 +162,49 @@ class Reporter {
      * @return {Set} set of periods
      * @alias module:gUtils.getPeriods
      * */
-  static getPeriods (agreement, window) {
-    const periods = [];
-    const Wfrom = moment.utc(moment.tz(window.initial, agreement.context.validity.timeZone));
-    const Wto = window.end ? moment.utc(moment.tz(window.end, agreement.context.validity.timeZone)) : moment.utc();
+  static getPeriods(agreement, window) {
+    var dates;
+    var periods = [];
+    const periodTypes = ['yearly', 'monthly', 'weekly', 'daily', 'hourly']
 
-    let from = moment.utc(moment.tz(Wfrom, agreement.context.validity.timeZone));
-    let to = moment.utc(moment.tz(Wfrom, agreement.context.validity.timeZone).add(1, utils.convertPeriodToName(window.period) + 's').subtract(1, 'milliseconds'));
+    var Wfrom = new Date(window.initial);
+    var Wto = window.end ? new Date(window.end) : new Date();
 
-    while (!to || to.isSameOrBefore(Wto)) {
+    if (periodTypes.indexOf(window.period) >= 0) {
+      var rruleInit = new RRule({
+        freq: this.getFreq(window.period),
+        dtstart: Wfrom,
+        until: Wto
+      })
+      var rruleFin = new RRule({
+        freq: this.getFreq(window.period),
+        dtstart: Wfrom,
+        until: Wto,
+        bysecond: -1
+      })
+
+      var rruleSet = new RRuleSet();
+      rruleSet.rrule(rruleInit);
+      rruleSet.rrule(rruleFin);
+      dates = rruleSet.all();
+    } else {
+      rule = rrulestr(window.period)
+      dates = rule.between(new Date(Wfrom), new Date(Wto));
+    }
+
+    //Sorting dates
+    dates.sort(function (a, b) {
+      return a - b;
+    });
+
+    for (var i = 0; i < dates.length - 1; i += 2) {
+      dates[i + 1].setMilliseconds(999)
+      dates[i].setUTCHours(dates[i].getUTCHours() + this.getTimeZoneOffset(dates[i], agreement.context.validity.timeZone))
+      dates[i + 1].setUTCHours(dates[i + 1].getUTCHours() + this.getTimeZoneOffset(dates[i + 1], agreement.context.validity.timeZone))
       periods.push({
-        from: from.toISOString(),
-        to: to.toISOString()
+        from: dates[i].toISOString(),
+        to: dates[i + 1].toISOString()
       });
-      from = moment.utc(moment.tz(from, agreement.context.validity.timeZone).add(1, utils.convertPeriodToName(window.period) + 's'));
-      to = moment.utc(moment.tz(from, agreement.context.validity.timeZone).add(1, utils.convertPeriodToName(window.period) + 's').subtract(1, 'milliseconds'));
     }
 
     return periods;
@@ -140,7 +212,7 @@ class Reporter {
   /// //////////////////////// END AUX FUNCTIONS ///////////////////////////
 
   /// //////////////////////// MAIN FUNCTION ///////////////////////////
-  process (periods) {
+  process(periods) {
     return new Promise(async (resolve, reject) => {
       this._;
       logger.info('New request to get states for the agreement = %s', this._contractId);
@@ -182,7 +254,7 @@ class Reporter {
   /// //////////////////////// END MAIN FUNCTION ///////////////////////////
 
   /// //////////////////////// CORE FUNCTIONS ///////////////////////////
-  _calculatePeriods (period, index) {
+  _calculatePeriods(period, index) {
     return new Promise((resolve, reject) => {
       const url = this._guaranteesStateURL + '?from=' + period.from + '&to=' + period.to;
       logger.info('Request %d from %s', (index + 1), JSON.stringify(url, null, 2));
@@ -217,7 +289,7 @@ class Reporter {
     });
   }
 
-  _processGuaranteeStates (guaranteeStates) {
+  _processGuaranteeStates(guaranteeStates) {
     return new Promise((resolve, reject) => {
       logger.info('Scoped guarantees states received: %d', guaranteeStates.length);
       Promise.each(guaranteeStates, this._calculateScopedGuaranteeState.bind(this)).then((results) => {
@@ -244,7 +316,7 @@ class Reporter {
 
   // TODO: Remove. This method for recalculate point
 
-  _calculateScopedGuaranteeState (scopedGuaranteeState, index, length) {
+  _calculateScopedGuaranteeState(scopedGuaranteeState, index, length) {
     return new Promise((resolve, reject) => {
       if (!this._kpiParam || this._kpiParam === scopedGuaranteeState.id) {
         logger.info('Processing KPI: %d/%d', (index + 1), length);
@@ -260,7 +332,7 @@ class Reporter {
     });
   }
 
-  _calculateEvidence (evidence, index, length) {
+  _calculateEvidence(evidence, index, length) {
     return new Promise((resolve, reject) => {
       logger.info('Processing evidence: %d/%d', (index + 1), length);
       //  logger.warn("Guarantee to: %s", scopedGuaranteeState.period.to);
@@ -274,7 +346,7 @@ class Reporter {
   /// //////////////////////// END CORE FUNCTIONS ///////////////////////////
 
   /// //////////////////////// BEGIN OVERRIDABLE BUSINESS FUNCTIONS ///////////////////////////
-  _generateResponse (kpi, evidence) {
+  _generateResponse(kpi, evidence) {
     return new Promise((resolve, reject) => {
       return reject('This abstract Reporter cannot generate a response. Please consider using a specific implementation.');
     });
@@ -282,7 +354,7 @@ class Reporter {
   /// //////////////////////// END OVERRIDABLE BUSINESS FUNCTIONS ///////////////////////////
 
   /// //////////////////////// METRIC ON DEMAND FUNCTIONS ///////////////////////////
-  _calculateOnDemandMetric (metricId) {
+  _calculateOnDemandMetric(metricId) {
     logger.info('Receiving %s for this period...', metricId);
     return new Promise((resolve, reject) => {
       // TODO: now it only supports priority calculation.
@@ -297,7 +369,7 @@ class Reporter {
     });
   }
 
-  _calculateScopedOnDemandMetric (priority) {
+  _calculateScopedOnDemandMetric(priority) {
     // TODO: now it only supports priority calculation.
     logger.info('Receiving metric scope %s for this period...', priority);
     return new Promise(async (resolve, reject) => {
@@ -347,7 +419,7 @@ class Reporter {
     });
   }
 
-  _generateOnDemandMetricResponse (metricState) {
+  _generateOnDemandMetricResponse(metricState) {
     return new Promise((resolve, reject) => {
       logger.error('_generateOnDemandMetricResponse NOT implemented yet.');
       return reject('_generateOnDemandMetricResponse NOT implemented yet.');

@@ -149,7 +149,7 @@ exports.contractsContractIdCreateHistoryPOST = async (contractId, period) => {
     const agreement = agreementRequest.data;
     var periods = Reporter.getPeriods(agreement, {
       initial: agreement.context.validity.initial,
-      period: period || 'monthly'
+      period: period
     });
 
     Promise.each(periods, function (period) {
@@ -157,7 +157,7 @@ exports.contractsContractIdCreateHistoryPOST = async (contractId, period) => {
     }).then(function () {
       logger.info('Finished creating history for agreeement ' + contractId);
       resolve();
-    }).catch(err=>{
+    }).catch(err => {
       logger.error("Calculation failed for period:", period);
       reject("Calculation failed for period:", period)
     });
@@ -263,7 +263,7 @@ exports.resetPOST = function (args, res, next) {
 
 var timeBetweenRequests = 10000;
 
-function callRegistryAndStorePoints (path, agreement) {
+function callRegistryAndStorePoints(path, agreement) {
   return new Promise((resolve, reject) => {
     setTimeout(async function () {
       logger.info('URLRegistry: ' + path);
@@ -277,6 +277,8 @@ function callRegistryAndStorePoints (path, agreement) {
       const requestStream = requestMetrics.data;
       requestStream.pipe(JSONStream.parse()).on('data', guaranteeStates => {
         logger.info('Receiving agreement states');
+        console.log(1)
+        console.log(requestStream.data)
         try {
           for (var i in guaranteeStates) {
             var guaranteeResult = guaranteeStates[i];
@@ -304,7 +306,7 @@ function callRegistryAndStorePoints (path, agreement) {
 
             influxInsert([influxPoint], function () { });
           }
-         
+
           resolve();
         } catch (err) {
           logger.error('Error while processing guarantee data received. Adding to queue');
@@ -321,7 +323,7 @@ function callRegistryAndStorePoints (path, agreement) {
       });
     }
 
-    , timeBetweenRequests);
+      , timeBetweenRequests);
   });
 }
 
@@ -329,7 +331,7 @@ var queue = [];
 var running = false;
 var timeBetweenQueueRequests = 20000;
 
-function addToRequestsQueue (urlRegistry, agreement) {
+function addToRequestsQueue(urlRegistry, agreement) {
   queue.push([urlRegistry, agreement]);
   timeBetweenRequests += 20000;
   timeBetweenRequests > 160000 ? timeBetweenRequests = 160000 : undefined;
@@ -341,7 +343,7 @@ function addToRequestsQueue (urlRegistry, agreement) {
   return Promise.resolve('Added to queue');
 }
 
-async function computeQueue () {
+async function computeQueue() {
   while (running) {
     logger.info('Queue lenght: [', queue.length, '] - Time Between requests: [', timeBetweenRequests, ']');
     if (queue.length === 0) {
@@ -366,9 +368,9 @@ var influxInsert = (elements, callback, repetitions) => {
     requestTimeout: 600000
   }).then(callback).catch((err, data) => {
     logger.info('Error Writing in db ', err);
-    if (!repetitions) { repetitions = 0;}
-    if (repetitions < 10){
-      return influxInsert(elements, callback, repetitions+1)
+    if (!repetitions) { repetitions = 0; }
+    if (repetitions < 10) {
+      return influxInsert(elements, callback, repetitions + 1)
     }
   });
 };
