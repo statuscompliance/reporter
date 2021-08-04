@@ -74,7 +74,7 @@ module.exports.contractsContractIdUpdateGET = function contractsContractIdUpdate
 
 module.exports.contractsContractIdCreateHistoryPOST = function contractsContractIdCreateHistoryPOST(req, res, next) {
   var contractId = req.swagger.params.contractId.value;
-  var period = req.query.division;
+  var period = req.body.division;
 
   ReporterController.contractsContractIdCreateHistoryPOST(contractId, period)
     .then((response) => {

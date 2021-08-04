@@ -130,10 +130,10 @@ paths:
           required: true
           type: string
         - name: division
-          in: query
-          type: string
-          required: false
-          default: daily
+          in: body
+          required: true
+          schema:
+            type: string
           description: The way to divide an agreement
       responses:
         '200':
