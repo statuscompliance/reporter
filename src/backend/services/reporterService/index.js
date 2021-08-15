@@ -188,8 +188,14 @@ class Reporter {
       rruleSet.rrule(rruleFin);
       dates = rruleSet.all();
     } else {
-      rule = rrulestr(window.period)
-      dates = rule.between(new Date(Wfrom), new Date(Wto));
+      var rules = window.period.split("---");
+      var initPeriodRule = rrulestr(rules[0])
+      var endPeriodRule = rrulestr(rules[1])
+
+      var rruleSet = new RRuleSet();
+      rruleSet.rrule(initPeriodRule);
+      rruleSet.rrule(endPeriodRule);
+      dates = rruleSet.between(new Date(Wfrom), new Date(Wto));
     }
 
     //Sorting dates

@@ -52,11 +52,11 @@ exports.contractsContractIdStartGET = (contractId, timer, loop, periods) => {
       reporter.isExecutionFinished = true;
       looper = setInterval(() => {
         if (loop && loop === 'false' && reporter.isExecutionFinished) {
-          logger.info('Initializing a new process at ' + moment().format());
+          logger.info('Initializing a new process at ' + new Date().toISOString() + ' UTC');
           reporter.isExecutionFinished = false;
 
           reporter.process(periods).then(() => {
-            logger.info('ExecutionFinished at ' + moment().format());
+            logger.info('ExecutionFinished at ' + new Date().toISOString() + ' UTC');
             reporter.isExecutionFinished = true;
           }).catch((error) => {
             reporter.isExecutionFinished = true;
@@ -68,7 +68,7 @@ exports.contractsContractIdStartGET = (contractId, timer, loop, periods) => {
           });
           return resolve({
             code: 'REP-200',
-            message: 'OK: Initializing a new process at ' + moment().format(),
+            message: 'OK: Initializing a new process at ' + new Date().toISOString() + ' UTC',
             details: ''
           });
         } else {
@@ -87,11 +87,11 @@ exports.contractsContractIdStartGET = (contractId, timer, loop, periods) => {
     } else {
       reporter.isExecutionFinished = false;
       reporter.process(periods).then((res) => {
-        logger.info('Execution finished at ' + moment().format());
+        logger.info('Execution finished at ' + new Date().toISOString() + ' UTC');
         reporter.isExecutionFinished = true;
         return resolve({
           code: 'REP-200',
-          message: 'Execution finished at ' + moment().format(),
+          message: 'Execution finished at ' + new Date().toISOString() + ' UTC',
           details: ''
         });
       }).catch((error) => {
@@ -117,7 +117,7 @@ exports.contractsContractIdStopGET = (contractId) => {
     clearTimeout(looper);
     return resolve({
       code: '200',
-      message: 'OK: Process stopped at ' + moment().format(),
+      message: 'OK: Process stopped at ' + new Date().toISOString() + ' UTC',
       details: ''
     });
   });
@@ -207,7 +207,7 @@ exports.contractsContractIdCreatePointsFromListPOST = async (contractId, listDat
  **/
 exports.contractsContractIdUpdateGET = (contractId) => {
   return new Promise(async (resolve, reject) => {
-    var urlRegistryRequest = '/api/v6/states/' + contractId + '/guarantees' + '?from=' + moment().toISOString() + '&to=' + moment().add(3, 'week').toISOString() + '&newPeriodsFromGuarantees=false';
+    var urlRegistryRequest = '/api/v6/states/' + contractId + '/guarantees' + '?from=' + new Date().toISOString() + '&to=' + moment().add(3, 'week').toISOString() + '&newPeriodsFromGuarantees=false';
     logger.info('Getting the agreements from Registry with contractId = %s', contractId);
     const agreementRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/agreements/' + contractId);
     const agreement = agreementRequest.data;
@@ -277,8 +277,6 @@ function callRegistryAndStorePoints(path, agreement) {
       const requestStream = requestMetrics.data;
       requestStream.pipe(JSONStream.parse()).on('data', guaranteeStates => {
         logger.info('Receiving agreement states');
-        console.log(1)
-        console.log(requestStream.data)
         try {
           for (var i in guaranteeStates) {
             var guaranteeResult = guaranteeStates[i];
