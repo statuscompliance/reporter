@@ -25,9 +25,7 @@ const governify = require('governify-commons');
 const moment = require('moment-timezone');
 const JSONStream = require('JSONStream');
 const stream = require('stream');
-const RRule = require('rrule').RRule
-const RRuleSet = require('rrule').RRuleSet
-const rrulestr = require('rrule').rrulestr
+const gPeriods = governify.periods;
 
 /// //////////////////////// INT DEPENDENCIES ///////////////////////////
 const config = governify.configurator.getConfig('main');
@@ -114,46 +112,6 @@ class Reporter {
   /// //////////////////////// END GETTERS ///////////////////////////
 
   /// //////////////////////// AUX FUNCTIONS ///////////////////////////
-  static getFreq(Wperiod) {
-    switch (Wperiod) {
-      case "yearly": return RRule.YEARLY
-      case "monthly": return RRule.MONTHLY
-      case "weekly": return RRule.WEEKLY
-      case "daily": return RRule.DAILY
-      case "hourly": return RRule.HOURLY
-    }
-  }
-
-  /*! Get the difference of an UTC date and the same date in a time zone
-  *  @param date, a date in UTC
-  *  @param timeZone, a timeZone supported by Intl
-  *  @return an integer that represents the difference in hours of a date in UTC and
-  *  the same date in a time zone
-  */
-  static getTimeZoneOffset(date, timeZone) {
-
-    // Abuse the Intl API to get a local ISO 8601 string for a given time zone.
-    const options = { timeZone, calendar: 'iso8601', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
-    const dateTimeFormat = new Intl.DateTimeFormat(undefined, options);
-    const parts = dateTimeFormat.formatToParts(date);
-    const map = new Map(parts.map(x => [x.type, x.value]));
-    const year = map.get('year');
-    const month = map.get('month');
-    const day = map.get('day');
-    const hour = map.get('hour');
-    const minute = map.get('minute');
-    const second = map.get('second');
-    const ms = date.getMilliseconds().toString().padStart(3, '0');
-    const iso = `${year}-${month}-${day}T${hour}:${minute}:${second}.${ms}`;
-
-    // Lie to the Date object constructor that it's a UTC time.
-    const lie = new Date(iso + 'Z');
-
-    // Return the difference in timestamps, as hours
-    // Positive values are West of GMT, opposite of ISO 8601
-    // this matches the output of `Date.getTimeZoneOffset`
-    return -(lie - date) / 60 / 1000 / 60;
-  }
 
   /**
      * This method returns a set of periods which are based on a window parameter.
@@ -162,58 +120,13 @@ class Reporter {
      * @return {Set} set of periods
      * @alias module:gUtils.getPeriods
      * */
-  static getPeriods(agreement, window) {
-    var dates;
-    var periods = [];
-    const periodTypes = ['yearly', 'monthly', 'weekly', 'daily', 'hourly']
+  static async getPeriods(agreement, window) {
 
-    var Wfrom = new Date(window.initial);
-    var Wto = window.end ? new Date(window.end) : new Date();
+    const Wfrom = new Date(window.initial);
+    const Wto = window.end ? new Date(window.end) : new Date();
 
-    if (periodTypes.indexOf(window.period) >= 0) {
-      var rruleInit = new RRule({
-        freq: this.getFreq(window.period),
-        dtstart: Wfrom,
-        until: Wto
-      })
-      var rruleFin = new RRule({
-        freq: this.getFreq(window.period),
-        dtstart: Wfrom,
-        until: Wto,
-        bysecond: -1
-      })
-
-      var rruleSet = new RRuleSet();
-      rruleSet.rrule(rruleInit);
-      rruleSet.rrule(rruleFin);
-      dates = rruleSet.all();
-    } else {
-      var rules = window.period.split("---");
-      var initPeriodRule = rrulestr(rules[0])
-      var endPeriodRule = rrulestr(rules[1])
-
-      var rruleSet = new RRuleSet();
-      rruleSet.rrule(initPeriodRule);
-      rruleSet.rrule(endPeriodRule);
-      dates = rruleSet.between(new Date(Wfrom), new Date(Wto));
-    }
-
-    //Sorting dates
-    dates.sort(function (a, b) {
-      return a - b;
-    });
-
-    for (var i = 0; i < dates.length - 1; i += 2) {
-      dates[i + 1].setMilliseconds(999)
-      dates[i].setUTCHours(dates[i].getUTCHours() + this.getTimeZoneOffset(dates[i], agreement.context.validity.timeZone))
-      dates[i + 1].setUTCHours(dates[i + 1].getUTCHours() + this.getTimeZoneOffset(dates[i + 1], agreement.context.validity.timeZone))
-      periods.push({
-        from: dates[i].toISOString(),
-        to: dates[i + 1].toISOString()
-      });
-    }
-
-    return periods;
+    var dates = await gPeriods.getDates(Wfrom, Wto, window.period, Wto);
+    return await gPeriods.getPeriods(dates, agreement.context.validity.timeZone, false);
   }
   /// //////////////////////// END AUX FUNCTIONS ///////////////////////////
 

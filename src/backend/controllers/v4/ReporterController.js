@@ -147,7 +147,7 @@ exports.contractsContractIdCreateHistoryPOST = async (contractId, period) => {
     logger.info('Getting the agreements from Registry with contractId = %s', contractId);
     const agreementRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/agreements/' + contractId);
     const agreement = agreementRequest.data;
-    var periods = Reporter.getPeriods(agreement, {
+    var periods = await Reporter.getPeriods(agreement, {
       initial: agreement.context.validity.initial,
       period: period
     });
@@ -394,7 +394,6 @@ exports.contractsContractIdCreatePointsFromPeriodsPOST = (contractId, periods) =
       const agreement = agreementRequest.data;
       Promise.each(periods, function (period) {
         // statusCreatePoints[contractId] = { current: statusCreatePoints[contractId].current + 1, total: periods.length }
-
         return callRegistryAndStorePoints('/api/v6/states/' + contractId + '/guarantees' + '?from=' + period.from + '&to=' + period.to + '&newPeriodsFromGuarantees=false', agreement);
       }).then(function () {
         // statusCreatePoints[contractId] = undefined;
