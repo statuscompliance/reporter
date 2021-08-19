@@ -29,6 +29,7 @@ const logger = governify.getLogger().tag('v4-reporter-controller');
 const JSONStream = require('JSONStream');
 const Promise = require('bluebird');
 const objectiveUtils = require('../../utils/objective-utils');
+const utils = require('../../utils');
 
 const influx = new InfluxDB(governify.infrastructure.getServiceURL('internal.database.influx-reporter'), config.influx.database, config.influx.measurement, config.influx.fields, config.influx.tags);
 
@@ -137,7 +138,6 @@ exports.contractsContractIdCreatePointsFromListGET = (contractId) => {
 
 /**
  * Create history and save points
- *
  * contractId String Contract ID
  * no response value expected for this operation
  **/
@@ -147,7 +147,7 @@ exports.contractsContractIdCreateHistoryPOST = async (contractId, period) => {
     logger.info('Getting the agreements from Registry with contractId = %s', contractId);
     const agreementRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/agreements/' + contractId);
     const agreement = agreementRequest.data;
-    var periods = await Reporter.getPeriods(agreement, {
+    var periods = utils.getPeriods(agreement, {
       initial: agreement.context.validity.initial,
       period: period
     });

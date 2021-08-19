@@ -24,8 +24,6 @@ const Promise = require('bluebird');
 const governify = require('governify-commons');
 const moment = require('moment-timezone');
 const JSONStream = require('JSONStream');
-const stream = require('stream');
-const gPeriods = governify.periods;
 
 /// //////////////////////// INT DEPENDENCIES ///////////////////////////
 const config = governify.configurator.getConfig('main');
@@ -113,21 +111,6 @@ class Reporter {
 
   /// //////////////////////// AUX FUNCTIONS ///////////////////////////
 
-  /**
-     * This method returns a set of periods which are based on a window parameter.
-     * @param {AgreementModel} agreement agreement model passed
-     * @param {WindowModel} window window model passed
-     * @return {Set} set of periods
-     * @alias module:gUtils.getPeriods
-     * */
-  static async getPeriods(agreement, window) {
-
-    const Wfrom = new Date(window.initial);
-    const Wto = window.end ? new Date(window.end) : new Date();
-
-    var dates = await gPeriods.getDates(Wfrom, Wto, window.period, Wto);
-    return await gPeriods.getPeriods(dates, agreement.context.validity.timeZone, false);
-  }
   /// //////////////////////// END AUX FUNCTIONS ///////////////////////////
 
   /// //////////////////////// MAIN FUNCTION ///////////////////////////
@@ -151,7 +134,7 @@ class Reporter {
 
         // periods = ""; //TEMPORAL FIX
         if (!periods || periods == null || periods == '') {
-          periods = Reporter.getPeriods(this._agreement, {
+          periods = utils.getPeriods(this._agreement, {
             initial: this._agreement.context.validity.initial
           });
         }
