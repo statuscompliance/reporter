@@ -1765,15 +1765,15 @@ const escapeRegExp = (string) => {
 
 function modifyJSON (jsonDashboard, agreement, dashboardName) {
   let modifiedDashboard = { ...jsonDashboard };
-  var agreementId = agreement.context.definitions.scopes.development.project.default;
-  var dashboardConfig = agreement.context.definitions.dashboards[dashboardName].config;
-  var currentXLocation = 0;
-  var currentYLocation = 0;
-  var currentPanelId = 0;
+  const agreementId = agreement.context.definitions.scopes.development.project.default;
+  const dashboardConfig = agreement.context.definitions.dashboards[dashboardName].config;
+  let currentXLocation = 0;
+  let currentYLocation = 0;
+  let currentPanelId = 0;
 
   // Each block configured in the agreement should be added with its configuration to the dashboard.
   dashboardConfig.blocks.sort(sortBlockCompare).forEach(function (block) {
-    var newPanels = [...blocks[block.type].panels];
+    let newPanels = [...blocks[block.type].panels];
     // Add here specific block custom code
 
     if (block.type === 'correlated' || block.type === 'gauge-time-correlation') {
@@ -1786,7 +1786,7 @@ function modifyJSON (jsonDashboard, agreement, dashboardName) {
       newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###OLDVIEW###/g, block.config['old-view']));
       newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###NEWVIEW###/g, block.config['new-view']));
       if (block.type === 'title-button-view-changer-github') {
-        var githubSlug = agreementId.split('GH-')[1];
+        const githubSlug = agreementId.split('GH-')[1];
         newPanels = JSON.parse(JSON.stringify(newPanels).replace(/%%%GITHUB_SLUG%%%/g, githubSlug.split('_')[0] + '/' + githubSlug.split('_')[1]));
       }
     } else if (block.type === 'gauge-not-zero') {
@@ -1798,7 +1798,7 @@ function modifyJSON (jsonDashboard, agreement, dashboardName) {
 
     newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###AGREEMENT.SCOPE.CLASS###/g, agreement.context.definitions.scopes.development.class.default));
 
-    var guarantee = agreement.terms.guarantees.find(gua => {
+    const guarantee = agreement.terms.guarantees.find(gua => {
       return gua.id === block.guarantee;
     });
 
@@ -1826,7 +1826,7 @@ function modifyJSON (jsonDashboard, agreement, dashboardName) {
     newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###GUARANTEE.NAME###/g, block.guarantee));
 
     modifiedDashboard.panels = modifiedDashboard.panels.concat(newPanels);
-    var modifiedDashboardString = JSON.stringify(modifiedDashboard);
+    let modifiedDashboardString = JSON.stringify(modifiedDashboard);
     modifiedDashboardString = modifiedDashboardString.replace(/###AGREEMENT.ID###/g, agreement.id);
     if (agreement?.context?.definitions?.scopes?.development?.project?.default) {
       modifiedDashboardString = modifiedDashboardString.replace(/###AGREEMENT.PROJECT###/g, agreement.context.definitions.scopes.development.project.default);

@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
 const governify = require('governify-commons');
 const gPeriods = governify.periods;
-var _ = require('lodash');
+const _ = require('lodash');
 
 module.exports = {
   swagger: require('./swagger.js'),
@@ -36,20 +36,19 @@ module.exports = {
  * @return {Set} set of periods
  * @alias module:gUtils.getPeriods
  **/
-function _getPeriods(agreement, window) {
-
+function _getPeriods (agreement, window) {
   const Wfrom = new Date(window.initial);
   const Wto = window.end ? new Date(window.end) : new Date();
 
-  var dates = gPeriods.getDates(Wfrom, Wto, window.period, Wto);
+  const dates = gPeriods.getDates(Wfrom, Wto, window.period, Wto);
   return gPeriods.getPeriods(dates, agreement.context.validity.timeZone, false);
 }
 
 // This function receives a text when variables can be declared with [startingDefinition].???.???[endDefinition] and replace them with the json content referenced
 // Example: textReplaceReferencesFromJSON(JSON.stringify(targetText), agreement, '>>>agreement.', "<<<"))
 // This function will replace all variables in text like >>>agreement.id<<< with the property id of the json
-function textReplaceReferencesFromJSON(targetText, json, startingDefinition, endDefinition) {
-  var finalText = targetText;
+function textReplaceReferencesFromJSON (targetText, json, startingDefinition, endDefinition) {
+  let finalText = targetText;
   // Returns an array of array with format [key, value], [key, value]
   // Key is the complete unparsed text >>>agreement.id<<<, and the value the parsed text (id)
   const matches = [...targetText.matchAll(startingDefinition + '([^<]+)' + endDefinition)];

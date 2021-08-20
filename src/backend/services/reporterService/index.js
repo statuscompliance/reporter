@@ -44,67 +44,67 @@ const _metricsForOnDemandCalculation = Symbol();
 /// //////////////////////////////////////////////////////////// BEGIN CLASS ///////////////////////////////////////////////////////////////
 class Reporter {
   /// //////////////////////// BEGIN CONSTRUCTOR ///////////////////////////
-  constructor(persistence) {
+  constructor (persistence) {
     this._persistence = persistence;
   }
   /// //////////////////////// END CONSTRUCTOR ///////////////////////////
 
   /// //////////////////////// SETTERS ///////////////////////////
-  set isExecutionFinished(new_isExecutionFinished) {
+  set isExecutionFinished (new_isExecutionFinished) {
     this._isExecutionFinished = new_isExecutionFinished;
   }
 
-  set contractId(new_contractId) {
+  set contractId (new_contractId) {
     this._contractId = new_contractId;
     this._agreementURL = config.v1.agreementURL + new_contractId;
     this._guaranteesStateURL = config.v1.statesURL + new_contractId + '/guarantees' + (this._kpiParam ? '/' + this._kpiParam : '');
     this._metricsStateURL = config.v1.statesURL + new_contractId + '/metrics/';
   }
 
-  set kpiParam(new_kpiParam) {
+  set kpiParam (new_kpiParam) {
     this._kpiParam = new_kpiParam;
     this._guaranteesStateURL = config.v1.statesURL + this._contractId + '/guarantees' + (new_kpiParam ? '/' + new_kpiParam : '');
   }
   /// //////////////////////// END SETTERS ///////////////////////////
 
   /// //////////////////////// GETTERS ///////////////////////////
-  get agreementURL() {
+  get agreementURL () {
     return this._agreementURL;
   }
 
-  get kpiParam() {
+  get kpiParam () {
     return this._kpiParam;
   }
 
-  get isExecutionFinished() {
+  get isExecutionFinished () {
     return this._isExecutionFinished;
   }
 
-  get contractId() {
+  get contractId () {
     return this._contractId;
   }
 
-  get guaranteesStateURL() {
+  get guaranteesStateURL () {
     return this._guaranteesStateURL;
   }
 
-  get metricsStateURL() {
+  get metricsStateURL () {
     return this._metricsStateURL;
   }
 
-  get agreement() {
+  get agreement () {
     return this._agreement;
   }
 
-  get contractDate() {
+  get contractDate () {
     return this._contractDate;
   }
 
-  get persistence() {
+  get persistence () {
     return this._persistence;
   }
 
-  get metricsForOnDemandCalculation() {
+  get metricsForOnDemandCalculation () {
     return this._metricsForOnDemandCalculation;
   }
   /// //////////////////////// END GETTERS ///////////////////////////
@@ -114,7 +114,7 @@ class Reporter {
   /// //////////////////////// END AUX FUNCTIONS ///////////////////////////
 
   /// //////////////////////// MAIN FUNCTION ///////////////////////////
-  process(periods) {
+  process (periods) {
     return new Promise(async (resolve, reject) => {
       this._;
       logger.info('New request to get states for the agreement = %s', this._contractId);
@@ -156,7 +156,7 @@ class Reporter {
   /// //////////////////////// END MAIN FUNCTION ///////////////////////////
 
   /// //////////////////////// CORE FUNCTIONS ///////////////////////////
-  _calculatePeriods(period, index) {
+  _calculatePeriods (period, index) {
     return new Promise((resolve, reject) => {
       const url = this._guaranteesStateURL + '?from=' + period.from + '&to=' + period.to;
       logger.info('Request %d from %s', (index + 1), JSON.stringify(url, null, 2));
@@ -191,7 +191,7 @@ class Reporter {
     });
   }
 
-  _processGuaranteeStates(guaranteeStates) {
+  _processGuaranteeStates (guaranteeStates) {
     return new Promise((resolve, reject) => {
       logger.info('Scoped guarantees states received: %d', guaranteeStates.length);
       Promise.each(guaranteeStates, this._calculateScopedGuaranteeState.bind(this)).then((results) => {
@@ -218,7 +218,7 @@ class Reporter {
 
   // TODO: Remove. This method for recalculate point
 
-  _calculateScopedGuaranteeState(scopedGuaranteeState, index, length) {
+  _calculateScopedGuaranteeState (scopedGuaranteeState, index, length) {
     return new Promise((resolve, reject) => {
       if (!this._kpiParam || this._kpiParam === scopedGuaranteeState.id) {
         logger.info('Processing KPI: %d/%d', (index + 1), length);
@@ -234,7 +234,7 @@ class Reporter {
     });
   }
 
-  _calculateEvidence(evidence, index, length) {
+  _calculateEvidence (evidence, index, length) {
     return new Promise((resolve, reject) => {
       logger.info('Processing evidence: %d/%d', (index + 1), length);
       //  logger.warn("Guarantee to: %s", scopedGuaranteeState.period.to);
@@ -248,7 +248,7 @@ class Reporter {
   /// //////////////////////// END CORE FUNCTIONS ///////////////////////////
 
   /// //////////////////////// BEGIN OVERRIDABLE BUSINESS FUNCTIONS ///////////////////////////
-  _generateResponse(kpi, evidence) {
+  _generateResponse (kpi, evidence) {
     return new Promise((resolve, reject) => {
       return reject('This abstract Reporter cannot generate a response. Please consider using a specific implementation.');
     });
@@ -256,7 +256,7 @@ class Reporter {
   /// //////////////////////// END OVERRIDABLE BUSINESS FUNCTIONS ///////////////////////////
 
   /// //////////////////////// METRIC ON DEMAND FUNCTIONS ///////////////////////////
-  _calculateOnDemandMetric(metricId) {
+  _calculateOnDemandMetric (metricId) {
     logger.info('Receiving %s for this period...', metricId);
     return new Promise((resolve, reject) => {
       // TODO: now it only supports priority calculation.
@@ -271,7 +271,7 @@ class Reporter {
     });
   }
 
-  _calculateScopedOnDemandMetric(priority) {
+  _calculateScopedOnDemandMetric (priority) {
     // TODO: now it only supports priority calculation.
     logger.info('Receiving metric scope %s for this period...', priority);
     return new Promise(async (resolve, reject) => {
@@ -321,7 +321,7 @@ class Reporter {
     });
   }
 
-  _generateOnDemandMetricResponse(metricState) {
+  _generateOnDemandMetricResponse (metricState) {
     return new Promise((resolve, reject) => {
       logger.error('_generateOnDemandMetricResponse NOT implemented yet.');
       return reject('_generateOnDemandMetricResponse NOT implemented yet.');

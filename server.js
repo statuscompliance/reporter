@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>. */
  * Put here your dependencies
  */
 
-
 module.exports = {
   deploy: _deploy,
   undeploy: _undeploy
@@ -35,13 +34,11 @@ module.exports = {
  * @param {function} callback callback function
  * @alias module:registry.deploy
  * */
-function _deploy(configurations, commonsMiddleware, callback) {
-
-
+function _deploy (configurations, commonsMiddleware, callback) {
   const governify = require('governify-commons');
   const config = governify.configurator.getConfig('main');
   // Add this to the VERY top of the first file loaded in your app
-  var apm = require('elastic-apm-node').start({
+  const apm = require('elastic-apm-node').start({
     // Override service name from package.json
     // Allowed characters: a-z, A-Z, 0-9, -, _, and space
     serviceName: 'Reporter',
@@ -71,12 +68,12 @@ function _deploy(configurations, commonsMiddleware, callback) {
 
   const server = null;
   const app = express();
-  
+
   if (config.server.bypassCORS) {
     logger.info("Adding 'Access-Control-Allow-Origin: *' header to every path.");
     app.use(cors());
   }
-  
+
   logger.info("Using '%s' as HTTP body size", config.server.bodySize);
   app.use(
     bodyParser.urlencoded({
@@ -94,7 +91,6 @@ function _deploy(configurations, commonsMiddleware, callback) {
 
   app.use(commonsMiddleware);
 
-
   const frontendPath = path.join(__dirname, './src/frontend');
   const serverPort = process.env.PORT || config.server.port;
   const CURRENT_API_VERSION = 'v4';
@@ -104,8 +100,6 @@ function _deploy(configurations, commonsMiddleware, callback) {
   // Default server options
 
   app.use(compression());
-
-  
 
   // Configurable server options
 
@@ -143,20 +137,19 @@ function _deploy(configurations, commonsMiddleware, callback) {
   logger.info('Trying to deploy server');
   if (configurations) {
     logger.info('Reading configuration...');
-    for (var c in configurations) {
-      var prop = configurations[c];
+    for (const c in configurations) {
+      const prop = configurations[c];
       logger.info('Setting property' + c + ' with value ' + prop);
       config.setProperty(c, prop);
     }
   }
 
   // list of swagger documents, one for each version of the api.
-  var swaggerDocs = [
+  const swaggerDocs = [
     swaggerUtils.getSwaggerDoc(4)
   ];
   // initialize swagger middleware for each swagger documents.
   swaggerUtils.initializeMiddleware(app, swaggerDocs, function () {
-
     if (config.server.listenOnHttps) {
       https.createServer({
         key: fs.readFileSync('certs/privkey.pem'),
@@ -183,7 +176,7 @@ function _deploy(configurations, commonsMiddleware, callback) {
  * @param {function} callback callback function
  * @alias module:registry.undeploy
  * */
-function _undeploy(callback) {
+function _undeploy (callback) {
   /* db.close(function () {
       server.close(function () {
         logger.info('Server has been closed');
