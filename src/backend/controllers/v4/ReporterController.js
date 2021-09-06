@@ -151,7 +151,7 @@ exports.contractsContractIdCreateHistoryPOST = async (contractId, period) => {
       initial: agreement.context.validity.initial,
       period: period
     });
-
+    await callRegistryAndStorePoints('/api/v6/states/' + contractId + '/guarantees' + '?lastPeriod=true', agreement);
     Promise.each(periods, function (period) {
       return callRegistryAndStorePoints('/api/v6/states/' + contractId + '/guarantees' + '?from=' + period.from + '&to=' + period.to, agreement);
     }).then(function () {
@@ -263,7 +263,7 @@ exports.resetPOST = function (args, res, next) {
 
 let timeBetweenRequests = 10000;
 
-function callRegistryAndStorePoints (path, agreement) {
+function callRegistryAndStorePoints(path, agreement) {
   return new Promise((resolve, reject) => {
     setTimeout(async function () {
       logger.info('URLRegistry: ' + path);
@@ -321,7 +321,7 @@ function callRegistryAndStorePoints (path, agreement) {
       });
     }
 
-    , timeBetweenRequests);
+      , timeBetweenRequests);
   });
 }
 
@@ -329,7 +329,7 @@ const queue = [];
 let running = false;
 const timeBetweenQueueRequests = 20000;
 
-function addToRequestsQueue (urlRegistry, agreement) {
+function addToRequestsQueue(urlRegistry, agreement) {
   queue.push([urlRegistry, agreement]);
   timeBetweenRequests += 20000;
   timeBetweenRequests > 160000 ? timeBetweenRequests = 160000 : undefined;
@@ -341,7 +341,7 @@ function addToRequestsQueue (urlRegistry, agreement) {
   return Promise.resolve('Added to queue');
 }
 
-async function computeQueue () {
+async function computeQueue() {
   while (running) {
     logger.info('Queue lenght: [', queue.length, '] - Time Between requests: [', timeBetweenRequests, ']');
     if (queue.length === 0) {
