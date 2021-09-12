@@ -24,7 +24,6 @@ const Promise = require('bluebird');
 const governify = require('governify-commons');
 const moment = require('moment-timezone');
 const JSONStream = require('JSONStream');
-const stream = require('stream');
 
 /// //////////////////////// INT DEPENDENCIES ///////////////////////////
 const config = governify.configurator.getConfig('main');
@@ -111,32 +110,7 @@ class Reporter {
   /// //////////////////////// END GETTERS ///////////////////////////
 
   /// //////////////////////// AUX FUNCTIONS ///////////////////////////
-  /**
-     * This method returns a set of periods which are based on a window parameter.
-     * @param {AgreementModel} agreement agreement model passed
-     * @param {WindowModel} window window model passed
-     * @return {Set} set of periods
-     * @alias module:gUtils.getPeriods
-     * */
-  static getPeriods (agreement, window) {
-    const periods = [];
-    const Wfrom = moment.utc(moment.tz(window.initial, agreement.context.validity.timeZone));
-    const Wto = window.end ? moment.utc(moment.tz(window.end, agreement.context.validity.timeZone)) : moment.utc();
 
-    let from = moment.utc(moment.tz(Wfrom, agreement.context.validity.timeZone));
-    let to = moment.utc(moment.tz(Wfrom, agreement.context.validity.timeZone).add(1, utils.convertPeriodToName(window.period) + 's').subtract(1, 'milliseconds'));
-
-    while (!to || to.isSameOrBefore(Wto)) {
-      periods.push({
-        from: from.toISOString(),
-        to: to.toISOString()
-      });
-      from = moment.utc(moment.tz(from, agreement.context.validity.timeZone).add(1, utils.convertPeriodToName(window.period) + 's'));
-      to = moment.utc(moment.tz(from, agreement.context.validity.timeZone).add(1, utils.convertPeriodToName(window.period) + 's').subtract(1, 'milliseconds'));
-    }
-
-    return periods;
-  }
   /// //////////////////////// END AUX FUNCTIONS ///////////////////////////
 
   /// //////////////////////// MAIN FUNCTION ///////////////////////////
@@ -160,7 +134,7 @@ class Reporter {
 
         // periods = ""; //TEMPORAL FIX
         if (!periods || periods == null || periods == '') {
-          periods = Reporter.getPeriods(this._agreement, {
+          periods = utils.getPeriods(this._agreement, {
             initial: this._agreement.context.validity.initial
           });
         }

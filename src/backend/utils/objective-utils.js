@@ -1,10 +1,10 @@
-var minValue = 0.0001;
-var operators = ['==', '>=', '<=', '>', '<'];
+const minValue = 0.0001;
+const operators = ['==', '>=', '<=', '>', '<'];
 
 // This function return the values that grafana dashboard needs to represent the data
 module.exports.graphThresholds = graphThresholds;
 function graphThresholds (threshold, operation) {
-  var configResult = {};
+  const configResult = {};
   threshold = parseInt(threshold.trim());
   if (operation === '==') {
     configResult.threshold = [(threshold - minValue), (threshold + minValue)];
@@ -37,9 +37,9 @@ function graphThresholds (threshold, operation) {
 // This function returns a object with the value result, the threshold, if is fullfilled or not, and the operation used
 module.exports.calculateObjective = calculateObjective;
 function calculateObjective (objective, values) {
-  var op = calculateOperator(objective);
-  var objectiveLeft = objective.split(op)[0];
-  var limit = objective.split(op)[1];
+  const op = calculateOperator(objective);
+  let objectiveLeft = objective.split(op)[0];
+  let limit = objective.split(op)[1];
   if (isNaN(limit)) {
     if (op.includes('<')) {
       objectiveLeft = limit + ' - ' + objectiveLeft;
@@ -48,12 +48,12 @@ function calculateObjective (objective, values) {
     }
     limit = '0';
   }
-  var threshold = parseInt(limit);
-  var resultQuery = objectiveLeft;
+  const threshold = parseInt(limit);
+  let resultQuery = objectiveLeft;
   for (const [metric, value] of Object.entries(values)) {
     resultQuery = resultQuery.split(metric).join(value).toString();
   }
-  var value = eval(resultQuery);
+  let value = eval(resultQuery);
   if (isNaN(value)) {
     value = 0;
   }
@@ -62,7 +62,7 @@ function calculateObjective (objective, values) {
 
 module.exports.calculateOperator = calculateOperator;
 function calculateOperator (objective) {
-  var result = {};
+  const result = {};
   for (const op of operators) {
     if (objective.split(op).length > 1) {
       return op;

@@ -39,7 +39,7 @@ const _tags = Symbol();
 class InfluxDB {
   /// //////////////////////// BEGIN CONSTRUCTOR ///////////////////////////
   constructor (host, database, measurement, fields, tags) {
-    for (var [key, value] of Object.entries(fields)) {
+    for (const [key, value] of Object.entries(fields)) {
       if (key === 'Influx.FieldType.INTEGER') {
         fields[key] = Influx.FieldType.INTEGER;
       }
@@ -53,7 +53,7 @@ class InfluxDB {
     this._fields = fields;
     this._tags = tags;
     logger.info("Creating InfluxDB connection to '%s' in database '%s' and params %s", host, database, JSON.stringify(influxConfig, 2, null));
-    this._influx = new Influx.InfluxDB(governify.infrastructure.getServiceURL('internal.database.influx-reporter') + "/" + config.influx.database, influxConfig);
+    this._influx = new Influx.InfluxDB(governify.infrastructure.getServiceURL('internal.database.influx-reporter') + '/' + config.influx.database, influxConfig);
     this._createDb();
   }
   /// //////////////////////// END CONSTRUCTOR ///////////////////////////
@@ -128,7 +128,7 @@ class InfluxDB {
   }
 
   writeIdPriority (id, scopes, value, timestamp) {
-    var tags = {};
+    const tags = {};
     tags.id = id;
     for (sc in scopes) {
       tags[sc] = scopes[sc];
@@ -149,7 +149,7 @@ class InfluxDB {
   }
 
   static getAgreementData (agreementId) {
-    this._influx = new Influx.InfluxDB(governify.infrastructure.getServiceURL('internal.database.influx-reporter') + "/" + config.influx.database, influxConfig);
+    this._influx = new Influx.InfluxDB(governify.infrastructure.getServiceURL('internal.database.influx-reporter') + '/' + config.influx.database, influxConfig);
     return this._influx.getSeries({
       measurement: agreementId,
       database: this._database

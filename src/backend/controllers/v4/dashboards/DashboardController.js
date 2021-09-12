@@ -23,25 +23,24 @@ const governify = require('governify-commons');
 const logger = governify.getLogger().tag('v4-dashboard-controller');
 const utils = require('../../../utils/index');
 
-
 /**
  * Return dashboard JSON for grafana
  **/
 
 exports.dashboardGET = async (req, res, next) => {
-  var params = req.swagger.params;
-  var agreementId = params.agreementId.value;
-  var dashboardId = params.dashboardId.value;
-  var boolGetBaseDashboard = params.base.value;
+  const params = req.swagger.params;
+  const agreementId = params.agreementId.value;
+  const dashboardId = params.dashboardId.value;
+  const boolGetBaseDashboard = params.base.value;
   const agreementRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/agreements/' + agreementId);
   const agreement = agreementRequest.data;
   try {
-    var dashboardConfig = agreement.context.definitions.dashboards[dashboardId];
+    const dashboardConfig = agreement.context.definitions.dashboards[dashboardId];
     // Get the JSON file
     var dashboardJSON = await governify.utils.loadObjectFromFileOrURL(dashboardConfig.base);
 
     if (!boolGetBaseDashboard) {
-      var dashboardModifier = await governify.utils.requireFromFileOrURL(dashboardConfig.modifier, dashboardConfig.modifier);
+      const dashboardModifier = await governify.utils.requireFromFileOrURL(dashboardConfig.modifier, dashboardConfig.modifier);
       // Replace all agreement variables specified in the json
       // TODO - This functions is not being currently used and has not been tested. Implement it as a standard for dashboards
       dashboardJSON = utils.textReplaceReferencesFromJSON(JSON.stringify(dashboardJSON), agreement, '>>>agreement.', '<<<');
