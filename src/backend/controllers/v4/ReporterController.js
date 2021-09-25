@@ -143,24 +143,30 @@ exports.contractsContractIdCreatePointsFromListGET = (contractId) => {
  **/
 exports.contractsContractIdCreateHistoryPOST = async (contractId, period) => {
   logger.info('Creating history for agreementID: ' + contractId);
-  return new Promise(async (resolve, reject) => {
+  return new Promise( (resolve, reject) => {
     logger.info('Getting the agreements from Registry with contractId = %s', contractId);
-    const agreementRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/agreements/' + contractId);
-    const agreement = agreementRequest.data;
-    const periods = utils.getPeriods(agreement, {
-      initial: agreement.context.validity.initial,
-      period: period
-    });
-    await callRegistryAndStorePoints('/api/v6/states/' + contractId + '/guarantees' + '?lastPeriod=true', agreement);
-    Promise.each(periods, function (period) {
-      return callRegistryAndStorePoints('/api/v6/states/' + contractId + '/guarantees' + '?from=' + period.from + '&to=' + period.to, agreement);
-    }).then(function () {
-      logger.info('Finished creating history for agreeement ' + contractId);
-      resolve();
-    }).catch(err => {
-      logger.error('Calculation failed for period:', period);
-      reject('Calculation failed for period:', period);
-    });
+    governify.infrastructure.getService('internal.registry').get('/api/v6/agreements/' + contractId)
+    .then(async (agreementRequest) => {
+      const agreement = agreementRequest.data;
+      const periods = utils.getPeriods(agreement, {
+        initial: agreement.context.validity.initial,
+        period: period
+      });
+      await callRegistryAndStorePoints('/api/v6/states/' + contractId + '/guarantees' + '?lastPeriod=true', agreement);
+      Promise.each(periods, function (period) {
+        return callRegistryAndStorePoints('/api/v6/states/' + contractId + '/guarantees' + '?from=' + period.from + '&to=' + period.to, agreement);
+      }).then(function () {
+        logger.info('Finished creating history for agreeement ' + contractId);
+        resolve();
+      }).catch(err => {
+        logger.error('Calculation failed for period:', period);
+        reject('Calculation failed for period:', period);
+      });
+    })
+    .catch(err => {
+      logger.error('Failed requesting agreement: ', err.response ? err.response.status : -1);
+      reject(err);
+    });   
   });
 };
 
@@ -206,14 +212,21 @@ exports.contractsContractIdCreatePointsFromListPOST = async (contractId, listDat
  * no response value expected for this operation
  **/
 exports.contractsContractIdUpdateGET = (contractId) => {
-  return new Promise(async (resolve, reject) => {
+  return new Promise((resolve, reject) => {
     const urlRegistryRequest = '/api/v6/states/' + contractId + '/guarantees' + '?from=' + new Date().toISOString() + '&to=' + moment().add(3, 'week').toISOString() + '&newPeriodsFromGuarantees=false';
     logger.info('Getting the agreements from Registry with contractId = %s', contractId);
-    const agreementRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/agreements/' + contractId);
-    const agreement = agreementRequest.data;
-    callRegistryAndStorePoints(urlRegistryRequest, agreement);
-    // TODO: Add feedback about request. And create tasks for get status of requests
-    resolve();
+    governify.infrastructure.getService('internal.registry').get('/api/v6/agreements/' + contractId)
+    .then(agreementRequest => {
+      const agreement = agreementRequest.data;
+      callRegistryAndStorePoints(urlRegistryRequest, agreement);
+      // TODO: Add feedback about request. And create tasks for get status of requests
+      resolve();
+    })
+    .catch(err => {
+      logger.error('Failed requesting agreement: ', err.response ? err.response.status : -1);
+      reject(err);
+    });
+    
   });
 };
 
