@@ -1089,60 +1089,30 @@ const atoms = {
     title: 'Tabla de % ###TIME_GRAPH.TITLE###',
     type: 'table'
   },
-  divider:{
-    "id": 42,
-    "gridPos": {
-      "h": 2,
-      "w": 24,
-      "x": 0,
-      "y": 0
+  htmlLink: {
+    content: "<script>\n setTimeout(function(){document.getElementById('daySelector').style.filter = 'invert(1)'; document.styleSheets[0].insertRule('::-webkit-calendar-picker-indicator {filter: invert(1);}',1);},1000);\n</script>\n <div style=\"font-size: 34px; color: white; max-width: 90%;text-shadow: 1px 0 0 #000, -1px 0 0 #000, 0 1px 0 #000, 0 -1px 0 #000, .5px .5px #000, -.5px -.5px 0 #000, .5px -.5px 0 #000, -.5px .5px 0 #000;;\">\n<center>\n###TITLE###\n\n</center>\n\n</div>\n<div style=\"font-size: 34px; color: black; margin-top: -60px; max-width: 15%; float: right;  margin-right: 20px;\">\n<button style=\"font-size: 18px; color: #000000\" onclick=\"location.href = location.href.replace('###OLDVIEW###', '###NEWVIEW###')\">\n###BUTTONTEXT###\n</button>\n</div>",
+    gridPos: {
+      h: 2,
+      w: 24,
+      x: 0,
+      y: 0
     },
-    "type": "text",
-    "pluginVersion": "8.0.6",
-    "options": {
-      "mode": "html",
-      "content": "<div style=\"font-size: 34px; color: white; max-width: 90%\">\n<center>\n###VIEW.ACTUALNAME###\n</center>\n\n</div>\n<div style=\"font-size: 34px; color: white; margin-top: -60px; max-width: 15%; float: right;  margin-right: 20px;\">\n<button style=\"font-size: 18px; color: #000000\" onclick=\"location.href = location.href.replace('###VIEW.ACTUAL###', '###VIEW.NEXT###')\">\n🔃 ###VIEW.NEXTNAME###\n</button>\n</div>"
+    id: 30,
+    mode: 'html',
+    type: 'text'
+
+  },
+  htmlLinkGithub: {
+    content: "<script>\n setTimeout(function(){document.getElementById('daySelector').style.filter = 'invert(1)'; document.styleSheets[0].insertRule('::-webkit-calendar-picker-indicator {filter: invert(1);}',1);},1000);\n</script>\n <div style=\"padding-left: 19%;font-size: 34px; color: white; max-width: 80%;text-shadow: 1px 0 0 #000, -1px 0 0 #000, 0 1px 0 #000, 0 -1px 0 #000, .5px .5px #000, -.5px -.5px 0 #000, .5px -.5px 0 #000, -.5px .5px 0 #000;;\">\n<center>\n###TITLE###\n\n</center>\n\n</div>\n<div style=\"font-size: 34px; color: black; margin-top: -55px; max-width: 30%; float: right;  margin-right: 10px;\">\n<a href=\"https://www.github.com/%%%GITHUB_SLUG%%%\" target=\"_blank\"><button style=\"font-size: 18px; color: #000000\">\nGitHub Repo\n</button></a>\n<button style=\"font-size: 18px; color: #000000\" onclick=\"location.href = location.href.replace('###OLDVIEW###', '###NEWVIEW###')\">\n###BUTTONTEXT###\n</button>\n</div>",
+    gridPos: {
+      h: 2,
+      w: 24,
+      x: 0,
+      y: 0
     },
-    "targets": [
-      {
-        "groupBy": [
-          {
-            "params": [
-              "$__interval"
-            ],
-            "type": "time"
-          },
-          {
-            "params": [
-              "null"
-            ],
-            "type": "fill"
-          }
-        ],
-        "orderByTime": "ASC",
-        "policy": "default",
-        "refId": "A",
-        "resultFormat": "time_series",
-        "select": [
-          [
-            {
-              "params": [
-                "value"
-              ],
-              "type": "field"
-            },
-            {
-              "params": [],
-              "type": "mean"
-            }
-          ]
-        ],
-        "tags": []
-      }
-    ],
-    "timeFrom": null,
-    "timeShift": null,
-    "datasource": null
+    id: 30,
+    mode: 'html',
+    type: 'text'
   }
 };
 
@@ -1614,10 +1584,20 @@ const blocks = {
       addAtom('gaugeLast5DaysNotZero', 8, 9, undefined,{ title: '###GUARANTEE.DESCRIPTION###' })
     ]
   },
-  divider:{
-    config:{},
+  'divider-changer': {
+    config: {
+      height: 2
+    },
     panels: [
-      addAtom('divider',undefined,2)
+      addAtom('htmlLink', 24, 2)
+    ]
+  },
+  'divider-changer-github': {
+    config: {
+      height: 2
+    },
+    panels: [
+      addAtom('htmlLinkGithub', 24, 2)
     ]
   }
 };
@@ -1634,6 +1614,7 @@ function sortBlockCompare (block1, block2) {
 module.exports.default = (jsonDashboard, agreement, dashboardName) => {
   let modifiedDashboard = { ...jsonDashboard };
   var agreementId = agreement.id;
+  var agreementProject = agreementId.replace('tpa-','')
   var dashboardConfig = agreement.context.definitions.dashboards[dashboardName].config;
   var currentXLocation = 0;
   var currentYLocation = 0;
@@ -1644,23 +1625,22 @@ module.exports.default = (jsonDashboard, agreement, dashboardName) => {
     var newPanels = [...blocks[block.type].panels];
     // Add here specific block custom code
   
-    if (block.type === 'correlated' || block.type === 'gauge-time-correlation') {
+    if (block.type === 'correlated' || block.type === 'gauge-time-correlation' || block.type === 'gauge-time-correlation-notZero') {
       newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###METRIC.XAXIS###/g, block.config['x-axis-metric']));
       newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###METRIC.YAXIS###/g, block.config['y-axis-metric']));
       newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###METRIC.NOTZERO###/g, block.config['not-zero-metric']));
-      newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###AGREEMENT.PROJECT###/g, agreementId));
-    } else if (block.type === 'title-button-view-changer') {
+      newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###AGREEMENT.PROJECT###/g, agreementProject));
+    } else if (block.type === 'divider-changer' || block.type === 'divider-changer-github') {
       newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###TITLE###/g, block.config.title));
       newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###BUTTONTEXT###/g, block.config['button-text']));
       newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###OLDVIEW###/g, block.config['old-view']));
       newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###NEWVIEW###/g, block.config['new-view']));
-    } else if (block.type === 'gauge-not-zero') {
+      if (block.type === 'divider-changer-github') {
+        var githubSlug = agreementId.split('GH-')[1];
+        newPanels = JSON.parse(JSON.stringify(newPanels).replace(/%%%GITHUB_SLUG%%%/g, githubSlug.split('_')[0] + '/' + githubSlug.split('_')[1]));
+      }
+    } else if (block.type === 'gauge-not-zero' || block.type== 'gauge-time-correlation-notZero') {
       newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###METRIC.NOTZERO###/g, block.config['not-zero-metric']));
-    } else if (block.type === 'divider') {
-      newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###VIEW.ACTUAL###/g, block.config['view-actual']));
-      newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###VIEW.ACTUALNAME###/g, block.config['view-actual-name']));
-      newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###VIEW.NEXT###/g, block.config['view-next']));
-      newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###VIEW.NEXTNAME###/g, block.config['view-next-name']));
     }
 
     const timeGraphTitle = block.config && block.config['time-graph-title'] ? block.config['time-graph-title'] : block.guarantee;
@@ -1700,9 +1680,6 @@ module.exports.default = (jsonDashboard, agreement, dashboardName) => {
     modifiedDashboard.panels = modifiedDashboard.panels.concat(newPanels);
     var modifiedDashboardString = JSON.stringify(modifiedDashboard);
     modifiedDashboardString = modifiedDashboardString.replace(/###AGREEMENT.ID###/g, agreement.id);
-    if (agreement?.context?.definitions?.scopes?.development?.project?.default) {
-      modifiedDashboardString = modifiedDashboardString.replace(/###AGREEMENT.PROJECT###/g, agreement.context.definitions.scopes.development.project.default);
-    }
 
     modifiedDashboard = JSON.parse(modifiedDashboardString);
   });
