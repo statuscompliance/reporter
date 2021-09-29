@@ -1,8 +1,6 @@
 
 'use strict';
 
-module.exports.modifyJSON = modifyJSON;
-
 const atoms = {
   rowTitle: {
     title: '###GUARANTEE.DESCRIPTION###',
@@ -239,21 +237,7 @@ const atoms = {
     datasource: 'InfluxDB',
     fieldConfig: {
       defaults: {
-        custom: {},
-        mappings: [],
-        thresholds: {
-          mode: 'absolute',
-          steps: [
-            {
-              color: 'green',
-              value: null
-            },
-            {
-              color: 'red',
-              value: 80
-            }
-          ]
-        }
+        links:[]
       },
       overrides: []
     },
@@ -261,8 +245,8 @@ const atoms = {
     fillGradient: 0,
     gridPos: {
       h: 9,
-      w: 20,
-      x: 4,
+      w: 12,
+      x: 0,
       y: 1
     },
     hiddenSeries: false,
@@ -277,13 +261,13 @@ const atoms = {
       values: false
     },
     lines: true,
-    linewidth: 1,
+    linewidth: 2,
     nullPointMode: 'null',
     options: {
       dataLinks: []
     },
     percentage: false,
-    pluginVersion: '7.0.0',
+    pluginVersion: '8.0.6',
     pointradius: 2,
     points: true,
     renderer: 'flot',
@@ -368,11 +352,12 @@ const atoms = {
     },
     yaxes: [
       {
-        format: 'short',
-        label: null,
+        decimals: 0,
+        format: "percent",
+        label: "",
         logBase: 1,
-        max: null,
-        min: null,
+        max: "100",
+        min: "0",
         show: true
       },
       {
@@ -934,7 +919,7 @@ const atoms = {
   },
   scatter: {
     title: 'Correlation for all teams',
-    type: 'isagroup-scatterplot',
+    type: 'governify-scatterplot',
     guarantee: '###GUARANTEE.NAME###',
     datasource: 'InfluxDB',
     description: '',
@@ -1029,6 +1014,81 @@ const atoms = {
     timeFrom: null,
     timeShift: null
   },
+  valuesInTime:{
+    datasource: 'InfluxDB',
+    fieldConfig: {
+      defaults: {
+        custom: {
+          align: 'center',
+          displayMode: 'color-background'
+        },
+        mappings: [],
+        thresholds: {
+          mode: 'absolute',
+          steps: [
+            {
+              color: "semi-dark-red",
+              value: null
+            },
+            {
+              color: "semi-dark-green",
+              value: '###GUARANTEE.THRESHOLD###'
+            }
+          ]
+        },
+        unit: 'percent'
+      },
+      overrides: []
+    },
+    gridPos: {
+      h: 9,
+      w: 12,
+      x: 12,
+      y: 1
+    },
+    id: 4,
+    options: {
+      showHeader: true
+    },
+    pluginVersion: '7.0.0',
+    targets: [
+      {
+        groupBy: [],
+        measurement: 'metrics_values',
+        orderByTime: 'ASC',
+        policy: 'autogen',
+        refId: 'A',
+        resultFormat: 'time_series',
+        select: [
+          [
+            {
+              params: [
+                'guaranteeValue'
+              ],
+              type: 'field'
+            }
+          ]
+        ],
+        tags: [
+          {
+            key: 'agreement',
+            operator: '=',
+            value: '###AGREEMENT.ID###'
+          },
+          {
+            condition: 'AND',
+            key: 'id',
+            operator: '=',
+            value: '###GUARANTEE.NAME###'
+          }
+        ]
+      }
+    ],
+    timeFrom: null,
+    timeShift: null,
+    title: 'Tabla de % ###TIME_GRAPH.TITLE###',
+    type: 'table'
+  },
   htmlLink: {
     content: "<script>\n setTimeout(function(){document.getElementById('daySelector').style.filter = 'invert(1)'; document.styleSheets[0].insertRule('::-webkit-calendar-picker-indicator {filter: invert(1);}',1);},1000);\n</script>\n <div style=\"font-size: 34px; color: white; max-width: 90%;text-shadow: 1px 0 0 #000, -1px 0 0 #000, 0 1px 0 #000, 0 -1px 0 #000, .5px .5px #000, -.5px -.5px 0 #000, .5px -.5px 0 #000, -.5px .5px 0 #000;;\">\n<center>\n###TITLE###\n\n</center>\n\n</div>\n<div style=\"font-size: 34px; color: black; margin-top: -60px; max-width: 15%; float: right;  margin-right: 20px;\">\n<button style=\"font-size: 18px; color: #000000\" onclick=\"location.href = location.href.replace('###OLDVIEW###', '###NEWVIEW###')\">\n###BUTTONTEXT###\n</button>\n</div>",
     gridPos: {
@@ -1056,14 +1116,17 @@ const atoms = {
   }
 };
 
-function addAtom (atom, width = 24, height = 9, options = {}) {
+function addAtom (atom, width = 24, height = 9,x = undefined, options = {}) {
   const result = { ...atoms[atom] };
   result.gridPos = { ...result.gridPos };
   result.gridPos.w = width;
   result.gridPos.h = height;
-
+  if(x != undefined){
+    result.gridPos.x = x;
+  }
   // TODO - Nested objects
   for (const [key, value] of Object.entries(options)) {
+    
     result[key] = value;
   }
 
@@ -1433,241 +1496,10 @@ const blocks = {
       height: 8
     },
     panels: [
-      {
-      datasource: 'InfluxDB',
-      fieldConfig: {
-        defaults: {
-          custom: {
-            align: 'center',
-            displayMode: 'color-background'
-          },
-          mappings: [],
-          thresholds: {
-            mode: 'absolute',
-            steps: [
-              {
-                color: 'rgb(127, 9, 11)',
-                value: null
-              },
-              {
-                color: 'rgb(30, 104, 11)',
-                value: '###GUARANTEE.THRESHOLD###'
-              }
-            ]
-          },
-          unit: 'none'
-        },
-        overrides: []
-      },
-      gridPos: {
-        h: 8,
-        w: 5,
-        x: 19,
-        y: 11
-      },
-      id: 4,
-      options: {
-        showHeader: true
-      },
-      pluginVersion: '7.0.0',
-      targets: [
-        {
-          groupBy: [],
-          measurement: 'metrics_values',
-          orderByTime: 'ASC',
-          policy: 'autogen',
-          refId: 'A',
-          resultFormat: 'time_series',
-          select: [
-            [
-              {
-                params: [
-                  'guaranteeValue'
-                ],
-                type: 'field'
-              }
-            ]
-          ],
-          tags: [
-            {
-              key: 'agreement',
-              operator: '=',
-              value: '###AGREEMENT.ID###'
-            },
-            {
-              condition: 'AND',
-              key: 'id',
-              operator: '=',
-              value: '###GUARANTEE.NAME###'
-            }
-          ]
-        }
-      ],
-      timeFrom: null,
-      timeShift: null,
-      title: 'Values in time',
-      type: 'table'
-    },
-    {
-      collapsed: false,
-      datasource: null,
-      gridPos: {
-        h: 1,
-        w: 24,
-        x: 0,
-        y: 19
-      },
-      id: 24,
-      panels: [],
-      title: '###GUARANTEE.DESCRIPTION###',
-      type: 'row'
-    },
-    {
-      aliasColors: {},
-      bars: false,
-      dashLength: 10,
-      dashes: false,
-      datasource: 'InfluxDB',
-      fieldConfig: {
-        defaults: {
-          custom: {}
-        },
-        overrides: []
-      },
-      fill: 1,
-      fillGradient: 0,
-      gridPos: {
-        h: 8,
-        w: 19,
-        x: 0,
-        y: 20
-      },
-      hiddenSeries: false,
-      id: 20,
-      legend: {
-        avg: false,
-        current: false,
-        max: false,
-        min: false,
-        show: true,
-        total: false,
-        values: false
-      },
-      lines: true,
-      linewidth: 1,
-      nullPointMode: 'null',
-      options: {
-        dataLinks: []
-      },
-      percentage: false,
-      pointradius: 2,
-      points: true,
-      renderer: 'flot',
-      seriesOverrides: [],
-      spaceLength: 10,
-      stack: false,
-      steppedLine: false,
-      targets: [
-        {
-          alias: '',
-          groupBy: [
-            {
-              params: [
-                '$__interval'
-              ],
-              type: 'time'
-            },
-            {
-              params: [
-                'none'
-              ],
-              type: 'fill'
-            }
-          ],
-          measurement: 'metrics_values',
-          orderByTime: 'ASC',
-          policy: 'autogen',
-          refId: 'A',
-          resultFormat: 'time_series',
-          select: [
-            [
-              {
-                params: [
-                  'guaranteeValue'
-                ],
-                type: 'field'
-              },
-              {
-                params: [],
-                type: 'mean'
-              }
-            ]
-          ],
-          tags: [
-            {
-              key: 'agreement',
-              operator: '=',
-              value: '###AGREEMENT.ID###'
-            },
-            {
-              condition: 'AND',
-              key: 'id',
-              operator: '=',
-              value: '###GUARANTEE.NAME###'
-            }
-          ]
-        }
-      ],
-      thresholds: [
-        {
-          colorMode: 'critical',
-          fill: true,
-          line: false,
-          op: 'lt',
-          value: '###GUARANTEE.THRESHOLD###',
-          yaxis: 'left'
-        }
-      ],
-      timeFrom: null,
-      timeRegions: [],
-      timeShift: null,
-      title: 'Time Graph',
-      tooltip: {
-        shared: true,
-        sort: 0,
-        value_type: 'individual'
-      },
-      type: 'graph',
-      xaxis: {
-        buckets: null,
-        mode: 'time',
-        name: null,
-        show: true,
-        values: []
-      },
-      yaxes: [
-        {
-          format: 'short',
-          label: null,
-          logBase: 1,
-          max: 100,
-          min: 0,
-          show: true
-        },
-        {
-          format: 'short',
-          label: null,
-          logBase: 1,
-          max: null,
-          min: null,
-          show: true
-        }
-      ],
-      yaxis: {
-        align: false,
-        alignLevel: null
-      }
-    }]
+      addAtom('rowTitle'),
+      addAtom('timeGraph',12),
+      addAtom('valuesInTime',12)
+    ]
 
   },
   'time-graph2': {
@@ -1675,7 +1507,6 @@ const blocks = {
       height: 8
     },
     panels: [
-
       addAtom('rowTitle'),
       addAtom('timeGraph')
     ]
@@ -1686,13 +1517,23 @@ const blocks = {
       height: 8
     },
     panels: [
-
       addAtom('rowTitle'),
       addAtom('timeGraphMember')
     ]
 
   },
   'gauge-time-correlation': {
+    config: {
+      height: 8
+    },
+    panels: [
+      addAtom('rowTitle'),
+      addAtom('gaugeLast5Days', 4),
+      addAtom('timeGraphPercent', 14),
+      addAtom('scatter', 6)
+    ]
+  },
+  'gauge-time-correlation-notZero': {
     config: {
       height: 8
     },
@@ -1713,6 +1554,16 @@ const blocks = {
       addAtom('timeGraphPercent', 20)
     ]
   },
+  'time-gauge': {
+    config: {
+      height: 8
+    },
+    panels: [
+      addAtom('rowTitle'),
+      addAtom('timeGraphPercent', 20,9,0),
+      addAtom('gaugeLast5Days', 4,9,20)
+    ]
+  },
   gauge: {
     config: {
       height: 9,
@@ -1720,7 +1571,7 @@ const blocks = {
       fillRow: true
     },
     panels: [
-      addAtom('gaugeLast5Days', 8, 9, { title: '###GUARANTEE.DESCRIPTION###' })
+      addAtom('gaugeLast5Days', 8, 9, undefined,{ title: '###GUARANTEE.DESCRIPTION###' })
     ]
   },
   'gauge-not-zero': {
@@ -1730,10 +1581,10 @@ const blocks = {
       fillRow: true
     },
     panels: [
-      addAtom('gaugeLast5DaysNotZero', 8, 9, { title: '###GUARANTEE.DESCRIPTION###' })
+      addAtom('gaugeLast5DaysNotZero', 8, 9, undefined,{ title: '###GUARANTEE.DESCRIPTION###' })
     ]
   },
-  'title-button-view-changer': {
+  'divider-changer': {
     config: {
       height: 2
     },
@@ -1741,7 +1592,7 @@ const blocks = {
       addAtom('htmlLink', 24, 2)
     ]
   },
-  'title-button-view-changer-github': {
+  'divider-changer-github': {
     config: {
       height: 2
     },
@@ -1760,44 +1611,44 @@ function sortBlockCompare (block1, block2) {
   return 0;
 }
 
-const escapeRegExp = (string) => {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-};
-
-function modifyJSON (jsonDashboard, agreement, dashboardName) {
+module.exports.default = (jsonDashboard, agreement, dashboardName) => {
   let modifiedDashboard = { ...jsonDashboard };
-  var agreementId = agreement.context.definitions.scopes.development.project.default;
+  var agreementId = agreement.id;
+  var agreementProject = agreementId.replace('tpa-','')
   var dashboardConfig = agreement.context.definitions.dashboards[dashboardName].config;
   var currentXLocation = 0;
   var currentYLocation = 0;
   var currentPanelId = 0;
 
   // Each block configured in the agreement should be added with its configuration to the dashboard.
-  dashboardConfig.blocks.sort(sortBlockCompare).forEach(function (block) {
+  Object.entries(dashboardConfig.blocks).sort((a,b)=> a[0]-b[0]).forEach(function ([_,block]) {
     var newPanels = [...blocks[block.type].panels];
     // Add here specific block custom code
-
-    if (block.type === 'correlated' || block.type === 'gauge-time-correlation') {
+  
+    if (block.type === 'correlated' || block.type === 'gauge-time-correlation' || block.type === 'gauge-time-correlation-notZero') {
       newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###METRIC.XAXIS###/g, block.config['x-axis-metric']));
       newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###METRIC.YAXIS###/g, block.config['y-axis-metric']));
       newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###METRIC.NOTZERO###/g, block.config['not-zero-metric']));
-    } else if (block.type === 'title-button-view-changer' || block.type === 'title-button-view-changer-github') {
+      newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###AGREEMENT.PROJECT###/g, agreementProject));
+    } else if (block.type === 'divider-changer' || block.type === 'divider-changer-github') {
       newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###TITLE###/g, block.config.title));
       newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###BUTTONTEXT###/g, block.config['button-text']));
       newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###OLDVIEW###/g, block.config['old-view']));
       newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###NEWVIEW###/g, block.config['new-view']));
-      if (block.type === 'title-button-view-changer-github') {
+      if (block.type === 'divider-changer-github') {
         var githubSlug = agreementId.split('GH-')[1];
         newPanels = JSON.parse(JSON.stringify(newPanels).replace(/%%%GITHUB_SLUG%%%/g, githubSlug.split('_')[0] + '/' + githubSlug.split('_')[1]));
       }
-    } else if (block.type === 'gauge-not-zero') {
+    } else if (block.type === 'gauge-not-zero' || block.type== 'gauge-time-correlation-notZero') {
       newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###METRIC.NOTZERO###/g, block.config['not-zero-metric']));
     }
 
-    const timeGraphTitle = block.config['time-graph-title'] ? block.config['time-graph-title'] : 'Time Graph';
+    const timeGraphTitle = block.config && block.config['time-graph-title'] ? block.config['time-graph-title'] : block.guarantee;
     newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###TIME_GRAPH.TITLE###/g, timeGraphTitle));
 
-    newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###AGREEMENT.SCOPE.CLASS###/g, agreement.context.definitions.scopes.development.class.default));
+    if(block.config && block.config['scope-class']){
+      newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###AGREEMENT.SCOPE.CLASS###/g, block.config['scope-class']));
+    }
 
     var guarantee = agreement.terms.guarantees.find(gua => {
       return gua.id === block.guarantee;
@@ -1829,9 +1680,6 @@ function modifyJSON (jsonDashboard, agreement, dashboardName) {
     modifiedDashboard.panels = modifiedDashboard.panels.concat(newPanels);
     var modifiedDashboardString = JSON.stringify(modifiedDashboard);
     modifiedDashboardString = modifiedDashboardString.replace(/###AGREEMENT.ID###/g, agreement.id);
-    if (agreement?.context?.definitions?.scopes?.development?.project?.default) {
-      modifiedDashboardString = modifiedDashboardString.replace(/###AGREEMENT.PROJECT###/g, agreement.context.definitions.scopes.development.project.default);
-    }
 
     modifiedDashboard = JSON.parse(modifiedDashboardString);
   });
