@@ -228,7 +228,7 @@ exports.contractsContractIdUpdateGET = async (contractId) => {
   logger.info('Getting the agreements from Registry with contractId = %s', contractId);
   
   governify.infrastructure.getService('internal.registry').get('/api/v6/agreements/' + contractId)
-  .then(agreementRequest => {
+  .then(async (agreementRequest) => {
     const agreement = agreementRequest.data;
     var influxPoints = await callRegistryAndStorePoints(urlRegistryRequest, agreement)
     .catch(err => {
@@ -367,7 +367,7 @@ exports.contractsContractIdCreatePointsFromPeriodsPOST = async (contractId, peri
   logger.info('Getting the agreements from Registry with contractId = %s', contractId);
 
   governify.infrastructure.getService('internal.registry').get('/api/v6/agreements/' + contractId)
-  .then(agreementRequest => {
+  .then(async (agreementRequest) => {
     const agreement = agreementRequest.data;
 
     for(let chunk of chunkArray(periods, periodInserted)){
