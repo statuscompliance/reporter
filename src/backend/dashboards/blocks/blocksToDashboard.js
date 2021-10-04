@@ -16,6 +16,111 @@ const atoms = {
     id: 53,
     panels: []
   },
+  gaugeLast5DaysOld: {
+    title: 'Last 5 days mean percentage',
+    guarantee: '###GUARANTEE.NAME###',
+    type: 'gauge',
+    datasource: 'InfluxDB',
+    fieldConfig: {
+      defaults: {
+        custom: {},
+        mappings: [],
+        max: 100,
+        min: 0,
+        thresholds: {
+          mode: 'absolute',
+          steps: [
+            {
+              color: 'red',
+              value: null
+            },
+            {
+              color: 'yellow',
+              value: 50
+            },
+            {
+              color: 'green',
+              value: 75
+            }
+          ]
+        }
+      },
+      overrides: []
+    },
+    gridPos: {
+      h: 9,
+      w: 4,
+      x: 0,
+      y: 1
+    },
+    id: 2,
+    options: {
+      orientation: 'auto',
+      reduceOptions: {
+        calcs: [
+          'mean'
+        ],
+        values: false
+      },
+      showThresholdLabels: false,
+      showThresholdMarkers: true
+    },
+    pluginVersion: '7.0.0',
+    targets: [
+      {
+        groupBy: [
+          {
+            params: [
+              '$__interval'
+            ],
+            type: 'time'
+          },
+          {
+            params: [
+              'null'
+            ],
+            type: 'fill'
+          }
+        ],
+        measurement: 'metrics_values',
+        orderByTime: 'ASC',
+        policy: 'autogen',
+        query: "SELECT mean(\"guaranteeValue\") FROM \"autogen\".\"metrics_values\" WHERE (\"agreement\" = '###AGREEMENT.ID###' AND \"id\" = '###GUARANTEE.NAME###') AND time < now() AND time >= now() -500d GROUP BY time($__interval) fill(null)",
+        rawQuery: true,
+        refId: 'A',
+        resultFormat: 'time_series',
+        select: [
+          [
+            {
+              params: [
+                'guaranteeValue'
+              ],
+              type: 'field'
+            },
+            {
+              params: [],
+              type: 'mean'
+            }
+          ]
+        ],
+        tags: [
+          {
+            key: 'agreement',
+            operator: '=',
+            value: '###AGREEMENT.ID###'
+          },
+          {
+            condition: 'AND',
+            key: 'id',
+            operator: '=',
+            value: '###GUARANTEE.NAME###'
+          }
+        ]
+      }
+    ],
+    timeFrom: null,
+    timeShift: null
+  },
   gaugeLast5Days: {
     title: 'Last 5 days mean percentage',
     guarantee: '###GUARANTEE.NAME###',
@@ -525,7 +630,7 @@ const atoms = {
       alignLevel: null
     }
   },
-  timeGraphPercent: {
+  timeGraphPercentOld: {
     title: '###TIME_GRAPH.TITLE###',
     guarantee: '###GUARANTEE.NAME###',
     type: 'graph',
@@ -559,7 +664,7 @@ const atoms = {
     gridPos: {
       h: 9,
       w: 20,
-      x: 4,
+      x: 0,
       y: 1
     },
     hiddenSeries: false,
@@ -746,6 +851,177 @@ const atoms = {
       alignLevel: null
     }
   },
+  timeGraphPercent: {
+    title: '###TIME_GRAPH.TITLE###',
+    guarantee: '###GUARANTEE.NAME###',
+    type: 'graph',
+    aliasColors: {},
+    bars: false,
+    dashLength: 10,
+    dashes: false,
+    datasource: 'InfluxDB',
+    fieldConfig: {
+      defaults: {
+        custom: {},
+        mappings: [],
+        thresholds: {
+          mode: 'absolute',
+          steps: [
+            {
+              color: 'green',
+              value: null
+            },
+            {
+              color: 'red',
+              value: 80
+            }
+          ]
+        }
+      },
+      overrides: []
+    },
+    fill: 1,
+    fillGradient: 0,
+    gridPos: {
+      h: 9,
+      w: 20,
+      x: 0,
+      y: 1
+    },
+    hiddenSeries: false,
+    id: 4,
+    legend: {
+      avg: false,
+      current: false,
+      max: false,
+      min: false,
+      show: true,
+      total: false,
+      values: false
+    },
+    lines: true,
+    linewidth: 1,
+    nullPointMode: 'connected',
+    options: {
+      dataLinks: []
+    },
+    percentage: false,
+    pluginVersion: '7.0.0',
+    pointradius: 2,
+    points: true,
+    renderer: 'flot',
+    seriesOverrides: [
+      {
+        alias: 'Team',
+        color: '#3274D9'
+      },
+      {
+        alias: 'Class mean',
+        color: 'rgb(155, 155, 155)',
+        points: false
+      }
+    ],
+    spaceLength: 10,
+    stack: false,
+    steppedLine: false,
+    targets:
+            [
+              {
+                alias: 'Team',
+                groupBy: [],
+                measurement: 'metrics_values',
+                orderByTime: 'ASC',
+                policy: 'autogen',
+                query: "SELECT \"guaranteeValue\" FROM \"autogen\".\"metrics_values\" WHERE (\"agreement\" = '###AGREEMENT.ID###' AND \"id\" = '###GUARANTEE.NAME###') AND $timeFilter",
+                rawQuery: true,
+                refId: 'A',
+                resultFormat: 'time_series',
+                select: [
+                  [
+                    {
+                      params: [
+                        'guaranteeValue'
+                      ],
+                      type: 'field'
+                    }
+                  ]
+                ],
+                tags: []
+              },
+              {
+                alias: 'Class mean',
+                groupBy: [],
+                orderByTime: 'ASC',
+                policy: 'autogen',
+                query: "SELECT MEAN(\"guaranteeValue\") FROM \"autogen\".\"metrics_values\" WHERE (\"scope_class\" = '###AGREEMENT.SCOPE.CLASS###' AND \"id\" = '###GUARANTEE.NAME###') AND $timeFilter GROUP BY time(24h)",
+                rawQuery: true,
+                refId: 'B',
+                resultFormat: 'time_series',
+                select: [
+                  [
+                    {
+                      params: [
+                        'value'
+                      ],
+                      type: 'field'
+                    },
+                    {
+                      params: [],
+                      type: 'mean'
+                    }
+                  ]
+                ],
+                tags: []
+              }
+            ],
+    thresholds: [
+      {
+        colorMode: 'critical',
+        fill: true,
+        line: false,
+        op: 'lt',
+        value: '###GUARANTEE.THRESHOLD###',
+        yaxis: 'left'
+      }
+    ],
+    timeFrom: null,
+    timeRegions: [],
+    timeShift: null,
+    tooltip: {
+      shared: true,
+      sort: 0,
+      value_type: 'individual'
+    },
+    xaxis: {
+      buckets: null,
+      mode: 'time',
+      name: null,
+      show: true,
+      values: []
+    },
+    yaxes: [
+      {
+        format: 'short',
+        label: null,
+        logBase: 1,
+        max: '100',
+        min: '0',
+        show: true
+      },
+      {
+        format: 'short',
+        label: null,
+        logBase: 1,
+        max: null,
+        min: null,
+        show: true
+      }
+    ],
+    yaxis: {
+      align: false,
+      alignLevel: null
+    }
+  },
   timeGraphPercentNotZero: {
     title: '###TIME_GRAPH.TITLE###',
     guarantee: '###GUARANTEE.NAME###',
@@ -780,7 +1056,7 @@ const atoms = {
     gridPos: {
       h: 9,
       w: 20,
-      x: 4,
+      x: 0,
       y: 1
     },
     hiddenSeries: false,
@@ -1246,7 +1522,7 @@ const blocks = {
         ],
         timeFrom: null,
         timeShift: null,
-        type: 'isagroup-scatterplot'
+        type: 'governify-scatterplot'
       },
       {
         title: 'Correlation values for all teams',
@@ -1452,8 +1728,8 @@ const blocks = {
               excludeByName: {},
               indexByName: {},
               renameByName: {
-                '###METRIC.XAXIS###': 'Correlated Pull Requests',
-                '###METRIC.YAXIS###': 'Finished stories'
+                '###METRIC.XAXIS###': '###METRIC.XAXIS###',
+                '###METRIC.YAXIS###': '###METRIC.YAXIS###'
               }
             }
           }
@@ -1497,7 +1773,18 @@ const blocks = {
     },
     panels: [
       addAtom('rowTitle'),
-      addAtom('timeGraph',12),
+      addAtom('timeGraphPercent',12),
+      addAtom('valuesInTime',12)
+    ]
+
+  },
+  'time-graph-notZero': {
+    config: {
+      height: 8
+    },
+    panels: [
+      addAtom('rowTitle'),
+      addAtom('timeGraphPercentNotZero',12),
       addAtom('valuesInTime',12)
     ]
 
@@ -1508,7 +1795,17 @@ const blocks = {
     },
     panels: [
       addAtom('rowTitle'),
-      addAtom('timeGraph')
+      addAtom('timeGraphPercent')
+    ]
+
+  },
+  'time-graph2-notZero': {
+    config: {
+      height: 8
+    },
+    panels: [
+      addAtom('rowTitle'),
+      addAtom('timeGraphPercentNotZero')
     ]
 
   },
@@ -1529,7 +1826,7 @@ const blocks = {
     panels: [
       addAtom('rowTitle'),
       addAtom('gaugeLast5Days', 4),
-      addAtom('timeGraphPercent', 14),
+      addAtom('timeGraphPercent', 14,9,4),
       addAtom('scatter', 6)
     ]
   },
@@ -1540,7 +1837,7 @@ const blocks = {
     panels: [
       addAtom('rowTitle'),
       addAtom('gaugeLast5DaysNotZero', 4),
-      addAtom('timeGraphPercentNotZero', 14),
+      addAtom('timeGraphPercentNotZero', 14,9,4),
       addAtom('scatter', 6)
     ]
   },
@@ -1551,7 +1848,17 @@ const blocks = {
     panels: [
       addAtom('rowTitle'),
       addAtom('gaugeLast5Days', 4),
-      addAtom('timeGraphPercent', 20)
+      addAtom('timeGraphPercent', 20,9,4)
+    ]
+  },
+  'gauge-time-notZero': {
+    config: {
+      height: 8
+    },
+    panels: [
+      addAtom('rowTitle'),
+      addAtom('gaugeLast5Days', 4),
+      addAtom('timeGraphPercentNotZero', 20,9,4)
     ]
   },
   'time-gauge': {
@@ -1561,6 +1868,16 @@ const blocks = {
     panels: [
       addAtom('rowTitle'),
       addAtom('timeGraphPercent', 20,9,0),
+      addAtom('gaugeLast5Days', 4,9,20)
+    ]
+  },
+  'time-gauge-notZero': {
+    config: {
+      height: 8
+    },
+    panels: [
+      addAtom('rowTitle'),
+      addAtom('timeGraphPercentNotZero', 20,9,0),
       addAtom('gaugeLast5Days', 4,9,20)
     ]
   },
@@ -1574,7 +1891,7 @@ const blocks = {
       addAtom('gaugeLast5Days', 8, 9, undefined,{ title: '###GUARANTEE.DESCRIPTION###' })
     ]
   },
-  'gauge-not-zero': {
+  'gauge-notZero': {
     config: {
       height: 9,
       width: 8,
@@ -1639,7 +1956,7 @@ module.exports.default = (jsonDashboard, agreement, dashboardName) => {
         var githubSlug = agreementId.split('GH-')[1];
         newPanels = JSON.parse(JSON.stringify(newPanels).replace(/%%%GITHUB_SLUG%%%/g, githubSlug.split('_')[0] + '/' + githubSlug.split('_')[1]));
       }
-    } else if (block.type === 'gauge-not-zero' || block.type== 'gauge-time-correlation-notZero') {
+    } else if (block.type.includes('notZero')) {
       newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###METRIC.NOTZERO###/g, block.config['not-zero-metric']));
     }
 
