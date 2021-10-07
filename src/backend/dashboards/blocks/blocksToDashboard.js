@@ -1857,7 +1857,7 @@ const blocks = {
     },
     panels: [
       addAtom('rowTitle'),
-      addAtom('gaugeLast5Days', 4),
+      addAtom('gaugeLast5DaysNotZero', 4),
       addAtom('timeGraphPercentNotZero', 20,9,4)
     ]
   },
@@ -1878,7 +1878,7 @@ const blocks = {
     panels: [
       addAtom('rowTitle'),
       addAtom('timeGraphPercentNotZero', 20,9,0),
-      addAtom('gaugeLast5Days', 4,9,20)
+      addAtom('gaugeLast5DaysNotZero', 4,9,20)
     ]
   },
   gauge: {
