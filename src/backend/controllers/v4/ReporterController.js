@@ -166,9 +166,13 @@ exports.contractsContractIdCreateHistoryPOST = async (contractId, period) => {
       for(let chunkperiod of chunk){
         var newPoints = await callRegistryAndStorePoints('/api/v6/states/' + contractId + '/guarantees' + '?from=' + chunkperiod.from + '&to=' + chunkperiod.to, agreement)
         .catch(err => {
-          logger.error('Error getting points from period ' + err)
+          logger.error(`Error getting points from period ${chunkperiod.from} to ${chunkperiod.to} ` + err)
         });
-        influxPoints = [...influxPoints, ...newPoints];
+        try{
+          influxPoints = [...influxPoints, ...newPoints];
+        }catch(_){
+          continue;
+        }
       }
       await influxInsert(influxPoints).catch(() => 'Error inserting periods ' + chunk);
     };
@@ -201,9 +205,13 @@ exports.contractsContractIdCreatePointsFromListPOST = async (contractId, listDat
           statusCreatePoints[contractId] = { current: statusCreatePoints[contractId].current + 1, total: periods.length };
           var newPoints = await callRegistryAndStorePoints('/api/v6/states/' + contractId + '/guarantees' + '?from=' + chunkperiod.from + '&to=' + chunkperiod.to + '&newPeriodsFromGuarantees=false', agreement)
           .catch(err => {
-            logger.error('Error getting points from period ' + err)
+            logger.error(`Error getting points from period ${chunkperiod.from} to ${chunkperiod.to} ` + err)
           });
-          influxPoints = [...influxPoints, ...newPoints];
+          try{
+            influxPoints = [...influxPoints, ...newPoints];
+          }catch(_){
+            continue;
+          }
         }
         await influxInsert(influxPoints).catch(() => 'Error inserting periods ' + chunk);
       }
@@ -375,9 +383,13 @@ exports.contractsContractIdCreatePointsFromPeriodsPOST = async (contractId, peri
       for(let chunkperiod of chunk){
         var newPoints = await callRegistryAndStorePoints('/api/v6/states/' + contractId + '/guarantees' + '?from=' + chunkperiod.from + '&to=' + chunkperiod.to + '&newPeriodsFromGuarantees=false', agreement)
         .catch(err => {
-          logger.error('Error getting points from period ' + err)
+          logger.error(`Error getting points from period ${chunkperiod.from} to ${chunkperiod.to} ` + err)
         });
-        influxPoints = [...influxPoints, ...newPoints];
+        try{
+          influxPoints = [...influxPoints, ...newPoints];
+        }catch(_){
+          continue;
+        }
       }
       await influxInsert(influxPoints).catch(() => 'Error inserting periods ' + chunk);
     }
