@@ -43,18 +43,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
                         $http.get(url).then((response) => {
                             try {
                                 var data = response.data;
-                                if (!Array.isArray(data) ||
-                                    data.length === 0 ||
-                                    !data[0].records.evidences ||
-                                    !Array.isArray(data[0].records.evidences) ||
-                                    data[0].records.evidences.length === 0) {
+                                if (!Array.isArray(data)){
                                     return reject({
                                         status: 500,
                                         message: 'Registry data is not an array with data'
                                     });
+                                }
+
+                                let lastEvidencesData = data[data.length-1];
+                                console.log(lastEvidencesData.records.evidences)
+                                if (lastEvidencesData?.records?.evidences && Array.isArray(lastEvidencesData?.records?.evidences)) {
+                                    return resolve(lastEvidencesData.records.evidences);
                                 } else {
-                                    data = data[0].records.evidences;
-                                    return resolve(data);
+                                    return reject({
+                                        status: 500,
+                                        message: 'No evidences returned in registry data' + lastEvidencesData.records?.evidences
+                                    });
                                 }
                             } catch (err) {
                                 return reject({

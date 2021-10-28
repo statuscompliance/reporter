@@ -20,10 +20,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 'use strict';
 
 const governify = require('governify-commons');
+const logger = governify.getLogger().tag('v4-dashboard-controller');
 const utils = require('../../../utils/index');
-const logger = require('../../../logger');
-
-// const logger = require('../../../logger');
+const baseDashboard = require('../../../dashboards/blocks/base.json')
+const blocksToDashboard = require('../../../dashboards/blocks/blocksToDashboard')
 
 /**
  * Return dashboard JSON for grafana
@@ -37,17 +37,15 @@ exports.dashboardGET = async (req, res, next) => {
   const agreementRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/agreements/' + agreementId);
   const agreement = agreementRequest.data;
   try {
-    var dashboardConfig = agreement.context.definitions.dashboards[dashboardId];
-    // Get the JSON file
-    var dashboardJSON = await governify.utils.loadObjectFromFileOrURL(dashboardConfig.base);
-
-    if (!boolGetBaseDashboard) {
-      var dashboardModifier = await governify.utils.requireFromFileOrURL(dashboardConfig.modifier, dashboardConfig.modifier);
-      // Replace all agreement variables specified in the json
-      // TODO - This functions is not being currently used and has not been tested. Implement it as a standard for dashboards
-      dashboardJSON = utils.textReplaceReferencesFromJSON(JSON.stringify(dashboardJSON), agreement, '>>>agreement.', '<<<');
-      // Apply modifier functions of the dashboard
-      var dashboardJSON = dashboardModifier.modifyJSON(JSON.parse(dashboardJSON), agreement, dashboardId);
+    var dashboardConfig = agreement.context.definitions.dashboards[dashboardId]
+    
+    
+    var dashboardJSON;
+    if(dashboardConfig.config.configDashboard){
+      dashboardJSON = await configDashboard(agreement,dashboardId);
+    }
+    else{
+      dashboardJSON = await customDashboard(dashboardConfig,agreement,dashboardId);
     }
     res.status(200).send(dashboardJSON);
   } catch (err) {
@@ -55,3 +53,42 @@ exports.dashboardGET = async (req, res, next) => {
     res.status(400).send(err);
   }
 };
+
+
+
+const customDashboard = async(dashboardConfig,agreement,dashboardId) => {
+  // Get the JSON file
+  var dashboardJSON = await governify.utils.loadObjectFromFileOrURL(dashboardConfig.base);
+  // Replace all agreement variables specified in the json
+  var stringDashboardJSON = utils.textReplaceReferencesFromJSON(JSON.stringify(dashboardJSON), agreement, '>>>agreement.', '<<<');
+  dashboardJSON = JSON.parse(stringDashboardJSON)
+
+  // Check if there is a base modifier
+  if(dashboardConfig.modifier && dashboardConfig.modifier !== ''){
+    var dashboardBaseModifier = await governify.utils.requireFromFileOrURL(dashboardConfig.modifier, dashboardConfig.modifier);
+    
+    // Apply modifier functions of the dashboard
+    dashboardJSON = dashboardBaseModifier.modifyJSON(dashboardJSON, agreement, dashboardId); 
+  }
+
+  if(dashboardConfig.modifierPipe && typeof dashboardConfig.modifierPipe === 'object'){
+    const modifierPipe = Object.entries(dashboardConfig.modifierPipe).sort((a,b)=> a[0]-b[0])
+    //Apply each modifier
+    for (const [_,modifier] of modifierPipe) {
+
+      var dashboardModifier = await governify.utils.requireFromFileOrURL(modifier, modifier);
+      dashboardJSON = dashboardModifier.modifyJSON(dashboardJSON, agreement, dashboardId);
+    }
+  }
+  
+  return dashboardJSON;
+}
+
+const configDashboard = async(agreement,dashboardId) => {
+  var dashboardJSON = {...baseDashboard}
+  var stringDashboardJSON = utils.textReplaceReferencesFromJSON(JSON.stringify(dashboardJSON), agreement, '>>>agreement.', '<<<');
+  dashboardJSON = JSON.parse(stringDashboardJSON)
+  dashboardJSON = blocksToDashboard.default(dashboardJSON,agreement,dashboardId)
+  
+  return dashboardJSON
+}

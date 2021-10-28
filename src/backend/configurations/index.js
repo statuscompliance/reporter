@@ -41,8 +41,8 @@ module.exports = config;
  * Implement the functions
  */
 function _addConfiguration (uri, encoding) {
-  var configStringTemplate = null;
-  var configString = null;
+  let configStringTemplate = null;
+  let configString = null;
 
   if (!uri) {
     throw new Error('Parameter URI is required');
@@ -52,9 +52,9 @@ function _addConfiguration (uri, encoding) {
 
   configString = mustache.render(configStringTemplate, process.env, {}, ['$_[', ']']);
 
-  var newConfigurations = jsyaml.safeLoad(configString)[process.env.NODE_ENV ? process.env.NODE_ENV : 'development'];
+  const newConfigurations = jsyaml.safeLoad(configString)[process.env.NODE_ENV ? process.env.NODE_ENV : 'development'];
 
-  for (var c in newConfigurations) {
+  for (const c in newConfigurations) {
     this[c] = newConfigurations[c];
   }
 }

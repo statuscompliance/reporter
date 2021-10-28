@@ -25,16 +25,16 @@ const governify = require('governify-commons');
 const config = governify.configurator.getConfig('main');
 
 module.exports.contractsContractIdStartGET = function contractsContractIdStartGET (req, res, next) {
-  var contractId = req.swagger.params.contractId.value;
-  var timer = req.swagger.params.timer.value || config.defaults.timer;
-  var loop = req.swagger.params.loop.value || config.defaults.loop;
+  const contractId = req.swagger.params.contractId.value;
+  const timer = req.swagger.params.timer.value || config.defaults.timer;
+  const loop = req.swagger.params.loop.value || config.defaults.loop;
 
-  var from = req.headers.from;
-  var to = req.headers.to;
+  const from = req.headers.from;
+  const to = req.headers.to;
 
   if (from && to) {
     var periods = [];
-    var period = {};
+    const period = {};
     period.from = from;
     period.to = to;
     periods.push(period);
@@ -50,7 +50,7 @@ module.exports.contractsContractIdStartGET = function contractsContractIdStartGE
 };
 
 module.exports.contractsContractIdStopGET = function contractsContractIdStopGET (req, res, next) {
-  var contractId = req.swagger.params.contractId.value;
+  const contractId = req.swagger.params.contractId.value;
   ReporterController.contractsContractIdStopGET(contractId)
     .then((response) => {
       writer.writeJson(res, response);
@@ -61,7 +61,7 @@ module.exports.contractsContractIdStopGET = function contractsContractIdStopGET 
 };
 
 module.exports.contractsContractIdUpdateGET = function contractsContractIdUpdateGET (req, res, next) {
-  var contractId = req.swagger.params.contractId.value;
+  const contractId = req.swagger.params.contractId.value;
 
   ReporterController.contractsContractIdUpdateGET(contractId)
     .then((response) => {
@@ -73,8 +73,8 @@ module.exports.contractsContractIdUpdateGET = function contractsContractIdUpdate
 };
 
 module.exports.contractsContractIdCreateHistoryPOST = function contractsContractIdCreateHistoryPOST (req, res, next) {
-  var contractId = req.swagger.params.contractId.value;
-  var period = req.swagger.params.period.value;
+  const contractId = req.swagger.params.contractId.value;
+  const period = req.body.division;
 
   ReporterController.contractsContractIdCreateHistoryPOST(contractId, period)
     .then((response) => {
@@ -86,8 +86,8 @@ module.exports.contractsContractIdCreateHistoryPOST = function contractsContract
 };
 
 module.exports.contractsContractIdCreatePointsFromPeriodsPOST = function contractsContractIdCreatePointsFromPeriodsPOST (req, res, next) {
-  var contractId = req.swagger.params.contractId.value;
-  var periods = req.body.periods;
+  const contractId = req.swagger.params.contractId.value;
+  const periods = req.body.periods;
 
   ReporterController.contractsContractIdCreatePointsFromPeriodsPOST(contractId, periods)
     .then((response) => {
@@ -99,8 +99,8 @@ module.exports.contractsContractIdCreatePointsFromPeriodsPOST = function contrac
 };
 
 module.exports.contractsContractIdCreatePointsFromListPOST = function contractsContractIdCreatePointsFromListPOST (req, res, next) {
-  var contractId = req.swagger.params.contractId.value;
-  var list = req.body.points;
+  const contractId = req.swagger.params.contractId.value;
+  const list = req.body.points;
 
   ReporterController.contractsContractIdCreatePointsFromListPOST(contractId, list)
     .then((response) => {
@@ -112,7 +112,7 @@ module.exports.contractsContractIdCreatePointsFromListPOST = function contractsC
 };
 
 module.exports.contractsContractIdCreatePointsFromListGET = function contractsContractIdCreatePointsFromListGET (req, res, next) {
-  var contractId = req.swagger.params.contractId.value;
+  const contractId = req.swagger.params.contractId.value;
 
   ReporterController.contractsContractIdCreatePointsFromListGET(contractId)
     .then((response) => {

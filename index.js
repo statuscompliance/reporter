@@ -1,10 +1,10 @@
 'use strict';
 
-console.log('Deploy request received');
-
-let server = null;
 const governify = require('governify-commons');
-let logger;
+const logger = governify.getLogger().tag('index');
+
+logger.info('Deploy request received');
+let server = null;
 
 governify.init({
   configurations: [{
@@ -13,7 +13,6 @@ governify.init({
     default: true
   }]
 }).then(function (commonsMiddleware) {
-  logger = require('./src/backend/logger');
   server = require('./server');
   server.deploy(null, commonsMiddleware, function () {
     logger.info('Deploy successfully done');

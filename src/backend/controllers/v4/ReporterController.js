@@ -25,17 +25,20 @@ const InfluxDB = require('../../services/influxService').InfluxDB;
 const Reporter = require('../../services/gaussReporterService/').GaussReporter;
 const governify = require('governify-commons');
 const config = governify.configurator.getConfig('main');
+const logger = governify.getLogger().tag('v4-reporter-controller');
 const JSONStream = require('JSONStream');
-const logger = require('../../logger');
 const Promise = require('bluebird');
 const objectiveUtils = require('../../utils/objective-utils');
+const utils = require('../../utils');
 
 const influx = new InfluxDB(governify.infrastructure.getServiceURL('internal.database.influx-reporter'), config.influx.database, config.influx.measurement, config.influx.fields, config.influx.tags);
 
 const reporter = new Reporter(influx);
-var statusCreatePoints = {};
+const statusCreatePoints = {};
 
-var looper;
+const periodInserted = 10; // Num of periods to insert in one write call
+
+let looper;
 /**
  * Start retrieving KPIs information
  *
@@ -48,15 +51,15 @@ exports.contractsContractIdStartGET = (contractId, timer, loop, periods) => {
   return new Promise((resolve, reject) => {
     reporter.contractId = contractId;
 
-    var loopProcess = (timer, loop, resolve, reject) => {
+    const loopProcess = (timer, loop, resolve, reject) => {
       reporter.isExecutionFinished = true;
       looper = setInterval(() => {
         if (loop && loop === 'false' && reporter.isExecutionFinished) {
-          logger.info('Initializing a new process at ' + moment().format());
+          logger.info('Initializing a new process at ' + new Date().toISOString() + ' UTC');
           reporter.isExecutionFinished = false;
 
           reporter.process(periods).then(() => {
-            logger.info('ExecutionFinished at ' + moment().format());
+            logger.info('ExecutionFinished at ' + new Date().toISOString() + ' UTC');
             reporter.isExecutionFinished = true;
           }).catch((error) => {
             reporter.isExecutionFinished = true;
@@ -68,7 +71,7 @@ exports.contractsContractIdStartGET = (contractId, timer, loop, periods) => {
           });
           return resolve({
             code: 'REP-200',
-            message: 'OK: Initializing a new process at ' + moment().format(),
+            message: 'OK: Initializing a new process at ' + new Date().toISOString() + ' UTC',
             details: ''
           });
         } else {
@@ -87,11 +90,11 @@ exports.contractsContractIdStartGET = (contractId, timer, loop, periods) => {
     } else {
       reporter.isExecutionFinished = false;
       reporter.process(periods).then((res) => {
-        logger.info('Execution finished at ' + moment().format());
+        logger.info('Execution finished at ' + new Date().toISOString() + ' UTC');
         reporter.isExecutionFinished = true;
         return resolve({
           code: 'REP-200',
-          message: 'Execution finished at ' + moment().format(),
+          message: 'Execution finished at ' + new Date().toISOString() + ' UTC',
           details: ''
         });
       }).catch((error) => {
@@ -117,7 +120,7 @@ exports.contractsContractIdStopGET = (contractId) => {
     clearTimeout(looper);
     return resolve({
       code: '200',
-      message: 'OK: Process stopped at ' + moment().format(),
+      message: 'OK: Process stopped at ' + new Date().toISOString() + ' UTC',
       details: ''
     });
   });
@@ -137,28 +140,45 @@ exports.contractsContractIdCreatePointsFromListGET = (contractId) => {
 
 /**
  * Create history and save points
- *
  * contractId String Contract ID
  * no response value expected for this operation
  **/
 exports.contractsContractIdCreateHistoryPOST = async (contractId, period) => {
   logger.info('Creating history for agreementID: ' + contractId);
-  return new Promise(async (resolve, reject) => {
-    logger.ctl('Getting the agreements from Registry with contractId = %s', contractId);
-    const agreementRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/agreements/' + contractId);
+  logger.info('Getting the agreements from Registry with contractId = %s', contractId);
+  governify.infrastructure.getService('internal.registry').get('/api/v6/agreements/' + contractId)
+  .then(async (agreementRequest) => {
     const agreement = agreementRequest.data;
-    var periods = Reporter.getPeriods(agreement, {
+    const periods = utils.getPeriods(agreement, {
       initial: agreement.context.validity.initial,
-      period: period || 'monthly'
+      period: period
     });
 
-    Promise.each(periods, function (period) {
-      return callRegistryAndStorePoints('/api/v6/states/' + contractId + '/guarantees' + '?from=' + period.from + '&to=' + period.to, agreement);
-    }).then(function () {
-      logger.info('Finished creating history for agreeement ' + contractId);
-      resolve();
+    await callRegistryAndStorePoints('/api/v6/states/' + contractId + '/guarantees' + '?lastPeriod=true', agreement)
+    .then(async (influxPoints) => {
+      await influxInsert(influxPoints).catch(() => 'Error inserting points of last period');
+    }).catch(err => {
+      logger.error('Error getting points from last period ' + err);
     });
-  });
+
+    for(let chunk of chunkArray(periods, periodInserted)){
+      var influxPoints = [];
+      for(let chunkperiod of chunk){
+        var newPoints = await callRegistryAndStorePoints('/api/v6/states/' + contractId + '/guarantees' + '?from=' + chunkperiod.from + '&to=' + chunkperiod.to, agreement)
+        .catch(err => {
+          logger.error(`Error getting points from period ${chunkperiod.from} to ${chunkperiod.to} ` + err)
+        });
+        try{
+          influxPoints = [...influxPoints, ...newPoints];
+        }catch(_){
+          continue;
+        }
+      }
+      await influxInsert(influxPoints).catch(() => 'Error inserting periods ' + chunk);
+    };
+  }).catch(
+    err => logger.error('Error creating history: ' + err)
+  );
 };
 
 /**
@@ -170,30 +190,39 @@ exports.contractsContractIdCreateHistoryPOST = async (contractId, period) => {
 exports.contractsContractIdCreatePointsFromListPOST = async (contractId, listDates) => {
   logger.info('Creating points from List for agreementID: ' + contractId);
 
-  return new Promise((resolve, reject) => async function () {
-    if (statusCreatePoints[contractId]) {
-      resolve(); // return "A process to create Points from List is already started."
-    } else {
-      statusCreatePoints[contractId] = { current: 0, total: 1 };
-      try {
-        logger.ctl('Getting the agreements from Registry with contractId = %s', contractId);
-        const agreementRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/agreements' + contractId);
-        const agreement = agreementRequest.data;
-        var periods = listDates.map(x => { return { from: x, to: moment(x).add(1, 'second').toISOString() }; });
-        Promise.each(periods, function (period) {
+  if (!statusCreatePoints[contractId]) {
+    statusCreatePoints[contractId] = { current: 0, total: 1 };
+    logger.info('Getting the agreements from Registry with contractId = %s', contractId);
+    
+    governify.infrastructure.getService('internal.registry').get('/api/v6/agreements' + contractId)
+    .then(async agreementRequest => {
+      const agreement = agreementRequest.data;
+      const periods = listDates.map(x => { return { from: x, to: moment(x).add(1, 'second').toISOString() }; });
+      
+      for(let chunk of chunkArray(periods, periodInserted)){
+        var influxPoints = [];
+        for(let chunkperiod of chunk){
           statusCreatePoints[contractId] = { current: statusCreatePoints[contractId].current + 1, total: periods.length };
-          return callRegistryAndStorePoints('/api/v6/states/' + contractId + '/guarantees' + '?from=' + period.from + '&to=' + period.to + '&newPeriodsFromGuarantees=false', agreement);
-        }).then(function () {
-          statusCreatePoints[contractId] = undefined;
-          logger.info('Finished creating history for agreeement ' + contractId);
-          resolve();
-        });
-      } catch (error) {
-        logger.error(error);
-        statusCreatePoints[contractId] = undefined;
+          var newPoints = await callRegistryAndStorePoints('/api/v6/states/' + contractId + '/guarantees' + '?from=' + chunkperiod.from + '&to=' + chunkperiod.to + '&newPeriodsFromGuarantees=false', agreement)
+          .catch(err => {
+            logger.error(`Error getting points from period ${chunkperiod.from} to ${chunkperiod.to} ` + err)
+          });
+          try{
+            influxPoints = [...influxPoints, ...newPoints];
+          }catch(_){
+            continue;
+          }
+        }
+        await influxInsert(influxPoints).catch(() => 'Error inserting periods ' + chunk);
       }
-    }
-  });
+      logger.info('Finished creating history for agreeement ' + contractId);
+      statusCreatePoints[contractId] = undefined;
+          
+    }).catch( err => {
+      logger.error(err);
+      statusCreatePoints[contractId] = undefined;
+    });  
+  }
 };
 
 /**
@@ -202,22 +231,27 @@ exports.contractsContractIdCreatePointsFromListPOST = async (contractId, listDat
  * contractId String Contract ID
  * no response value expected for this operation
  **/
-exports.contractsContractIdUpdateGET = (contractId) => {
-  return new Promise(async (resolve, reject) => {
-    var urlRegistryRequest = '/api/v6/states/' + contractId + '/guarantees' + '?from=' + moment().toISOString() + '&to=' + moment().add(3, 'week').toISOString() + '&newPeriodsFromGuarantees=false';
-    logger.ctl('Getting the agreements from Registry with contractId = %s', contractId);
-    const agreementRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/agreements/' + contractId);
+exports.contractsContractIdUpdateGET = async (contractId) => {
+  const urlRegistryRequest = '/api/v6/states/' + contractId + '/guarantees' + '?from=' + new Date().toISOString() + '&to=' + moment().add(3, 'week').toISOString() + '&newPeriodsFromGuarantees=false';
+  logger.info('Getting the agreements from Registry with contractId = %s', contractId);
+  
+  governify.infrastructure.getService('internal.registry').get('/api/v6/agreements/' + contractId)
+  .then(async (agreementRequest) => {
     const agreement = agreementRequest.data;
-    callRegistryAndStorePoints(urlRegistryRequest, agreement);
-    // TODO: Add feedback about request. And create tasks for get status of requests
-    resolve();
+    var influxPoints = await callRegistryAndStorePoints(urlRegistryRequest, agreement)
+    .catch(err => {
+      logger.error('Error getting points from period ' + err)
+    });
+    await influxInsert(influxPoints).catch(() => 'Error inserting points');
+  }).catch(err => {
+    logger.error('Failed requesting agreement: ', err.response ? err.response.status : -1);
   });
 };
 
 exports.resetPOST = function (args, res, next) {
   try {
-    logger.ctl('Trying to reset Reporter and  Influx database!');
-    var agreementId = args.contractId.value;
+    logger.info('Trying to reset Reporter and  Influx database!');
+    const agreementId = args.contractId.value;
 
     // Delete influx db for the agreement
 
@@ -235,14 +269,14 @@ exports.resetPOST = function (args, res, next) {
 
     // Create database if it does not exist yet.
     influx.influx.getDatabaseNames().then(names => {
-      logger.ctl('DBs in influxdb', names);
+      logger.info('DBs in influxdb', names);
       if (!names.includes(config.influx.database)) {
         return influx.createDatabase(config.influx.database);
       }
     }).then(() => {
-      logger.ctl('InfluxDb: DB created');
+      logger.info('InfluxDb: DB created');
     }).catch(err => {
-      logger.ctl('Error creating Influx database!');
+      logger.info('Error creating Influx database!');
     });
 
     res.status(200).json({
@@ -258,28 +292,31 @@ exports.resetPOST = function (args, res, next) {
   }
 };
 
-var timeBetweenRequests = 0;
+function callRegistryAndStorePoints(path, agreement) {
+  return new Promise(async (resolve, reject) => {
+    logger.info('URLRegistry: ' + path);
 
-function callRegistryAndStorePoints (path, agreement) {
-  return new Promise((resolve, reject) => {
-    setTimeout(async function () {
-      logger.ctl('URLRegistry: ' + path);
-      var requestMetrics = await governify.infrastructure.getService('internal.registry').request({
+    var timeout = setTimeout(()=>{
+      logger.error(path + ' request time out exceeded')
+      resolve([])
+    }, 120000)
+
+    governify.infrastructure.getService('internal.registry')
+      .request({
         url: path,
         responseType: 'stream'
-      }).catch(err => {
-        console.error('Error in registry state call: ', err);
-        reject(err);
-      });
-      const requestStream = requestMetrics.data;
-      requestStream.pipe(JSONStream.parse()).on('data', guaranteeStates => {
-        console.log('Receiving agreement states');
-        try {
-          for (var i in guaranteeStates) {
+      })
+      .then( requestMetrics => {       
+        const requestStream = requestMetrics.data;
+        const influxPoints = [];
+        requestStream.pipe(JSONStream.parse())
+        .on('data', guaranteeStates => {
+          logger.info('Receiving agreement states');
+          for (const i in guaranteeStates) {
             var guaranteeResult = guaranteeStates[i];
-            var timestamp = moment(guaranteeResult.period.from).valueOf() * 1000000;
-
-            var influxPoint = {
+            const timestamp = moment(guaranteeResult.period.from).valueOf() * 1000000;
+            
+            const influxPoint = {
               measurement: config.influx.measurement,
               tags: {
                 agreement: guaranteeResult.agreementId,
@@ -291,79 +328,39 @@ function callRegistryAndStorePoints (path, agreement) {
               },
               timestamp: timestamp
             };
-
+            
             for (const [key, value] of Object.entries(guaranteeResult.metrics)) {
               influxPoint.fields['metric_' + key] = value;
             }
             for (const [key, value] of Object.entries(guaranteeResult.scope)) {
               influxPoint.tags['scope_' + key] = value;
             }
-
-            influxInsert([influxPoint], function () { });
+            influxPoints.push(influxPoint);
           }
-          timeBetweenRequests -= 40000;
-          timeBetweenRequests < 0 ? timeBetweenRequests = 0 : undefined;
-          resolve();
-        } catch (err) {
-          logger.error('Error while processing guarantee data received. Adding to queue');
-          logger.error(err);
-          return addToRequestsQueue(path, agreement).then(() => { resolve(); });
-        }
-      }).on('error', err => {
-        logger.error('Error while getting data from registry, retrying connection:');
-        setTimeout(function () {
-          return callRegistryAndStorePoints(path, agreement).then(function () { resolve(); });
-        }, 1500);
-
-        return res.status(500).json(err);
+        })
+        .on('end', () => {
+          clearTimeout(timeout)
+          resolve(influxPoints)
+        })
+        .on('error', err => reject(err));
+      })
+      .catch(err => {
+        logger.error('Error in registry state call: ', err);
+        reject(err);
       });
-    }
-
-    , timeBetweenRequests);
   });
 }
 
-var queue = [];
-var running = false;
-var timeBetweenQueueRequests = 20000;
-
-function addToRequestsQueue (urlRegistry, agreement) {
-  queue.push([urlRegistry, agreement]);
-  timeBetweenRequests += 20000;
-  timeBetweenRequests > 160000 ? timeBetweenRequests = 160000 : undefined;
-
-  if (!running) {
-    running = true;
-    computeQueue();
-  }
-  return Promise.resolve('Added to queue');
-}
-
-async function computeQueue () {
-  while (running) {
-    logger.info('Queue lenght: [', queue.length, '] - Time Between requests: [', timeBetweenRequests, ']');
-    if (queue.length === 0) {
-      logger.info('There are no more items in the queue.');
-      running = false;
-    } else {
-      var element = queue.shift();
-      await new Promise(async (resolve, reject) => { // Waits for the function to complete
-        callRegistryAndStorePoints(element[0], element[1]).then(async () => {
-          setTimeout(function () {
-            resolve();
-          }, timeBetweenQueueRequests); // Time between Queue requests
-        });
-      });
-    }
-  }
-}
-
-var influxInsert = (elements, callback) => {
+var influxInsert = async (elements) => {
   influx.influx.writePoints(elements, {
     maxRetries: 50,
     requestTimeout: 600000
-  }).then(callback).catch((err, data) => {
-    logger.ctl('Error Writing in db ', err);
+  })
+  .then(() => {
+    logger.info(`Inserted ${elements.length} elements`);
+  })
+  .catch((err) => {
+    logger.info('Error Writing in db ', err);
   });
 };
 
@@ -373,33 +370,39 @@ var influxInsert = (elements, callback) => {
  * contractId String Contract ID
  * no response value expected for this operation
  **/
-exports.contractsContractIdCreatePointsFromPeriodsPOST = (contractId, periods) => {
+exports.contractsContractIdCreatePointsFromPeriodsPOST = async (contractId, periods) => {
   logger.info('Creating points from List for agreementID: ' + contractId);
+  logger.info('Getting the agreements from Registry with contractId = %s', contractId);
 
-  return new Promise(async (resolve, reject) => {
-    /* if (statusCreatePoints[contractId]) {
-     resolve(); //return "A process to create Points from List is already started."
+  governify.infrastructure.getService('internal.registry').get('/api/v6/agreements/' + contractId)
+  .then(async (agreementRequest) => {
+    const agreement = agreementRequest.data;
+
+    for(let chunk of chunkArray(periods, periodInserted)){
+      var influxPoints = [];
+      for(let chunkperiod of chunk){
+        var newPoints = await callRegistryAndStorePoints('/api/v6/states/' + contractId + '/guarantees' + '?from=' + chunkperiod.from + '&to=' + chunkperiod.to + '&newPeriodsFromGuarantees=false', agreement)
+        .catch(err => {
+          logger.error(`Error getting points from period ${chunkperiod.from} to ${chunkperiod.to} ` + err)
+        });
+        try{
+          influxPoints = [...influxPoints, ...newPoints];
+        }catch(_){
+          continue;
+        }
+      }
+      await influxInsert(influxPoints).catch(() => 'Error inserting periods ' + chunk);
     }
-    else {
-      statusCreatePoints[contractId] = { current: 0, total: 1 }; */
-    try {
-      logger.ctl('Getting the agreements from Registry with contractId = %s', contractId);
-      const agreementRequest = await governify.infrastructure.getService('internal.registry').get('/api/v6/agreements/' + contractId);
-      const agreement = agreementRequest.data;
-      Promise.each(periods, function (period) {
-        // statusCreatePoints[contractId] = { current: statusCreatePoints[contractId].current + 1, total: periods.length }
-
-        return callRegistryAndStorePoints('/api/v6/states/' + contractId + '/guarantees' + '?from=' + period.from + '&to=' + period.to + '&newPeriodsFromGuarantees=false', agreement);
-      }).then(function () {
-        // statusCreatePoints[contractId] = undefined;
-        logger.info('Finished creating event collector metrics for agreeement ' + contractId);
-        resolve();
-      });
-    } catch (error) {
-      logger.error(error);
-      // statusCreatePoints[contractId] = undefined;
-    }
-
-    // }
+    logger.info('Finished creating event collector metrics for agreeement ' + contractId);
+  }).catch(err => {
+    logger.error('Failed requesting agreement: ', err.response ? err.response.status : -1);
   });
 };
+
+function chunkArray(myArray, chunk_size){
+  var results = [];
+  while (myArray.length) {
+      results.push(myArray.splice(0, chunk_size));
+  }
+  return results;
+}

@@ -119,7 +119,7 @@ paths:
           schema:
             $ref: '#/definitions/error'
       x-swagger-router-controller: ReporterRoutes
-  '/contracts/{contractId}/createHistory/{period}':
+  '/contracts/{contractId}/createHistory':
     post:
       description: Send create History request for contract
       operationId: contractsContractIdCreateHistoryPOST
@@ -129,11 +129,12 @@ paths:
           description: Contract ID
           required: true
           type: string
-        - name: period
-          in: path
-          description: Periodicity
+        - name: division
+          in: body
           required: true
-          type: string
+          schema:
+            type: string
+          description: The way to divide an agreement
       responses:
         '200':
           description: Success

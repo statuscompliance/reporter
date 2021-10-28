@@ -24,7 +24,7 @@
   "style": "dark",
   "tags": [],
   "time": {
-    "from": "now-2y",
+    "from": "now-6M",
     "to": "now"
   },
   "timepicker": {
@@ -41,7 +41,7 @@
     ]
   },
   "timezone": "",
-  "title": "###AGREEMENT.ID### - Dashboard",
+  "title": ">>>agreement.id<<< - Dashboard",
   "uid": "IyfjMSqZz",
   "version": 38
 }

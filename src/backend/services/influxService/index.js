@@ -25,7 +25,7 @@ const Influx = require('influx');
 /// //////////////////////// INT DEPENDENCIES ///////////////////////////
 const governify = require('governify-commons');
 const config = governify.configurator.getConfig('main');
-const logger = require('../../logger');
+const logger = governify.getLogger().tag('service-influx-index');
 const influxConfig = config.influx;
 
 /// //////////////////////// PRIVATE ATTRIBUTES ///////////////////////////
@@ -39,7 +39,7 @@ const _tags = Symbol();
 class InfluxDB {
   /// //////////////////////// BEGIN CONSTRUCTOR ///////////////////////////
   constructor (host, database, measurement, fields, tags) {
-    for (var [key, value] of Object.entries(fields)) {
+    for (const [key, value] of Object.entries(fields)) {
       if (key === 'Influx.FieldType.INTEGER') {
         fields[key] = Influx.FieldType.INTEGER;
       }
@@ -52,8 +52,8 @@ class InfluxDB {
     this._measurement = measurement;
     this._fields = fields;
     this._tags = tags;
-    logger.ctl("Creating InfluxDB connection to '%s' in database '%s' and params %s", host, database, JSON.stringify(influxConfig, 2, null));
-    this._influx = new Influx.InfluxDB(governify.infrastructure.getServiceURL('internal.database.influx-reporter') + "/" + config.influx.database, influxConfig);
+    logger.info("Creating InfluxDB connection to '%s' in database '%s' and params %s", host, database, JSON.stringify(influxConfig, 2, null));
+    this._influx = new Influx.InfluxDB(governify.infrastructure.getServiceURL('internal.database.influx-reporter') + '/' + config.influx.database, influxConfig);
     this._createDb();
   }
   /// //////////////////////// END CONSTRUCTOR ///////////////////////////
@@ -113,22 +113,22 @@ class InfluxDB {
   /// //////////////////////// CORE FUNCTIONS ///////////////////////////
   _createDb () {
     this._influx.getDatabaseNames().then(names => {
-      logger.ctl('Retrieving existing databases in InfluxDB', names);
+      logger.info('Retrieving existing databases in InfluxDB', names);
       if (!names.includes(this.database)) {
-        logger.ctl("Creating database '%s' in InfluxDB", this.database);
+        logger.info("Creating database '%s' in InfluxDB", this.database);
         return this.influx.createDatabase(this.database);
       } else {
-        logger.ctl("Database '%s' already exists in InfluxDB", this.database);
+        logger.info("Database '%s' already exists in InfluxDB", this.database);
       }
     }).then(() => {
-      logger.ctl("Database '%s' is ready to be used in InfluxDB", this.database);
+      logger.info("Database '%s' is ready to be used in InfluxDB", this.database);
     }).catch(error => {
       logger.error("Error creating database '%s' in InfluxDB: %s", this.database, error);
     });
   }
 
   writeIdPriority (id, scopes, value, timestamp) {
-    var tags = {};
+    const tags = {};
     tags.id = id;
     for (sc in scopes) {
       tags[sc] = scopes[sc];
@@ -149,7 +149,7 @@ class InfluxDB {
   }
 
   static getAgreementData (agreementId) {
-    this._influx = new Influx.InfluxDB(governify.infrastructure.getServiceURL('internal.database.influx-reporter') + "/" + config.influx.database, influxConfig);
+    this._influx = new Influx.InfluxDB(governify.infrastructure.getServiceURL('internal.database.influx-reporter') + '/' + config.influx.database, influxConfig);
     return this._influx.getSeries({
       measurement: agreementId,
       database: this._database

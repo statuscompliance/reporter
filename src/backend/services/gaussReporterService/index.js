@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 'use strict';
 
 const Reporter = require('../../services/reporterService').Reporter;
-const logger = require('../../logger');
+const logger = require('governify-commons').getLogger().tag('service-gauss-reporter-index');
 
 /// //////////////////////////////////////////////////////////// BEGIN CLASS ///////////////////////////////////////////////////////////////
 class GaussReporter extends Reporter {
@@ -84,7 +84,8 @@ class GaussReporter extends Reporter {
       const params = ofElement.with[kpi.id];
       let schedule, deadlineSign, deadlineThreshold, deadlineUnit;
       if (params && params.schedule) {
-        schedule = (params.schedule === 'L-DT00:00-23:59') ? '24X7'
+        schedule = (params.schedule === 'L-DT00:00-23:59')
+          ? '24X7'
           : params.schedule.split('T')[0] + ' de ' + params.schedule.split('T')[1].replace('-', ' a ');
       }
       if (params && params.deadline) {
@@ -218,7 +219,7 @@ class GaussReporter extends Reporter {
   }
 
   _checkScope (scopeObj1, scopeObj2) {
-    var checkPriority = true;
+    let checkPriority = true;
     checkServiceLine = true;
     checkActivity = true;
 
