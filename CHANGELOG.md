@@ -1,3 +1,42 @@
+# [2.2.0](https://github.com/governify/reporter/compare/v2.1.0...v2.2.0) (2021-10-28)
+
+
+### Bug Fixes
+
+* Added missing catch blocks in controller ([2c7a3ed](https://github.com/governify/reporter/commit/2c7a3ed04fc3a4ce7139d6dbf79c6364f4979684))
+* body parser before commons middleware ([54d9b4a](https://github.com/governify/reporter/commit/54d9b4adffccc2d6384cae5be404bbd70d246687))
+* cors before commons middleware ([2b72b1b](https://github.com/governify/reporter/commit/2b72b1b2e37b5d5043a685914676757885aa1246))
+* Error abort calculation ([8273c9b](https://github.com/governify/reporter/commit/8273c9bbb0d4bbd63a33857bcc0c6facbb2f4f2b))
+* lint ([d17633e](https://github.com/governify/reporter/commit/d17633e638349c1842ed0fdabc1897f9b9a716ee))
+* Missing async functions ([353906b](https://github.com/governify/reporter/commit/353906b09f64243acf952f734a4ffb5b942e7bdb))
+* notZero blocks error ([e8f64a1](https://github.com/governify/reporter/commit/e8f64a11b5bf0c753d0d676f1913bbf4879d908b))
+* notZero gauge error ([dc961a0](https://github.com/governify/reporter/commit/dc961a0f7067bf0b51b8876dc1da765dfcf2bdce))
+* ReporterController refactor ([be510c5](https://github.com/governify/reporter/commit/be510c5bc73d22ec0b39eaa60c6b35a3ed46e7b1))
+* rm collectors from external infrastructure ([2d8c20d](https://github.com/governify/reporter/commit/2d8c20dbe803df2299f003efca502665ceb76883))
+* Show last evidences in evidences view. ([3c955ba](https://github.com/governify/reporter/commit/3c955ba4dd2de28468f2153212bfa92a699ee363))
+* Updated governify-commons ([45cd792](https://github.com/governify/reporter/commit/45cd7928ba5cc0f2d1bf64ed7cf418208028eddd))
+
+
+### Features
+
+* commons logger ([c0c3afc](https://github.com/governify/reporter/commit/c0c3afc871b2fdfe2df16016b94f0fd051b850bb))
+* createHistory API endpoint modified ([445ce2a](https://github.com/governify/reporter/commit/445ce2a0576a262e95494068d03e2959f9e3c68a))
+* dashboard refactor ([9f914ac](https://github.com/governify/reporter/commit/9f914ac809b35fda99d8d52a593b2a4167a36f15))
+* E2E assets to develop ([7c7bd03](https://github.com/governify/reporter/commit/7c7bd03336470efb3b54719a2ac3e148dcd572f1))
+* Implemented commons main middleware ([596487e](https://github.com/governify/reporter/commit/596487eca679cfc91248b26b51c54d538543d856))
+* npm update governify-commons ([839a70f](https://github.com/governify/reporter/commit/839a70f1a27bb34ffcaf8a5a12644159d3e6f204))
+* npm update governify-commons ([f46ecf5](https://github.com/governify/reporter/commit/f46ecf58afb061a88206639db36a8f6de78db129))
+* refactor period calculation ([94e43b6](https://github.com/governify/reporter/commit/94e43b61483b8760f35d68f45ff4d5b69071fce1))
+* refactor period calculation ([b0ad0bf](https://github.com/governify/reporter/commit/b0ad0bf9a79a185016429ba59fafeb36daca32d0))
+* refactor period calculation ([2f9d48e](https://github.com/governify/reporter/commit/2f9d48eaee97cf0ae1166b254a8250cd2196e270))
+* refactor period calculation ([51a8481](https://github.com/governify/reporter/commit/51a8481cf0d6a8eadd028cd8c59848f30defcdfc))
+* refactor period calculation ([7f26a82](https://github.com/governify/reporter/commit/7f26a82d8650164eef2f4ee6bf6d1e863c1ecf92))
+* refactor period calculation ([11a002c](https://github.com/governify/reporter/commit/11a002cff39acc38678864821ba99c2970f6dac6))
+* update commons v1.14 ([35b9bc0](https://github.com/governify/reporter/commit/35b9bc0928c5d4cd67e6ddc407945b3b5814284e))
+* Updated calls ([208f465](https://github.com/governify/reporter/commit/208f465f36ef63ecb12e806bcd887459321369f9))
+
+
+
 # [2.1.0](https://github.com/governify/reporter/compare/v1.1.0...v2.1.0) (2021-05-07)
 
 
