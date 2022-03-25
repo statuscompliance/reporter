@@ -17,7 +17,7 @@ const atoms = {
     panels: []
   },
   gaugeLast5DaysOld: {
-    title: 'Last 5 days mean percentage',
+    title: 'Mean percentage since the beginning',
     guarantee: '###GUARANTEE.NAME###',
     type: 'gauge',
     datasource: 'InfluxDB',
@@ -122,7 +122,7 @@ const atoms = {
     timeShift: null
   },
   gaugeLast5Days: {
-    title: 'Last 5 days mean percentage',
+    title: 'Mean percentage since the beginning',
     guarantee: '###GUARANTEE.NAME###',
     type: 'gauge',
     datasource: 'InfluxDB',
@@ -227,7 +227,7 @@ const atoms = {
     timeShift: null
   },
   gaugeLast5DaysNotZero: {
-    title: 'Last 5 days mean percentage',
+    title: 'Mean percentage since the beginning',
     guarantee: '###GUARANTEE.NAME###',
     type: 'gauge',
     datasource: 'InfluxDB',
@@ -1497,7 +1497,7 @@ const atoms = {
   }
 };
 
-function addAtom (atom, width = 24, height = 9, x = undefined, options = {}) {
+function addAtom(atom, width = 24, height = 9, x = undefined, options = {}) {
   const result = { ...atoms[atom] };
   result.gridPos = { ...result.gridPos };
   result.gridPos.w = width;
@@ -2035,7 +2035,7 @@ const blocks = {
   }
 };
 
-function sortBlockCompare (block1, block2) {
+function sortBlockCompare(block1, block2) {
   if ((block2.order & !block1.order) || (block1.order > block2.order)) {
     return 1;
   } else if ((block1.order & !block2.order) || (block2.order > block1.order)) {
