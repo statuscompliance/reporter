@@ -400,7 +400,7 @@ const atoms = {
         measurement: 'metrics_values',
         orderByTime: 'ASC',
         policy: 'autogen',
-        query: "SELECT mean(\"guaranteeValue\") FROM \"autogen\".\"metrics_values\" WHERE (\"agreement\" = '###AGREEMENT.ID###' AND \"id\" = '###GUARANTEE.NAME###' AND \"###METRIC.NOTZERO###\" != 0) AND time < now() AND AND $timeFilter GROUP BY time($__interval) fill(null)",
+        query: "SELECT mean(\"guaranteeValue\") FROM \"autogen\".\"metrics_values\" WHERE (\"agreement\" = '###AGREEMENT.ID###' AND \"id\" = '###GUARANTEE.NAME###' AND \"###METRIC.NOTZERO###\" != 0) AND $timeFilter GROUP BY time($__interval) fill(null)",
         rawQuery: true,
         refId: 'A',
         resultFormat: 'time_series',
