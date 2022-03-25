@@ -1,3 +1,17 @@
+# [2.3.0](https://github.com/governify/reporter/compare/v2.2.0...v2.3.0) (2022-03-25)
+
+
+### Bug Fixes
+
+* Atom typo name ([b298386](https://github.com/governify/reporter/commit/b298386bdb425a32ffa9c92e0cbf12f6c3686731))
+
+
+### Features
+
+* New atom and block ([3316bbc](https://github.com/governify/reporter/commit/3316bbc3536f4c0cce30d5304c8ec889b30f9e9e))
+
+
+
 # [2.2.0](https://github.com/governify/reporter/compare/v2.1.0...v2.2.0) (2021-10-28)
 
 
