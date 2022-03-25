@@ -331,6 +331,111 @@ const atoms = {
     timeFrom: null,
     timeShift: null
   },
+  gaugeLastPeriodNotZero: {
+    title: 'Period mean percentage',
+    guarantee: '###GUARANTEE.NAME###',
+    type: 'gauge',
+    datasource: 'InfluxDB',
+    fieldConfig: {
+      defaults: {
+        custom: {},
+        mappings: [],
+        max: 100,
+        min: 0,
+        thresholds: {
+          mode: 'absolute',
+          steps: [
+            {
+              color: 'red',
+              value: null
+            },
+            {
+              color: 'yellow',
+              value: 50
+            },
+            {
+              color: 'green',
+              value: 75
+            }
+          ]
+        }
+      },
+      overrides: []
+    },
+    gridPos: {
+      h: 9,
+      w: 4,
+      x: 0,
+      y: 1
+    },
+    id: 2,
+    options: {
+      orientation: 'auto',
+      reduceOptions: {
+        calcs: [
+          'mean'
+        ],
+        values: false
+      },
+      showThresholdLabels: false,
+      showThresholdMarkers: true
+    },
+    pluginVersion: '7.0.0',
+    targets: [
+      {
+        groupBy: [
+          {
+            params: [
+              '$__interval'
+            ],
+            type: 'time'
+          },
+          {
+            params: [
+              'null'
+            ],
+            type: 'fill'
+          }
+        ],
+        measurement: 'metrics_values',
+        orderByTime: 'ASC',
+        policy: 'autogen',
+        query: "SELECT mean(\"guaranteeValue\") FROM \"autogen\".\"metrics_values\" WHERE (\"agreement\" = '###AGREEMENT.ID###' AND \"id\" = '###GUARANTEE.NAME###' AND \"###METRIC.NOTZERO###\" != 0) AND time < now() AND AND $timeFilter GROUP BY time($__interval) fill(null)",
+        rawQuery: true,
+        refId: 'A',
+        resultFormat: 'time_series',
+        select: [
+          [
+            {
+              params: [
+                'guaranteeValue'
+              ],
+              type: 'field'
+            },
+            {
+              params: [],
+              type: 'mean'
+            }
+          ]
+        ],
+        tags: [
+          {
+            key: 'agreement',
+            operator: '=',
+            value: '###AGREEMENT.ID###'
+          },
+          {
+            condition: 'AND',
+            key: 'id',
+            operator: '=',
+            value: '###GUARANTEE.NAME###'
+          }
+        ]
+      }
+    ],
+    timeFrom: null,
+    timeShift: null
+  },
   timeGraph: {
     title: '###TIME_GRAPH.TITLE###',
     guarantee: '###GUARANTEE.NAME###',
@@ -342,7 +447,7 @@ const atoms = {
     datasource: 'InfluxDB',
     fieldConfig: {
       defaults: {
-        links:[]
+        links: []
       },
       overrides: []
     },
@@ -458,11 +563,11 @@ const atoms = {
     yaxes: [
       {
         decimals: 0,
-        format: "percent",
-        label: "",
+        format: 'percent',
+        label: '',
         logBase: 1,
-        max: "100",
-        min: "0",
+        max: '100',
+        min: '0',
         show: true
       },
       {
@@ -925,55 +1030,55 @@ const atoms = {
     stack: false,
     steppedLine: false,
     targets:
+      [
+        {
+          alias: 'Team',
+          groupBy: [],
+          measurement: 'metrics_values',
+          orderByTime: 'ASC',
+          policy: 'autogen',
+          query: "SELECT \"guaranteeValue\" FROM \"autogen\".\"metrics_values\" WHERE (\"agreement\" = '###AGREEMENT.ID###' AND \"id\" = '###GUARANTEE.NAME###') AND $timeFilter",
+          rawQuery: true,
+          refId: 'A',
+          resultFormat: 'time_series',
+          select: [
             [
               {
-                alias: 'Team',
-                groupBy: [],
-                measurement: 'metrics_values',
-                orderByTime: 'ASC',
-                policy: 'autogen',
-                query: "SELECT \"guaranteeValue\" FROM \"autogen\".\"metrics_values\" WHERE (\"agreement\" = '###AGREEMENT.ID###' AND \"id\" = '###GUARANTEE.NAME###') AND $timeFilter",
-                rawQuery: true,
-                refId: 'A',
-                resultFormat: 'time_series',
-                select: [
-                  [
-                    {
-                      params: [
-                        'guaranteeValue'
-                      ],
-                      type: 'field'
-                    }
-                  ]
+                params: [
+                  'guaranteeValue'
                 ],
-                tags: []
+                type: 'field'
+              }
+            ]
+          ],
+          tags: []
+        },
+        {
+          alias: 'Class mean',
+          groupBy: [],
+          orderByTime: 'ASC',
+          policy: 'autogen',
+          query: "SELECT MEAN(\"guaranteeValue\") FROM \"autogen\".\"metrics_values\" WHERE (\"scope_class\" = '###AGREEMENT.SCOPE.CLASS###' AND \"id\" = '###GUARANTEE.NAME###') AND $timeFilter GROUP BY time(24h)",
+          rawQuery: true,
+          refId: 'B',
+          resultFormat: 'time_series',
+          select: [
+            [
+              {
+                params: [
+                  'value'
+                ],
+                type: 'field'
               },
               {
-                alias: 'Class mean',
-                groupBy: [],
-                orderByTime: 'ASC',
-                policy: 'autogen',
-                query: "SELECT MEAN(\"guaranteeValue\") FROM \"autogen\".\"metrics_values\" WHERE (\"scope_class\" = '###AGREEMENT.SCOPE.CLASS###' AND \"id\" = '###GUARANTEE.NAME###') AND $timeFilter GROUP BY time(24h)",
-                rawQuery: true,
-                refId: 'B',
-                resultFormat: 'time_series',
-                select: [
-                  [
-                    {
-                      params: [
-                        'value'
-                      ],
-                      type: 'field'
-                    },
-                    {
-                      params: [],
-                      type: 'mean'
-                    }
-                  ]
-                ],
-                tags: []
+                params: [],
+                type: 'mean'
               }
-            ],
+            ]
+          ],
+          tags: []
+        }
+      ],
     thresholds: [
       {
         colorMode: 'critical',
@@ -1096,55 +1201,55 @@ const atoms = {
     stack: false,
     steppedLine: false,
     targets:
+      [
+        {
+          alias: 'Team',
+          groupBy: [],
+          measurement: 'metrics_values',
+          orderByTime: 'ASC',
+          policy: 'autogen',
+          query: "SELECT \"guaranteeValue\" FROM \"autogen\".\"metrics_values\" WHERE (\"agreement\" = '###AGREEMENT.ID###' AND \"id\" = '###GUARANTEE.NAME###' AND \"###METRIC.NOTZERO###\" != 0) AND $timeFilter",
+          rawQuery: true,
+          refId: 'A',
+          resultFormat: 'time_series',
+          select: [
             [
               {
-                alias: 'Team',
-                groupBy: [],
-                measurement: 'metrics_values',
-                orderByTime: 'ASC',
-                policy: 'autogen',
-                query: "SELECT \"guaranteeValue\" FROM \"autogen\".\"metrics_values\" WHERE (\"agreement\" = '###AGREEMENT.ID###' AND \"id\" = '###GUARANTEE.NAME###' AND \"###METRIC.NOTZERO###\" != 0) AND $timeFilter",
-                rawQuery: true,
-                refId: 'A',
-                resultFormat: 'time_series',
-                select: [
-                  [
-                    {
-                      params: [
-                        'guaranteeValue'
-                      ],
-                      type: 'field'
-                    }
-                  ]
+                params: [
+                  'guaranteeValue'
                 ],
-                tags: []
+                type: 'field'
+              }
+            ]
+          ],
+          tags: []
+        },
+        {
+          alias: 'Class mean',
+          groupBy: [],
+          orderByTime: 'ASC',
+          policy: 'autogen',
+          query: "SELECT MEAN(\"guaranteeValue\") FROM \"autogen\".\"metrics_values\" WHERE (\"scope_class\" = '###AGREEMENT.SCOPE.CLASS###' AND \"id\" = '###GUARANTEE.NAME###' AND \"###METRIC.NOTZERO###\" != 0) AND $timeFilter GROUP BY time(24h)",
+          rawQuery: true,
+          refId: 'B',
+          resultFormat: 'time_series',
+          select: [
+            [
+              {
+                params: [
+                  'value'
+                ],
+                type: 'field'
               },
               {
-                alias: 'Class mean',
-                groupBy: [],
-                orderByTime: 'ASC',
-                policy: 'autogen',
-                query: "SELECT MEAN(\"guaranteeValue\") FROM \"autogen\".\"metrics_values\" WHERE (\"scope_class\" = '###AGREEMENT.SCOPE.CLASS###' AND \"id\" = '###GUARANTEE.NAME###' AND \"###METRIC.NOTZERO###\" != 0) AND $timeFilter GROUP BY time(24h)",
-                rawQuery: true,
-                refId: 'B',
-                resultFormat: 'time_series',
-                select: [
-                  [
-                    {
-                      params: [
-                        'value'
-                      ],
-                      type: 'field'
-                    },
-                    {
-                      params: [],
-                      type: 'mean'
-                    }
-                  ]
-                ],
-                tags: []
+                params: [],
+                type: 'mean'
               }
-            ],
+            ]
+          ],
+          tags: []
+        }
+      ],
     thresholds: [
       {
         colorMode: 'critical',
@@ -1290,7 +1395,7 @@ const atoms = {
     timeFrom: null,
     timeShift: null
   },
-  valuesInTime:{
+  valuesInTime: {
     datasource: 'InfluxDB',
     fieldConfig: {
       defaults: {
@@ -1303,11 +1408,11 @@ const atoms = {
           mode: 'absolute',
           steps: [
             {
-              color: "semi-dark-red",
+              color: 'semi-dark-red',
               value: null
             },
             {
-              color: "semi-dark-green",
+              color: 'semi-dark-green',
               value: '###GUARANTEE.THRESHOLD###'
             }
           ]
@@ -1392,17 +1497,16 @@ const atoms = {
   }
 };
 
-function addAtom (atom, width = 24, height = 9,x = undefined, options = {}) {
+function addAtom (atom, width = 24, height = 9, x = undefined, options = {}) {
   const result = { ...atoms[atom] };
   result.gridPos = { ...result.gridPos };
   result.gridPos.w = width;
   result.gridPos.h = height;
-  if(x != undefined){
+  if (x != undefined) {
     result.gridPos.x = x;
   }
   // TODO - Nested objects
   for (const [key, value] of Object.entries(options)) {
-    
     result[key] = value;
   }
 
@@ -1773,8 +1877,8 @@ const blocks = {
     },
     panels: [
       addAtom('rowTitle'),
-      addAtom('timeGraphPercent',12),
-      addAtom('valuesInTime',12)
+      addAtom('timeGraphPercent', 12),
+      addAtom('valuesInTime', 12)
     ]
 
   },
@@ -1784,8 +1888,8 @@ const blocks = {
     },
     panels: [
       addAtom('rowTitle'),
-      addAtom('timeGraphPercentNotZero',12),
-      addAtom('valuesInTime',12)
+      addAtom('timeGraphPercentNotZero', 12),
+      addAtom('valuesInTime', 12)
     ]
 
   },
@@ -1826,7 +1930,7 @@ const blocks = {
     panels: [
       addAtom('rowTitle'),
       addAtom('gaugeLast5Days', 4),
-      addAtom('timeGraphPercent', 14,9,4),
+      addAtom('timeGraphPercent', 14, 9, 4),
       addAtom('scatter', 6)
     ]
   },
@@ -1837,7 +1941,19 @@ const blocks = {
     panels: [
       addAtom('rowTitle'),
       addAtom('gaugeLast5DaysNotZero', 4),
-      addAtom('timeGraphPercentNotZero', 14,9,4),
+      addAtom('timeGraphPercentNotZero', 14, 9, 4),
+      addAtom('scatter', 6)
+    ]
+  },
+  'gauge-period-time-correlation-notZero': {
+    config: {
+      height: 8
+    },
+    panels: [
+      addAtom('rowTitle'),
+      addAtom('gaugeLast5DaysNotZero', 4),
+      addAtom('gaugeLastPeriodNotZero', 4, 9, 4),
+      addAtom('timeGraphPercentNotZero', 10, 9, 8),
       addAtom('scatter', 6)
     ]
   },
@@ -1848,7 +1964,7 @@ const blocks = {
     panels: [
       addAtom('rowTitle'),
       addAtom('gaugeLast5Days', 4),
-      addAtom('timeGraphPercent', 20,9,4)
+      addAtom('timeGraphPercent', 20, 9, 4)
     ]
   },
   'gauge-time-notZero': {
@@ -1858,7 +1974,7 @@ const blocks = {
     panels: [
       addAtom('rowTitle'),
       addAtom('gaugeLast5DaysNotZero', 4),
-      addAtom('timeGraphPercentNotZero', 20,9,4)
+      addAtom('timeGraphPercentNotZero', 20, 9, 4)
     ]
   },
   'time-gauge': {
@@ -1867,8 +1983,8 @@ const blocks = {
     },
     panels: [
       addAtom('rowTitle'),
-      addAtom('timeGraphPercent', 20,9,0),
-      addAtom('gaugeLast5Days', 4,9,20)
+      addAtom('timeGraphPercent', 20, 9, 0),
+      addAtom('gaugeLast5Days', 4, 9, 20)
     ]
   },
   'time-gauge-notZero': {
@@ -1877,8 +1993,8 @@ const blocks = {
     },
     panels: [
       addAtom('rowTitle'),
-      addAtom('timeGraphPercentNotZero', 20,9,0),
-      addAtom('gaugeLast5DaysNotZero', 4,9,20)
+      addAtom('timeGraphPercentNotZero', 20, 9, 0),
+      addAtom('gaugeLast5DaysNotZero', 4, 9, 20)
     ]
   },
   gauge: {
@@ -1888,7 +2004,7 @@ const blocks = {
       fillRow: true
     },
     panels: [
-      addAtom('gaugeLast5Days', 8, 9, undefined,{ title: '###GUARANTEE.DESCRIPTION###' })
+      addAtom('gaugeLast5Days', 8, 9, undefined, { title: '###GUARANTEE.DESCRIPTION###' })
     ]
   },
   'gauge-notZero': {
@@ -1898,7 +2014,7 @@ const blocks = {
       fillRow: true
     },
     panels: [
-      addAtom('gaugeLast5DaysNotZero', 8, 9, undefined,{ title: '###GUARANTEE.DESCRIPTION###' })
+      addAtom('gaugeLast5DaysNotZero', 8, 9, undefined, { title: '###GUARANTEE.DESCRIPTION###' })
     ]
   },
   'divider-changer': {
@@ -1931,17 +2047,17 @@ function sortBlockCompare (block1, block2) {
 module.exports.default = (jsonDashboard, agreement, dashboardName) => {
   let modifiedDashboard = { ...jsonDashboard };
   var agreementId = agreement.id;
-  var agreementProject = agreementId.replace('tpa-','')
+  var agreementProject = agreementId.replace('tpa-', '');
   var dashboardConfig = agreement.context.definitions.dashboards[dashboardName].config;
   var currentXLocation = 0;
   var currentYLocation = 0;
   var currentPanelId = 0;
 
   // Each block configured in the agreement should be added with its configuration to the dashboard.
-  Object.entries(dashboardConfig.blocks).sort((a,b)=> a[0]-b[0]).forEach(function ([_,block]) {
+  Object.entries(dashboardConfig.blocks).sort((a, b) => a[0] - b[0]).forEach(function ([_, block]) {
     var newPanels = [...blocks[block.type].panels];
     // Add here specific block custom code
-  
+
     if (block.type === 'correlated' || block.type === 'gauge-time-correlation' || block.type === 'gauge-time-correlation-notZero') {
       newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###METRIC.XAXIS###/g, block.config['x-axis-metric']));
       newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###METRIC.YAXIS###/g, block.config['y-axis-metric']));
@@ -1963,7 +2079,7 @@ module.exports.default = (jsonDashboard, agreement, dashboardName) => {
     const timeGraphTitle = block.config && block.config['time-graph-title'] ? block.config['time-graph-title'] : block.guarantee;
     newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###TIME_GRAPH.TITLE###/g, timeGraphTitle));
 
-    if(block.config && block.config['scope-class']){
+    if (block.config && block.config['scope-class']) {
       newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###AGREEMENT.SCOPE.CLASS###/g, block.config['scope-class']));
     }
 
@@ -2003,4 +2119,4 @@ module.exports.default = (jsonDashboard, agreement, dashboardName) => {
 
   // Dashboard JSON is received here, data (like thresholds) must be replaced with agreement data.
   return modifiedDashboard;
-}
+};
