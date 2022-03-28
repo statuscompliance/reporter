@@ -2174,7 +2174,7 @@ module.exports.default = (jsonDashboard, agreement, dashboardName) => {
     var newPanels = [...blocks[block.type].panels];
     // Add here specific block custom code
 
-    if (block.type === 'correlated' || block.type === 'gauge-time-correlation' || block.type === 'gauge-time-correlation-notZero') {
+    if (block.type === 'correlated' || block.type === 'gauge-time-correlation' || block.type === 'gauge-time-correlation-notZero' || block.type === 'gauge-period-time-correlation-notZero') {
       newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###METRIC.XAXIS###/g, block.config['x-axis-metric']));
       newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###METRIC.YAXIS###/g, block.config['y-axis-metric']));
       newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###METRIC.NOTZERO###/g, block.config['not-zero-metric']));
