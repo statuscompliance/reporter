@@ -226,6 +226,111 @@ const atoms = {
     timeFrom: null,
     timeShift: null
   },
+  gaugeLastPeriod: {
+    title: 'Mean percentage since the beginning',
+    guarantee: '###GUARANTEE.NAME###',
+    type: 'gauge',
+    datasource: 'InfluxDB',
+    fieldConfig: {
+      defaults: {
+        custom: {},
+        mappings: [],
+        max: 100,
+        min: 0,
+        thresholds: {
+          mode: 'absolute',
+          steps: [
+            {
+              color: 'red',
+              value: null
+            },
+            {
+              color: 'yellow',
+              value: 50
+            },
+            {
+              color: 'green',
+              value: 75
+            }
+          ]
+        }
+      },
+      overrides: []
+    },
+    gridPos: {
+      h: 9,
+      w: 4,
+      x: 0,
+      y: 1
+    },
+    id: 2,
+    options: {
+      orientation: 'auto',
+      reduceOptions: {
+        calcs: [
+          'mean'
+        ],
+        values: false
+      },
+      showThresholdLabels: false,
+      showThresholdMarkers: true
+    },
+    pluginVersion: '7.0.0',
+    targets: [
+      {
+        groupBy: [
+          {
+            params: [
+              '$__interval'
+            ],
+            type: 'time'
+          },
+          {
+            params: [
+              'null'
+            ],
+            type: 'fill'
+          }
+        ],
+        measurement: 'metrics_values',
+        orderByTime: 'ASC',
+        policy: 'autogen',
+        query: "SELECT mean(\"guaranteeValue\") FROM \"autogen\".\"metrics_values\" WHERE (\"agreement\" = '###AGREEMENT.ID###' AND \"id\" = '###GUARANTEE.NAME###') AND $timeFilter GROUP BY time($__interval) fill(null)",
+        rawQuery: true,
+        refId: 'A',
+        resultFormat: 'time_series',
+        select: [
+          [
+            {
+              params: [
+                'guaranteeValue'
+              ],
+              type: 'field'
+            },
+            {
+              params: [],
+              type: 'mean'
+            }
+          ]
+        ],
+        tags: [
+          {
+            key: 'agreement',
+            operator: '=',
+            value: '###AGREEMENT.ID###'
+          },
+          {
+            condition: 'AND',
+            key: 'id',
+            operator: '=',
+            value: '###GUARANTEE.NAME###'
+          }
+        ]
+      }
+    ],
+    timeFrom: null,
+    timeShift: null
+  },
   gaugeLast5DaysNotZero: {
     title: 'Mean percentage since the beginning',
     guarantee: '###GUARANTEE.NAME###',
@@ -1965,6 +2070,17 @@ const blocks = {
       addAtom('rowTitle'),
       addAtom('gaugeLast5Days', 4),
       addAtom('timeGraphPercent', 20, 9, 4)
+    ]
+  },
+  'gauge-period-time': {
+    config: {
+      height: 8
+    },
+    panels: [
+      addAtom('rowTitle'),
+      addAtom('gaugeLast5Days', 4),
+      addAtom('gaugeLastPeriod', 4, 9, 4),
+      addAtom('timeGraphPercent', 16, 9, 8)
     ]
   },
   'gauge-time-notZero': {
