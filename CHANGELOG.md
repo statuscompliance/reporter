@@ -1,3 +1,12 @@
+## [2.3.2](https://github.com/governify/reporter/compare/v2.3.1...v2.3.2) (2022-03-28)
+
+
+### Bug Fixes
+
+* Axis metric new blocks ([bb913e2](https://github.com/governify/reporter/commit/bb913e23f9ab9289b08dd1cb470693914954394d))
+
+
+
 ## [2.3.1](https://github.com/governify/reporter/compare/v2.3.0...v2.3.1) (2022-03-28)
 
 
