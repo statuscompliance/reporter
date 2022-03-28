@@ -1,3 +1,12 @@
+## [2.3.1](https://github.com/governify/reporter/compare/v2.3.0...v2.3.1) (2022-03-28)
+
+
+### Bug Fixes
+
+* block rename ([71eff0e](https://github.com/governify/reporter/commit/71eff0ee2df6c84911e1e7fedf80b7ec2d6f90e8))
+
+
+
 # [2.3.0](https://github.com/governify/reporter/compare/v2.2.0...v2.3.0) (2022-03-25)
 
 
