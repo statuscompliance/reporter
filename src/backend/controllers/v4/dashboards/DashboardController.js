@@ -41,7 +41,7 @@ exports.dashboardGET = async (req, res, next) => {
     
     
     var dashboardJSON;
-    if(dashboardConfig.config.configDashboard){
+    if(dashboardConfig.config && dashboardConfig.config.configDashboard){
       dashboardJSON = await configDashboard(agreement,dashboardId);
     }
     else{
