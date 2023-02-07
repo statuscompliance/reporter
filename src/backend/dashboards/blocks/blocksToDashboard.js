@@ -788,6 +788,12 @@ const atoms = {
             key: 'id',
             operator: '=',
             value: '###GUARANTEE.NAME###'
+          },
+          {
+            condition: 'AND',
+            key: 'scope_member',
+            operator: '!=',
+            value: ''
           }
         ]
       }
