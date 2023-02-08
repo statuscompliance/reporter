@@ -1,3 +1,12 @@
+# [2.4.0](https://github.com/governify/reporter/compare/v2.3.3...v2.4.0) (2023-02-08)
+
+
+### Features
+
+* Added new block time-graph-count ([5eec89e](https://github.com/governify/reporter/commit/5eec89edcca8f2039f1cfef6db1786f2e0087195))
+
+
+
 ## [2.3.3](https://github.com/governify/reporter/compare/v2.3.2...v2.3.3) (2023-02-07)
 
 
