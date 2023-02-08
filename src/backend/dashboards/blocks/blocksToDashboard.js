@@ -1993,6 +1993,247 @@ const blocks = {
     ]
 
   },
+  'time-graph-count': {
+    config: {
+      height: 8
+    },
+    panels: [
+      {
+        datasource: 'InfluxDB',
+        fieldConfig: {
+          defaults: {
+            custom: {
+              align: 'center',
+              displayMode: 'color-background'
+            },
+            mappings: [],
+            thresholds: {
+              mode: 'absolute',
+              steps: [
+                {
+                  color: 'rgb(127, 9, 11)',
+                  value: null
+                },
+                {
+                  color: 'rgb(30, 104, 11)',
+                  value: '###GUARANTEE.THRESHOLD###'
+                }
+              ]
+            },
+            unit: 'none'
+          },
+          overrides: []
+        },
+        gridPos: {
+          h: 8,
+          w: 5,
+          x: 19,
+          y: 11
+        },
+        id: 4,
+        options: {
+          showHeader: true
+        },
+        pluginVersion: '7.0.0',
+        targets: [
+          {
+            groupBy: [],
+            measurement: 'metrics_values',
+            orderByTime: 'ASC',
+            policy: 'autogen',
+            refId: 'A',
+            resultFormat: 'time_series',
+            select: [
+              [
+                {
+                  params: [
+                    'guaranteeValue'
+                  ],
+                  type: 'field'
+                }
+              ]
+            ],
+            tags: [
+              {
+                key: 'agreement',
+                operator: '=',
+                value: '###AGREEMENT.ID###'
+              },
+              {
+                condition: 'AND',
+                key: 'id',
+                operator: '=',
+                value: '###GUARANTEE.NAME###'
+              }
+            ]
+          }
+        ],
+        timeFrom: null,
+        timeShift: null,
+        title: 'Values in time',
+        type: 'table'
+      },
+      {
+        collapsed: false,
+        datasource: null,
+        gridPos: {
+          h: 1,
+          w: 24,
+          x: 0,
+          y: 19
+        },
+        id: 24,
+        panels: [],
+        title: '###GUARANTEE.DESCRIPTION###',
+        type: 'row'
+      },
+      {
+        aliasColors: {},
+        bars: false,
+        dashLength: 10,
+        dashes: false,
+        datasource: 'InfluxDB',
+        fieldConfig: {
+          defaults: {
+            custom: {}
+          },
+          overrides: []
+        },
+        fill: 1,
+        fillGradient: 0,
+        gridPos: {
+          h: 8,
+          w: 19,
+          x: 0,
+          y: 20
+        },
+        hiddenSeries: false,
+        id: 20,
+        legend: {
+          avg: false,
+          current: false,
+          max: false,
+          min: false,
+          show: true,
+          total: false,
+          values: false
+        },
+        lines: true,
+        linewidth: 1,
+        nullPointMode: 'null',
+        options: {
+          dataLinks: []
+        },
+        percentage: false,
+        pointradius: 2,
+        points: true,
+        renderer: 'flot',
+        seriesOverrides: [],
+        spaceLength: 10,
+        stack: false,
+        steppedLine: false,
+        targets: [
+          {
+            alias: '',
+            groupBy: [
+              {
+                params: [
+                  '$__interval'
+                ],
+                type: 'time'
+              },
+              {
+                params: [
+                  'none'
+                ],
+                type: 'fill'
+              }
+            ],
+            measurement: 'metrics_values',
+            orderByTime: 'ASC',
+            policy: 'autogen',
+            refId: 'A',
+            resultFormat: 'time_series',
+            select: [
+              [
+                {
+                  params: [
+                    'guaranteeValue'
+                  ],
+                  type: 'field'
+                },
+                {
+                  params: [],
+                  type: 'mean'
+                }
+              ]
+            ],
+            tags: [
+              {
+                key: 'agreement',
+                operator: '=',
+                value: '###AGREEMENT.ID###'
+              },
+              {
+                condition: 'AND',
+                key: 'id',
+                operator: '=',
+                value: '###GUARANTEE.NAME###'
+              }
+            ]
+          }
+        ],
+        thresholds: [
+          {
+            colorMode: 'critical',
+            fill: true,
+            line: false,
+            op: 'lt',
+            value: '###GUARANTEE.THRESHOLD###',
+            yaxis: 'left'
+          }
+        ],
+        timeFrom: null,
+        timeRegions: [],
+        timeShift: null,
+        title: '###TIME_GRAPH.TITLE###',
+        tooltip: {
+          shared: true,
+          sort: 0,
+          value_type: 'individual'
+        },
+        type: 'graph',
+        xaxis: {
+          buckets: null,
+          mode: 'time',
+          name: null,
+          show: true,
+          values: []
+        },
+        yaxes: [
+          {
+            format: 'short',
+            label: null,
+            logBase: 1,
+            max: "",
+            min: 0,
+            show: true
+          },
+          {
+            format: 'short',
+            label: null,
+            logBase: 1,
+            max: null,
+            min: null,
+            show: true
+          }
+        ],
+        yaxis: {
+          align: false,
+          alignLevel: null
+        }
+      }]
+  },
   'time-graph-notZero': {
     config: {
       height: 8
