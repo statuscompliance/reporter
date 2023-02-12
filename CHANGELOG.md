@@ -1,3 +1,22 @@
+# [2.4.0](https://github.com/governify/reporter/compare/v2.3.3...v2.4.0) (2023-02-08)
+
+
+### Features
+
+* Added new block time-graph-count ([5eec89e](https://github.com/governify/reporter/commit/5eec89edcca8f2039f1cfef6db1786f2e0087195))
+
+
+
+## [2.3.3](https://github.com/governify/reporter/compare/v2.3.2...v2.3.3) (2023-02-07)
+
+
+### Bug Fixes
+
+* Error get 'configDashboard' of undefined ([0a4ad60](https://github.com/governify/reporter/commit/0a4ad60b5b24c5dab70917be282638198f0eec3e))
+* Removed empty member from member graph ([9eecbba](https://github.com/governify/reporter/commit/9eecbba997d919924236cb952f5ce0c1a4d7077f))
+
+
+
 ## [2.3.2](https://github.com/governify/reporter/compare/v2.3.1...v2.3.2) (2022-03-28)
 
 
