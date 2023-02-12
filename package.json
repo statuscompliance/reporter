@@ -21,7 +21,8 @@
     "moment-timezone": "^0.5.33",
     "mustache": "^4.2.0",
     "rrule": "^2.6.8",
-    "swagger-tools": "^0.10.3"
+    "swagger-tools": "^0.10.3",
+    "newrelic": "latest"
   },
   "devDependencies": {
     "mocha": "^7.1.1",
