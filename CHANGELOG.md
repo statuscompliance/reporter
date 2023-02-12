@@ -1,3 +1,12 @@
+# [2.5.0](https://github.com/governify/reporter/compare/v2.4.0...v2.5.0) (2023-02-12)
+
+
+### Features
+
+* Installed newrelic ([d2ccb10](https://github.com/governify/reporter/commit/d2ccb10d6ba36333c576cc9fc6ad6ceac4109ac7))
+
+
+
 # [2.4.0](https://github.com/governify/reporter/compare/v2.3.3...v2.4.0) (2023-02-08)
 
 
