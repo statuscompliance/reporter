@@ -1,3 +1,12 @@
+## [2.6.1](https://github.com/governify/reporter/compare/v2.6.0...v2.6.1) (2023-04-21)
+
+
+### Bug Fixes
+
+* Changed transformation for renameByRegex ([efbb710](https://github.com/governify/reporter/commit/efbb710fb578d27aaf80c63c0b684f70de2945ad))
+
+
+
 # [2.6.0](https://github.com/governify/reporter/compare/v2.5.0...v2.6.0) (2023-04-21)
 
 
