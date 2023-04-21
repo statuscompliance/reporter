@@ -823,7 +823,7 @@ const atoms = {
       {
         "id": "renameByRegex",
         "options": {
-          "regex": "metrics_values.guaranteeValue {scope_member:",
+          "regex": "metrics_values.sum {scope_member:",
           "renamePattern": ""
         }
       },
@@ -1014,7 +1014,7 @@ const atoms = {
       {
         "id": "renameByRegex",
         "options": {
-          "regex": "metrics_values.guaranteeValue {scope_member:",
+          "regex": "metrics_values.sum {scope_member:",
           "renamePattern": ""
         }
       },
