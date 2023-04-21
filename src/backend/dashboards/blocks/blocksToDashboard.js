@@ -800,17 +800,232 @@ const atoms = {
     ],
     thresholds: [
       {
-        colorMode: 'critical',
-        fill: true,
-        line: false,
-        op: 'lt',
-        value: '###GUARANTEE.THRESHOLD###',
-        yaxis: 'left'
+        "colorMode": "critical",
+        "fill": true,
+        "line": "###GUARANTEE.CRITICAL_THRESHOLD_SIGN_LINE###",
+        "op": "###GUARANTEE.CRITICAL_THRESHOLD_SIGN###",
+        "value": '###GUARANTEE.THRESHOLD###',
+        "yaxis": "left"
+      },
+      {
+        "colorMode": "ok",
+        "fill": true,
+        "line": "###GUARANTEE.OK_THRESHOLD_SIGN_LINE###",
+        "op": "###GUARANTEE.OK_THRESHOLD_SIGN###",
+        "value": '###GUARANTEE.THRESHOLD###',
+        "yaxis": "left"
       }
     ],
     timeFrom: null,
     timeRegions: [],
     timeShift: null,
+    transformations: [
+      {
+        "id": "renameByRegex",
+        "options": {
+          "regex": "metrics_values.guaranteeValue {scope_member:",
+          "renamePattern": ""
+        }
+      },
+      {
+        "id": "renameByRegex",
+        "options": {
+          "regex": "}",
+          "renamePattern": ""
+        }
+      }
+    ],
+    tooltip: {
+      shared: true,
+      sort: 0,
+      value_type: 'individual'
+    },
+    xaxis: {
+      buckets: null,
+      mode: 'time',
+      name: null,
+      show: true,
+      values: []
+    },
+    yaxes: [
+      {
+        format: 'short',
+        label: null,
+        logBase: 1,
+        max: null,
+        min: null,
+        show: true
+      },
+      {
+        format: 'short',
+        label: null,
+        logBase: 1,
+        max: null,
+        min: null,
+        show: true
+      }
+    ],
+    yaxis: {
+      align: false,
+      alignLevel: null
+    }
+  },
+  timeGraphMemberGroupBy: {
+    title: '###TIME_GRAPH.TITLE###',
+    guarantee: '###GUARANTEE.NAME###',
+    type: 'graph',
+    aliasColors: {},
+    bars: false,
+    dashLength: 10,
+    dashes: false,
+    datasource: 'InfluxDB',
+    fieldConfig: {
+      defaults: {
+        custom: {},
+        mappings: [],
+        thresholds: {
+          mode: 'absolute',
+          steps: [
+            {
+              color: 'green',
+              value: null
+            },
+            {
+              color: 'red',
+              value: 80
+            }
+          ]
+        }
+      },
+      overrides: []
+    },
+    fill: 1,
+    fillGradient: 0,
+    gridPos: {
+      h: 9,
+      w: 20,
+      x: 4,
+      y: 1
+    },
+    hiddenSeries: false,
+    id: 4,
+    legend: {
+      avg: false,
+      current: false,
+      max: false,
+      min: false,
+      show: true,
+      total: false,
+      values: false
+    },
+    lines: true,
+    linewidth: 1,
+    nullPointMode: 'null',
+    options: {
+      dataLinks: []
+    },
+    percentage: false,
+    pluginVersion: '7.0.0',
+    pointradius: 2,
+    points: true,
+    renderer: 'flot',
+    seriesOverrides: [],
+    spaceLength: 10,
+    stack: false,
+    steppedLine: false,
+    targets: [
+      {
+        groupBy: [
+          {
+            type: "time",
+            params: [
+              "###TIME_GRAPH.TIME_INTERVAL###"
+            ]
+          },
+          {
+            params: [
+              'scope_member'
+            ],
+            type: 'tag'
+          }
+        ],
+        measurement: 'metrics_values',
+        orderByTime: 'ASC',
+        policy: 'autogen',
+        refId: 'A',
+        resultFormat: 'time_series',
+        select: [
+          [
+            {
+              params: [
+                'guaranteeValue'
+              ],
+              type: 'field'
+            },
+            {
+              type: "###TIME_GRAPH.AGGREGATION###",
+              params: []
+            }
+          ]
+        ],
+        tags: [
+          {
+            key: 'agreement',
+            operator: '=',
+            value: '###AGREEMENT.ID###'
+          },
+          {
+            condition: 'AND',
+            key: 'id',
+            operator: '=',
+            value: '###GUARANTEE.NAME###'
+          },
+          {
+            condition: 'AND',
+            key: 'scope_member',
+            operator: '!=',
+            value: ''
+          }
+        ]
+      }
+    ],
+    thresholds: [
+      {
+        "colorMode": "critical",
+        "fill": true,
+        "line": "###GUARANTEE.CRITICAL_THRESHOLD_SIGN_LINE###",
+        "op": "###GUARANTEE.CRITICAL_THRESHOLD_SIGN###",
+        "value": '###GUARANTEE.THRESHOLD###',
+        "yaxis": "left"
+      },
+      {
+        "colorMode": "ok",
+        "fill": true,
+        "line": "###GUARANTEE.OK_THRESHOLD_SIGN_LINE###",
+        "op": "###GUARANTEE.OK_THRESHOLD_SIGN###",
+        "value": '###GUARANTEE.THRESHOLD###',
+        "yaxis": "left"
+      }
+    ],
+    timeFrom: null,
+    timeRegions: [],
+    timeShift: null,
+    transformations: [
+      {
+        "id": "renameByRegex",
+        "options": {
+          "regex": "metrics_values.guaranteeValue {scope_member:",
+          "renamePattern": ""
+        }
+      },
+      {
+        "id": "renameByRegex",
+        "options": {
+          "regex": "}",
+          "renamePattern": ""
+        }
+      }
+    ],
     tooltip: {
       shared: true,
       sort: 0,
@@ -1594,6 +1809,30 @@ const atoms = {
     type: 'text'
 
   },
+  htmlGithub: {
+    content: "<div\r\n    style=\"padding-left: 19%;font-size: 34px; color: white; max-width: 80%;text-shadow: 1px 0 0 #000, -1px 0 0 #000, 0 1px 0 #000, 0 -1px 0 #000, .5px .5px #000, -.5px -.5px 0 #000, .5px -.5px 0 #000, -.5px .5px 0 #000;;\">\r\n    <center>\r\n        ###TITLE###\r\n    <\/center>\r\n<\/div>\r\n<div style=\"font-size: 34px; color: black; margin-top: -55px; max-width: 30%; float: right;  margin-right: 10px;\">\r\n    <a href=\"https:\/\/www.github.com\/%%%GITHUB_SLUG%%%\" target=\"_blank\"><button style=\"font-size: 18px; color: #000000\">GitHub Repo<\/button><\/a>\r\n<\/div>",
+    gridPos: {
+      h: 2,
+      w: 24,
+      x: 0,
+      y: 0
+    },
+    id: 30,
+    mode: 'html',
+    type: 'text'
+  },
+  htmlGithubStates: {
+    content: "<div style=\"display: flex;align-items: center;justify-content: space-between;margin: 0px 10px;\">\r\n    <a href=\"http:\/\/37.187.8.193:32124\/api\/v1\/states?agreementId=###AGREEMENT.ID###&amp;format=csv&amp;download\" target=\"_blank\"><button style=\"font-size: 18px; color: #000000\">Download States<\/button><\/a>\r\n    <div style=\"font-size: 34px;color: white;\">\r\n        PSG2-2223 Dashboard\r\n    <\/div>\r\n    <a href=\"https://www.github.com/%%%GITHUB_SLUG%%%\" target=\"_blank\"><button style=\"font-size: 18px;color: #000000;\">GitHub Repo<\/button><\/a>\r\n<\/div>",
+    gridPos: {
+      h: 2,
+      w: 24,
+      x: 0,
+      y: 0
+    },
+    id: 30,
+    mode: 'html',
+    type: 'text'
+  },
   htmlLinkGithub: {
     content: "<script>\n setTimeout(function(){document.getElementById('daySelector').style.filter = 'invert(1)'; document.styleSheets[0].insertRule('::-webkit-calendar-picker-indicator {filter: invert(1);}',1);},1000);\n</script>\n <div style=\"padding-left: 19%;font-size: 34px; color: white; max-width: 80%;text-shadow: 1px 0 0 #000, -1px 0 0 #000, 0 1px 0 #000, 0 -1px 0 #000, .5px .5px #000, -.5px -.5px 0 #000, .5px -.5px 0 #000, -.5px .5px 0 #000;;\">\n<center>\n###TITLE###\n\n</center>\n\n</div>\n<div style=\"font-size: 34px; color: black; margin-top: -55px; max-width: 30%; float: right;  margin-right: 10px;\">\n<a href=\"https://www.github.com/%%%GITHUB_SLUG%%%\" target=\"_blank\"><button style=\"font-size: 18px; color: #000000\">\nGitHub Repo\n</button></a>\n<button style=\"font-size: 18px; color: #000000\" onclick=\"location.href = location.href.replace('###OLDVIEW###', '###NEWVIEW###')\">\n###BUTTONTEXT###\n</button>\n</div>",
     gridPos: {
@@ -2185,12 +2424,20 @@ const blocks = {
         ],
         thresholds: [
           {
-            colorMode: 'critical',
-            fill: true,
-            line: false,
-            op: 'lt',
-            value: '###GUARANTEE.THRESHOLD###',
-            yaxis: 'left'
+            "colorMode": "critical",
+            "fill": true,
+            "line": "###GUARANTEE.CRITICAL_THRESHOLD_SIGN_LINE###",
+            "op": "###GUARANTEE.CRITICAL_THRESHOLD_SIGN###",
+            "value": '###GUARANTEE.THRESHOLD###',
+            "yaxis": "left"
+          },
+          {
+            "colorMode": "ok",
+            "fill": true,
+            "line": "###GUARANTEE.OK_THRESHOLD_SIGN_LINE###",
+            "op": "###GUARANTEE.OK_THRESHOLD_SIGN###",
+            "value": '###GUARANTEE.THRESHOLD###',
+            "yaxis": "left"
           }
         ],
         timeFrom: null,
@@ -2215,7 +2462,256 @@ const blocks = {
             format: 'short',
             label: null,
             logBase: 1,
-            max: "",
+            max: null,
+            min: 0,
+            show: true
+          },
+          {
+            format: 'short',
+            label: null,
+            logBase: 1,
+            max: null,
+            min: null,
+            show: true
+          }
+        ],
+        yaxis: {
+          align: false,
+          alignLevel: null
+        }
+      }]
+  },
+  'time-graph-count-groupby': {
+    config: {
+      height: 8
+    },
+    panels: [
+      {
+        datasource: 'InfluxDB',
+        fieldConfig: {
+          defaults: {
+            custom: {
+              align: 'center',
+              displayMode: 'color-background'
+            },
+            mappings: [],
+            thresholds: {
+              mode: 'absolute',
+              steps: [
+                {
+                  color: 'rgb(127, 9, 11)',
+                  value: null
+                },
+                {
+                  color: 'rgb(30, 104, 11)',
+                  value: '###GUARANTEE.THRESHOLD###'
+                }
+              ]
+            },
+            unit: 'none'
+          },
+          overrides: []
+        },
+        gridPos: {
+          h: 8,
+          w: 5,
+          x: 19,
+          y: 11
+        },
+        id: 4,
+        options: {
+          showHeader: true
+        },
+        pluginVersion: '7.0.0',
+        targets: [
+          {
+            groupBy: [],
+            measurement: 'metrics_values',
+            orderByTime: 'ASC',
+            policy: 'autogen',
+            refId: 'A',
+            resultFormat: 'time_series',
+            select: [
+              [
+                {
+                  params: [
+                    'guaranteeValue'
+                  ],
+                  type: 'field'
+                }
+              ]
+            ],
+            tags: [
+              {
+                key: 'agreement',
+                operator: '=',
+                value: '###AGREEMENT.ID###'
+              },
+              {
+                condition: 'AND',
+                key: 'id',
+                operator: '=',
+                value: '###GUARANTEE.NAME###'
+              }
+            ]
+          }
+        ],
+        timeFrom: null,
+        timeShift: null,
+        title: 'Values in time',
+        type: 'table'
+      },
+      {
+        collapsed: false,
+        datasource: null,
+        gridPos: {
+          h: 1,
+          w: 24,
+          x: 0,
+          y: 19
+        },
+        id: 24,
+        panels: [],
+        title: '###GUARANTEE.DESCRIPTION###',
+        type: 'row'
+      },
+      {
+        aliasColors: {},
+        bars: false,
+        dashLength: 10,
+        dashes: false,
+        datasource: 'InfluxDB',
+        fieldConfig: {
+          defaults: {
+            custom: {}
+          },
+          overrides: []
+        },
+        fill: 1,
+        fillGradient: 0,
+        gridPos: {
+          h: 8,
+          w: 19,
+          x: 0,
+          y: 20
+        },
+        hiddenSeries: false,
+        id: 20,
+        legend: {
+          avg: false,
+          current: false,
+          max: false,
+          min: false,
+          show: true,
+          total: false,
+          values: false
+        },
+        lines: true,
+        linewidth: 1,
+        nullPointMode: 'null',
+        options: {
+          dataLinks: []
+        },
+        percentage: false,
+        pointradius: 2,
+        points: true,
+        renderer: 'flot',
+        seriesOverrides: [],
+        spaceLength: 10,
+        stack: false,
+        steppedLine: false,
+        targets: [
+          {
+            alias: '',
+            groupBy: [
+              {
+                params: [
+                  '###TIME_GRAPH.TIME_INTERVAL###'
+                ],
+                type: 'time'
+              },
+              {
+                params: [
+                  'none'
+                ],
+                type: 'fill'
+              }
+            ],
+            measurement: 'metrics_values',
+            orderByTime: 'ASC',
+            policy: 'autogen',
+            refId: 'A',
+            resultFormat: 'time_series',
+            select: [
+              [
+                {
+                  params: [
+                    'guaranteeValue'
+                  ],
+                  type: 'field'
+                },
+                {
+                  params: [],
+                  type: 'mean'
+                }
+              ]
+            ],
+            tags: [
+              {
+                key: 'agreement',
+                operator: '=',
+                value: '###AGREEMENT.ID###'
+              },
+              {
+                condition: 'AND',
+                key: 'id',
+                operator: '=',
+                value: '###GUARANTEE.NAME###'
+              }
+            ]
+          }
+        ],
+        thresholds: [
+          {
+            "colorMode": "critical",
+            "fill": true,
+            "line": "###GUARANTEE.CRITICAL_THRESHOLD_SIGN_LINE###",
+            "op": "###GUARANTEE.CRITICAL_THRESHOLD_SIGN###",
+            "value": '###GUARANTEE.THRESHOLD###',
+            "yaxis": "left"
+          },
+          {
+            "colorMode": "ok",
+            "fill": true,
+            "line": "###GUARANTEE.OK_THRESHOLD_SIGN_LINE###",
+            "op": "###GUARANTEE.OK_THRESHOLD_SIGN###",
+            "value": '###GUARANTEE.THRESHOLD###',
+            "yaxis": "left"
+          }
+        ],
+        timeFrom: null,
+        timeRegions: [],
+        timeShift: null,
+        title: '###TIME_GRAPH.TITLE###',
+        tooltip: {
+          shared: true,
+          sort: 0,
+          value_type: 'individual'
+        },
+        type: 'graph',
+        xaxis: {
+          buckets: null,
+          mode: 'time',
+          name: null,
+          show: true,
+          values: []
+        },
+        yaxes: [
+          {
+            format: 'short',
+            label: null,
+            logBase: 1,
+            max: null,
             min: 0,
             show: true
           },
@@ -2272,6 +2768,16 @@ const blocks = {
     panels: [
       addAtom('rowTitle'),
       addAtom('timeGraphMember')
+    ]
+
+  },
+  'time-graph2-member-groupby': {
+    config: {
+      height: 8
+    },
+    panels: [
+      addAtom('rowTitle'),
+      addAtom('timeGraphMemberGroupBy')
     ]
 
   },
@@ -2388,6 +2894,22 @@ const blocks = {
       addAtom('htmlLink', 24, 2)
     ]
   },
+  'divider-github': {
+    config: {
+      height: 2
+    },
+    panels: [
+      addAtom('htmlGithub', 24, 2)
+    ]
+  },
+  'divider-github-states': {
+    config: {
+      height: 2
+    },
+    panels: [
+      addAtom('htmlGithubStates', 24, 2)
+    ]
+  },
   'divider-changer-github': {
     config: {
       height: 2
@@ -2435,6 +2957,10 @@ module.exports.default = (jsonDashboard, agreement, dashboardName) => {
         var githubSlug = agreementId.split('GH-')[1];
         newPanels = JSON.parse(JSON.stringify(newPanels).replace(/%%%GITHUB_SLUG%%%/g, githubSlug.split('_')[0] + '/' + githubSlug.split('_')[1]));
       }
+    } else if (block.type === 'divider-github' || block.type === 'divider-github-states') {
+      newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###TITLE###/g, block.config.title));
+      var githubSlug = agreementId.split('GH-')[1];
+      newPanels = JSON.parse(JSON.stringify(newPanels).replace(/%%%GITHUB_SLUG%%%/g, githubSlug.split('_')[0] + '/' + githubSlug.split('_')[1]));
     } else if (block.type.includes('notZero')) {
       newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###METRIC.NOTZERO###/g, block.config['not-zero-metric']));
     }
@@ -2454,6 +2980,56 @@ module.exports.default = (jsonDashboard, agreement, dashboardName) => {
       newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###GUARANTEE.DESCRIPTION###/g, guarantee.description));
       newPanels = JSON.parse(JSON.stringify(newPanels).replace(/"###GUARANTEE.THRESHOLD###"/g, guarantee.of[0].objective.split(' ')[guarantee.of[0].objective.split(' ').length - 1]));
     }
+
+    if (block.type === 'time-graph2-member' || block.type === 'time-graph2-member-groupby' || block.type === 'time-graph-count' || block.type === 'time-graph-count-groupby') {
+      const regex = /([a-zA-Z_]+[\w\.\[\]]*)\s*([<>=]+)\s*(\d+)/;
+      const match = guarantee.of[0].objective.match(regex); // Match the objective against the regular expression
+      if (!match) throw new Error('Invalid objective format.'); // Check if the objective is in the expected format
+      const variable = match[1]; // Extract the variable name from the match
+      const operator = match[2]; // Extract the operator from the match
+      const value = Number(match[3]); // Extract the value from the match and convert it to a number
+      if (isNaN(value)) throw new Error('Invalid threshold value.'); // Check if the threshold value is valid
+
+      let okThresholdSign = '';
+      let criticalThresholdSign = '';
+      let okThresholdSignLine = '';
+      let criticalThresholdSignLine = '';
+
+      if (operator === '>') {
+        okThresholdSign = 'gt';
+        criticalThresholdSign = 'lt';
+        okThresholdSignLine = false;
+        criticalThresholdSignLine = true;
+      } else if (operator === '>=') {
+        okThresholdSign = 'gt';
+        criticalThresholdSign = 'lt';
+        okThresholdSignLine = true;
+        criticalThresholdSignLine = true;
+      } else if (operator === '<') {
+        okThresholdSign = 'lt';
+        criticalThresholdSign = 'gt';
+        okThresholdSignLine = false;
+        criticalThresholdSignLine = true;
+      } else if (operator === '<=') {
+        okThresholdSign = 'lt';
+        criticalThresholdSign = 'gt';
+        okThresholdSignLine = true;
+        criticalThresholdSignLine = false;
+      }
+
+      if (block.type === 'time-graph2-member-groupby' || block.type === 'time-graph-count-groupby') {
+        newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###TIME_GRAPH.TIME_INTERVAL###/g, block.config['time-interval']));
+        if (block.type === 'time-graph2-member-groupby') {
+          newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###TIME_GRAPH.AGGREGATION###/g, block.config['aggregation']));
+        }
+      }
+
+      newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###GUARANTEE.OK_THRESHOLD_SIGN###/g, okThresholdSign));
+      newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###GUARANTEE.OK_THRESHOLD_SIGN_LINE###      /g, okThresholdSignLine));
+      newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###GUARANTEE.CRITICAL_THRESHOLD_SIGN###/g, criticalThresholdSign));
+      newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###GUARANTEE.CRITICAL_THRESHOLD_SIGN_LINE###      /g, criticalThresholdSignLine));
+    }
+
     // Add new panels to the current dashboard
     newPanels.forEach(panel => {
       // Increment x position for next block if fill = true
