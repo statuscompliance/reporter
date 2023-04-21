@@ -1,7 +1,7 @@
 {
   "name": "governify-reporter",
   "buildOn": "2020-11-05",
-  "version": "2.3.2",
+  "version": "2.5.0",
   "description": "A reporter for Governify project",
   "homepage": "https://github.com/governify/reporter",
   "main": "index.js",
@@ -21,7 +21,8 @@
     "moment-timezone": "^0.5.33",
     "mustache": "^4.2.0",
     "rrule": "^2.6.8",
-    "swagger-tools": "^0.10.3"
+    "swagger-tools": "^0.10.3",
+    "newrelic": "latest"
   },
   "devDependencies": {
     "mocha": "^7.1.1",
