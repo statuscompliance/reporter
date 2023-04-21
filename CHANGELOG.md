@@ -1,3 +1,12 @@
+# [2.6.0](https://github.com/governify/reporter/compare/v2.5.0...v2.6.0) (2023-04-21)
+
+
+### Features
+
+* Added support for PSG2-2223 ([c5ffe99](https://github.com/governify/reporter/commit/c5ffe993f91f65df5ba5f127156111d4335b00b6))
+
+
+
 # [2.5.0](https://github.com/governify/reporter/compare/v2.4.0...v2.5.0) (2023-02-12)
 
 
