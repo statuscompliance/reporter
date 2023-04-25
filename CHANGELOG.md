@@ -1,3 +1,12 @@
+## [2.6.3](https://github.com/governify/reporter/compare/v2.6.2...v2.6.3) (2023-04-25)
+
+
+### Bug Fixes
+
+* Changed transformation for member block ([7e45516](https://github.com/governify/reporter/commit/7e45516db40a2620e909e77ab654c0837cc1a518))
+
+
+
 ## [2.6.2](https://github.com/governify/reporter/compare/v2.6.1...v2.6.2) (2023-04-25)
 
 
