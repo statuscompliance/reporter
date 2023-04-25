@@ -1,3 +1,12 @@
+## [2.6.2](https://github.com/governify/reporter/compare/v2.6.1...v2.6.2) (2023-04-25)
+
+
+### Bug Fixes
+
+* Changed download states' URL and icon ([cd58ee0](https://github.com/governify/reporter/commit/cd58ee008220bafb1f3ae253d4905e8886c50a6c))
+
+
+
 ## [2.6.1](https://github.com/governify/reporter/compare/v2.6.0...v2.6.1) (2023-04-21)
 
 
