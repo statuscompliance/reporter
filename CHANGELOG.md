@@ -1,3 +1,12 @@
+## [2.6.4](https://github.com/governify/reporter/compare/v2.6.3...v2.6.4) (2023-04-27)
+
+
+### Bug Fixes
+
+* Added missing s for https protocol ([32eff62](https://github.com/governify/reporter/commit/32eff62fcd4c96bb210695c721fdfc8b152322f7))
+
+
+
 ## [2.6.3](https://github.com/governify/reporter/compare/v2.6.2...v2.6.3) (2023-04-25)
 
 
