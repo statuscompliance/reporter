@@ -1822,7 +1822,7 @@ const atoms = {
     type: 'text'
   },
   htmlGithubStates: {
-    content: "<div style=\"height: inherit;display: flex;align-items: center;justify-content: space-between;margin: 0px 10px;\">\r\n    <a style='width: 5%' href=\"http://states-exporter.bluejay.governify.io\/api\/v1\/states?agreementId=###AGREEMENT.ID###&amp;format=csv&amp;download\" target=\"_blank\"><img src='https://www.freeiconspng.com/uploads/cloud-download-icon-0.png' alt='Download states' /><\/a>\r\n    <div style=\"font-size: 34px;color: white;\">\r\n        PSG2-2223 Dashboard\r\n    <\/div>\r\n    <a href=\"https://www.github.com/%%%GITHUB_SLUG%%%\" target=\"_blank\"><button style=\"font-size: 18px;color: #000000;\">GitHub Repo<\/button><\/a>\r\n<\/div>",
+    content: "<div style=\"height: inherit;display: flex;align-items: center;justify-content: space-between;margin: 0px 10px;\">\r\n    <a style='width: 5%' href=\"https://states-exporter.bluejay.governify.io\/api\/v1\/states?agreementId=###AGREEMENT.ID###&amp;format=csv&amp;download\" target=\"_blank\"><img src='https://www.freeiconspng.com/uploads/cloud-download-icon-0.png' alt='Download states' /><\/a>\r\n    <div style=\"font-size: 34px;color: white;\">\r\n        PSG2-2223 Dashboard\r\n    <\/div>\r\n    <a href=\"https://www.github.com/%%%GITHUB_SLUG%%%\" target=\"_blank\"><button style=\"font-size: 18px;color: #000000;\">GitHub Repo<\/button><\/a>\r\n<\/div>",
     gridPos: {
       h: 2,
       w: 24,
