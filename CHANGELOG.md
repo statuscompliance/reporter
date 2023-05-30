@@ -1,3 +1,12 @@
+# [2.7.0](https://github.com/governify/reporter/compare/v2.6.4...v2.7.0) (2023-05-30)
+
+
+### Features
+
+* Added new block for correlation by member ([ebe490d](https://github.com/governify/reporter/commit/ebe490da9500f347eb3f7041995ee461ffe81a28))
+
+
+
 ## [2.6.4](https://github.com/governify/reporter/compare/v2.6.3...v2.6.4) (2023-04-27)
 
 
