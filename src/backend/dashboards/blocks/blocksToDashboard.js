@@ -1624,6 +1624,195 @@ const atoms = {
       alignLevel: null
     }
   },
+  timeGraphPercentNotZeroMember: {
+    title: '###TIME_GRAPH.TITLE###',
+    guarantee: '###GUARANTEE.NAME###',
+    type: 'graph',
+    aliasColors: {},
+    bars: false,
+    dashLength: 10,
+    dashes: false,
+    datasource: 'InfluxDB',
+    fieldConfig: {
+      defaults: {
+        custom: {},
+        mappings: [],
+        thresholds: {
+          mode: 'absolute',
+          steps: [
+            {
+              color: 'green',
+              value: null
+            },
+            {
+              color: 'red',
+              value: 80
+            }
+          ]
+        }
+      },
+      overrides: []
+    },
+    fill: 0,
+    fillGradient: 0,
+    gridPos: {
+      h: 9,
+      w: 20,
+      x: 0,
+      y: 1
+    },
+    hiddenSeries: false,
+    id: 4,
+    legend: {
+      avg: false,
+      current: false,
+      max: false,
+      min: false,
+      show: true,
+      total: false,
+      values: false
+    },
+    lines: true,
+    linewidth: 1,
+    nullPointMode: 'connected',
+    options: {
+      dataLinks: []
+    },
+    percentage: false,
+    pluginVersion: '7.0.0',
+    pointradius: 3,
+    points: true,
+    renderer: 'flot',
+    seriesOverrides: [
+      {
+        alias: 'Class mean',
+        color: 'rgb(155, 155, 155)',
+        points: false
+      }
+    ],
+    spaceLength: 10,
+    stack: false,
+    steppedLine: false,
+    targets:
+      [
+        {
+          measurement: 'metrics_values',
+          orderByTime: 'ASC',
+          policy: 'autogen',
+          query: "SELECT \"guaranteeValue\" FROM \"autogen\".\"metrics_values\" WHERE (\"agreement\" = '###AGREEMENT.ID###' AND \"id\" = '###GUARANTEE.NAME###' AND \"###METRIC.NOTZERO###\" != 0) AND $timeFilter GROUP BY \"scope_member\"",
+          rawQuery: true,
+          refId: 'A',
+          resultFormat: 'time_series',
+          select: [
+            [
+              {
+                params: [
+                  'guaranteeValue'
+                ],
+                type: 'field'
+              }
+            ]
+          ],
+          tags: []
+        },
+        {
+          alias: 'Class mean',
+          groupBy: [],
+          orderByTime: 'ASC',
+          policy: 'autogen',
+          query: "SELECT MEAN(\"guaranteeValue\") FROM \"autogen\".\"metrics_values\" WHERE (\"scope_class\" = '###AGREEMENT.SCOPE.CLASS###' AND \"id\" = '###GUARANTEE.NAME###' AND \"###METRIC.NOTZERO###\" != 0) AND $timeFilter GROUP BY time(24h)",
+          rawQuery: true,
+          refId: 'B',
+          resultFormat: 'time_series',
+          select: [
+            [
+              {
+                params: [
+                  'value'
+                ],
+                type: 'field'
+              },
+              {
+                params: [],
+                type: 'mean'
+              }
+            ]
+          ],
+          tags: []
+        }
+      ],
+    thresholds: [
+      {
+        "colorMode": "critical",
+        "fill": true,
+        "###LINE_CRITICAL###": "###GUARANTEE.CRITICAL_THRESHOLD_SIGN_LINE###",
+        "op": "###GUARANTEE.CRITICAL_THRESHOLD_SIGN###",
+        "value": '###GUARANTEE.THRESHOLD###',
+        "yaxis": "left"
+      },
+      {
+        "colorMode": "ok",
+        "fill": true,
+        "###LINE_OK###": "###GUARANTEE.OK_THRESHOLD_SIGN_LINE###",
+        "op": "###GUARANTEE.OK_THRESHOLD_SIGN###",
+        "value": '###GUARANTEE.THRESHOLD###',
+        "yaxis": "left"
+      }
+    ],
+    timeFrom: null,
+    timeRegions: [],
+    timeShift: null,
+    transformations: [
+      {
+        "id": "renameByRegex",
+        "options": {
+          "regex": "metrics_values.guaranteeValue {scope_member:",
+          "renamePattern": ""
+        }
+      },
+      {
+        "id": "renameByRegex",
+        "options": {
+          "regex": "}",
+          "renamePattern": ""
+        }
+      }
+    ],
+    tooltip: {
+      shared: true,
+      sort: 0,
+      value_type: 'individual'
+    },
+    xaxis: {
+      buckets: null,
+      mode: 'time',
+      name: null,
+      show: true,
+      values: []
+    },
+    yaxes: [
+      {
+        format: 'short',
+        label: null,
+        logBase: 1,
+        max: '100',
+        min: '0',
+        show: true
+      },
+      {
+        format: 'short',
+        label: null,
+        logBase: 1,
+        max: null,
+        min: null,
+        show: true
+      }
+    ],
+    yaxis: {
+      align: false,
+      alignLevel: null
+    }
+  },
   scatter: {
     title: 'Correlation for all teams',
     type: 'governify-scatterplot',
@@ -2815,6 +3004,18 @@ const blocks = {
       addAtom('scatter', 6)
     ]
   },
+  'gauge-period-time-correlation-notZero-member': {
+    config: {
+      height: 8
+    },
+    panels: [
+      addAtom('rowTitle'),
+      addAtom('gaugeLast5DaysNotZero', 4),
+      addAtom('gaugeLastPeriodNotZero', 4, 9, 4),
+      addAtom('timeGraphPercentNotZeroMember', 10, 9, 8),
+      addAtom('scatter', 6)
+    ]
+  },
   'gauge-time': {
     config: {
       height: 8
@@ -2941,9 +3142,8 @@ module.exports.default = (jsonDashboard, agreement, dashboardName) => {
   // Each block configured in the agreement should be added with its configuration to the dashboard.
   Object.entries(dashboardConfig.blocks).sort((a, b) => a[0] - b[0]).forEach(function ([_, block]) {
     var newPanels = [...blocks[block.type].panels];
-    // Add here specific block custom code
 
-    if (block.type === 'correlated' || block.type === 'gauge-time-correlation' || block.type === 'gauge-time-correlation-notZero' || block.type === 'gauge-period-time-correlation-notZero') {
+    if (block.type === 'correlated' || block.type === 'gauge-time-correlation' || block.type === 'gauge-time-correlation-notZero' || block.type === 'gauge-period-time-correlation-notZero' || block.type === 'gauge-period-time-correlation-notZero-member') {
       newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###METRIC.XAXIS###/g, block.config['x-axis-metric']));
       newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###METRIC.YAXIS###/g, block.config['y-axis-metric']));
       newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###METRIC.NOTZERO###/g, block.config['not-zero-metric']));
@@ -2981,8 +3181,8 @@ module.exports.default = (jsonDashboard, agreement, dashboardName) => {
       newPanels = JSON.parse(JSON.stringify(newPanels).replace(/"###GUARANTEE.THRESHOLD###"/g, guarantee.of[0].objective.split(' ')[guarantee.of[0].objective.split(' ').length - 1]));
     }
 
-    if (block.type === 'time-graph2-member' || block.type === 'time-graph2-member-groupby' || block.type === 'time-graph-count' || block.type === 'time-graph-count-groupby') {
-      const regex = /([a-zA-Z_]+[\w\.\[\]]*)\s*([<>=]+)\s*(\d+)/;
+    if (block.type === 'time-graph2-member' || block.type === 'time-graph2-member-groupby' || block.type === 'time-graph-count' || block.type === 'time-graph-count-groupby' || block.type === 'gauge-period-time-correlation-notZero-member') {
+      const regex = /(\([^)]+\)|[a-zA-Z_]+[\w\.\[\]]*(?:\s*\/\s*[a-zA-Z_]+[\w\.\[\]]*)?(?:\s*\*\s*\d+)?|\d+)\s*([<>=]=?|>)\s*(\d+)/;
       const match = guarantee.of[0].objective.match(regex); // Match the objective against the regular expression
       if (!match) throw new Error('Invalid objective format.'); // Check if the objective is in the expected format
       const variable = match[1]; // Extract the variable name from the match
@@ -2991,9 +3191,9 @@ module.exports.default = (jsonDashboard, agreement, dashboardName) => {
       if (isNaN(value)) throw new Error('Invalid threshold value.'); // Check if the threshold value is valid
 
       let okThresholdSign = '';
-      let criticalThresholdSign = '';
+      let criticalThresholdSign = null;
       let okThresholdSignLine = '';
-      let criticalThresholdSignLine = '';
+      let criticalThresholdSignLine = null;
 
       if (operator === '>') {
         okThresholdSign = 'gt';
@@ -3025,9 +3225,16 @@ module.exports.default = (jsonDashboard, agreement, dashboardName) => {
       }
 
       newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###GUARANTEE.OK_THRESHOLD_SIGN###/g, okThresholdSign));
-      newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###GUARANTEE.OK_THRESHOLD_SIGN_LINE###      /g, okThresholdSignLine));
+      newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###GUARANTEE.OK_THRESHOLD_SIGN_LINE###/g, okThresholdSignLine));
       newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###GUARANTEE.CRITICAL_THRESHOLD_SIGN###/g, criticalThresholdSign));
-      newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###GUARANTEE.CRITICAL_THRESHOLD_SIGN_LINE###      /g, criticalThresholdSignLine));
+      newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###GUARANTEE.CRITICAL_THRESHOLD_SIGN_LINE###/g, criticalThresholdSignLine));
+
+      // If the threshold is ok, the line should be green, otherwise red (true and false values do not work in Grafana)
+      if (okThresholdSignLine) {
+        newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###LINE_OK###/g, "line"));
+      } else {
+        newPanels = JSON.parse(JSON.stringify(newPanels).replace(/###LINE_CRITICAL###/g, "line"));
+      }
     }
 
     // Add new panels to the current dashboard
