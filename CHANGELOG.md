@@ -1,3 +1,12 @@
+# [2.8.0](https://github.com/governify/reporter/compare/v2.7.0...v2.8.0) (2023-06-18)
+
+
+### Features
+
+* added new block "time-graph2-member-notZero" ([3eaa9e6](https://github.com/governify/reporter/commit/3eaa9e637a267fd4329b4c792791cf3dddd87079))
+
+
+
 # [2.7.0](https://github.com/governify/reporter/compare/v2.6.4...v2.7.0) (2023-05-30)
 
 
