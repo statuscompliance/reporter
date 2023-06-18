@@ -870,6 +870,195 @@ const atoms = {
       alignLevel: null
     }
   },
+  timeGraphMemberNotZero: {
+    title: '###TIME_GRAPH.TITLE###',
+    guarantee: '###GUARANTEE.NAME###',
+    type: 'graph',
+    aliasColors: {},
+    bars: false,
+    dashLength: 10,
+    dashes: false,
+    datasource: 'InfluxDB',
+    fieldConfig: {
+      defaults: {
+        custom: {},
+        mappings: [],
+        thresholds: {
+          mode: 'absolute',
+          steps: [
+            {
+              color: 'green',
+              value: null
+            },
+            {
+              color: 'red',
+              value: 80
+            }
+          ]
+        }
+      },
+      overrides: []
+    },
+    fill: 1,
+    fillGradient: 0,
+    gridPos: {
+      h: 9,
+      w: 20,
+      x: 4,
+      y: 1
+    },
+    hiddenSeries: false,
+    id: 4,
+    legend: {
+      avg: false,
+      current: false,
+      max: false,
+      min: false,
+      show: true,
+      total: false,
+      values: false
+    },
+    lines: true,
+    linewidth: 1,
+    nullPointMode: 'null',
+    options: {
+      dataLinks: []
+    },
+    percentage: false,
+    pluginVersion: '7.0.0',
+    pointradius: 2,
+    points: true,
+    renderer: 'flot',
+    seriesOverrides: [],
+    spaceLength: 10,
+    stack: false,
+    steppedLine: false,
+    targets: [
+      {
+        groupBy: [
+          {
+            params: [
+              'scope_member'
+            ],
+            type: 'tag'
+          }
+        ],
+        measurement: 'metrics_values',
+        orderByTime: 'ASC',
+        policy: 'autogen',
+        query: "SELECT \"guaranteeValue\" FROM \"autogen\".\"metrics_values\" WHERE (\"agreement\" = '###AGREEMENT.ID###' AND \"id\" = '###GUARANTEE.NAME###' AND \"###METRIC.NOTZERO###\" != 0 AND \"scope_member\" != '') AND $timeFilter GROUP BY \"scope_member\"",
+        rawQuery: true,
+        refId: 'A',
+        resultFormat: 'time_series',
+        select: [
+          [
+            {
+              params: [
+                'guaranteeValue'
+              ],
+              type: 'field'
+            }
+          ]
+        ],
+        tags: [
+          {
+            key: 'agreement',
+            operator: '=',
+            value: '###AGREEMENT.ID###'
+          },
+          {
+            condition: 'AND',
+            key: 'id',
+            operator: '=',
+            value: '###GUARANTEE.NAME###'
+          },
+          {
+            condition: 'AND',
+            key: 'scope_member',
+            operator: '!=',
+            value: ''
+          },
+          {
+            condition: 'AND',
+            key: '###METRIC.NOTZERO###',
+            operator: '!=',
+            value: '0'
+          }
+        ]
+      }
+    ],
+    thresholds: [
+      {
+        "colorMode": "critical",
+        "fill": true,
+        "line": "###GUARANTEE.CRITICAL_THRESHOLD_SIGN_LINE###",
+        "op": "###GUARANTEE.CRITICAL_THRESHOLD_SIGN###",
+        "value": '###GUARANTEE.THRESHOLD###',
+        "yaxis": "left"
+      },
+      {
+        "colorMode": "ok",
+        "fill": true,
+        "line": "###GUARANTEE.OK_THRESHOLD_SIGN_LINE###",
+        "op": "###GUARANTEE.OK_THRESHOLD_SIGN###",
+        "value": '###GUARANTEE.THRESHOLD###',
+        "yaxis": "left"
+      }
+    ],
+    timeFrom: null,
+    timeRegions: [],
+    timeShift: null,
+    transformations: [
+      {
+        "id": "renameByRegex",
+        "options": {
+          "regex": "metrics_values.guaranteeValue {scope_member:",
+          "renamePattern": ""
+        }
+      },
+      {
+        "id": "renameByRegex",
+        "options": {
+          "regex": "}",
+          "renamePattern": ""
+        }
+      }
+    ],
+    tooltip: {
+      shared: true,
+      sort: 0,
+      value_type: 'individual'
+    },
+    xaxis: {
+      buckets: null,
+      mode: 'time',
+      name: null,
+      show: true,
+      values: []
+    },
+    yaxes: [
+      {
+        format: 'short',
+        label: null,
+        logBase: 1,
+        max: null,
+        min: null,
+        show: true
+      },
+      {
+        format: 'short',
+        label: null,
+        logBase: 1,
+        max: null,
+        min: null,
+        show: true
+      }
+    ],
+    yaxis: {
+      align: false,
+      alignLevel: null
+    }
+  },
   timeGraphMemberGroupBy: {
     title: '###TIME_GRAPH.TITLE###',
     guarantee: '###GUARANTEE.NAME###',
@@ -1578,12 +1767,20 @@ const atoms = {
       ],
     thresholds: [
       {
-        colorMode: 'critical',
-        fill: true,
-        line: false,
-        op: 'lt',
-        value: '###GUARANTEE.THRESHOLD###',
-        yaxis: 'left'
+        "colorMode": "critical",
+        "fill": true,
+        "###LINE_CRITICAL###": "###GUARANTEE.CRITICAL_THRESHOLD_SIGN_LINE###",
+        "op": "###GUARANTEE.CRITICAL_THRESHOLD_SIGN###",
+        "value": '###GUARANTEE.THRESHOLD###',
+        "yaxis": "left"
+      },
+      {
+        "colorMode": "ok",
+        "fill": true,
+        "###LINE_OK###": "###GUARANTEE.OK_THRESHOLD_SIGN_LINE###",
+        "op": "###GUARANTEE.OK_THRESHOLD_SIGN###",
+        "value": '###GUARANTEE.THRESHOLD###',
+        "yaxis": "left"
       }
     ],
     timeFrom: null,
@@ -2958,7 +3155,15 @@ const blocks = {
       addAtom('rowTitle'),
       addAtom('timeGraphMember')
     ]
-
+  },
+  'time-graph2-member-notZero': {
+    config: {
+      height: 8
+    },
+    panels: [
+      addAtom('rowTitle'),
+      addAtom('timeGraphMemberNotZero')
+    ]
   },
   'time-graph2-member-groupby': {
     config: {
@@ -3181,7 +3386,7 @@ module.exports.default = (jsonDashboard, agreement, dashboardName) => {
       newPanels = JSON.parse(JSON.stringify(newPanels).replace(/"###GUARANTEE.THRESHOLD###"/g, guarantee.of[0].objective.split(' ')[guarantee.of[0].objective.split(' ').length - 1]));
     }
 
-    if (block.type === 'time-graph2-member' || block.type === 'time-graph2-member-groupby' || block.type === 'time-graph-count' || block.type === 'time-graph-count-groupby' || block.type === 'gauge-period-time-correlation-notZero-member') {
+    if (block.type === 'time-graph2-member' || block.type === 'time-graph2-member-notZero' || block.type === 'time-graph2-member-groupby' || block.type === 'time-graph-count' || block.type === 'time-graph-count-groupby' || block.type === 'gauge-period-time-correlation-notZero' || block.type === 'gauge-period-time-correlation-notZero-member') {
       const regex = /(\([^)]+\)|[a-zA-Z_]+[\w\.\[\]]*(?:\s*\/\s*[a-zA-Z_]+[\w\.\[\]]*)?(?:\s*\*\s*\d+)?|\d+)\s*([<>=]=?|>)\s*(\d+)/;
       const match = guarantee.of[0].objective.match(regex); // Match the objective against the regular expression
       if (!match) throw new Error('Invalid objective format.'); // Check if the objective is in the expected format
