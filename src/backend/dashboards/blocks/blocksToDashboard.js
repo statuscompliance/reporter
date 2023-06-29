@@ -3203,10 +3203,10 @@ const blocks = {
     },
     panels: [
       addAtom('rowTitle'),
-      addAtom('gaugeLast5DaysNotZero', 4),
-      addAtom('gaugeLastPeriodNotZero', 4, 9, 4),
-      addAtom('timeGraphPercentNotZero', 10, 9, 8),
-      addAtom('scatter', 6)
+      addAtom('gaugeLast5DaysNotZero', 3, 6.2),
+      addAtom('gaugeLastPeriodNotZero', 4, 9, 3),
+      addAtom('timeGraphPercentNotZero', 11.5, 9, 7),
+      addAtom('scatter', 5.5,9)
     ]
   },
   'gauge-period-time-correlation-notZero-member': {
