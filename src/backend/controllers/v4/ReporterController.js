@@ -24,6 +24,7 @@ const moment = require('moment-timezone');
 const InfluxDB = require('../../services/influxService').InfluxDB;
 const Reporter = require('../../services/gaussReporterService/').GaussReporter;
 const governify = require('governify-commons');
+const gPeriods = governify.periods;
 const config = governify.configurator.getConfig('main');
 const logger = governify.getLogger().tag('v4-reporter-controller');
 const JSONStream = require('JSONStream');
@@ -147,38 +148,38 @@ exports.contractsContractIdCreateHistoryPOST = async (contractId, period) => {
   logger.info('Creating history for agreementID: ' + contractId);
   logger.info('Getting the agreements from Registry with contractId = %s', contractId);
   governify.infrastructure.getService('internal.registry').get('/api/v6/agreements/' + contractId)
-  .then(async (agreementRequest) => {
-    const agreement = agreementRequest.data;
-    const periods = utils.getPeriods(agreement, {
-      initial: agreement.context.validity.initial,
-      period: period
-    });
+    .then(async (agreementRequest) => {
+      const agreement = agreementRequest.data;
+      const periods = utils.getPeriods(agreement, {
+        initial: agreement.context.validity.initial,
+        period: period
+      });
 
-    await callRegistryAndStorePoints('/api/v6/states/' + contractId + '/guarantees' + '?lastPeriod=true', agreement)
-    .then(async (influxPoints) => {
-      await influxInsert(influxPoints).catch(() => 'Error inserting points of last period');
-    }).catch(err => {
-      logger.error('Error getting points from last period ' + err);
-    });
-
-    for(let chunk of chunkArray(periods, periodInserted)){
-      var influxPoints = [];
-      for(let chunkperiod of chunk){
-        var newPoints = await callRegistryAndStorePoints('/api/v6/states/' + contractId + '/guarantees' + '?from=' + chunkperiod.from + '&to=' + chunkperiod.to, agreement)
-        .catch(err => {
-          logger.error(`Error getting points from period ${chunkperiod.from} to ${chunkperiod.to} ` + err)
+      await callRegistryAndStorePoints('/api/v6/states/' + contractId + '/guarantees' + '?lastPeriod=true', agreement)
+        .then(async (influxPoints) => {
+          await influxInsert(influxPoints).catch(() => 'Error inserting points of last period');
+        }).catch(err => {
+          logger.error('Error getting points from last period ' + err);
         });
-        try{
-          influxPoints = [...influxPoints, ...newPoints];
-        }catch(_){
-          continue;
+
+      for (let chunk of chunkArray(periods, periodInserted)) {
+        var influxPoints = [];
+        for (let chunkperiod of chunk) {
+          var newPoints = await callRegistryAndStorePoints('/api/v6/states/' + contractId + '/guarantees' + '?from=' + chunkperiod.from + '&to=' + chunkperiod.to, agreement)
+            .catch(err => {
+              logger.error(`Error getting points from period ${chunkperiod.from} to ${chunkperiod.to} ` + err)
+            });
+          try {
+            influxPoints = [...influxPoints, ...newPoints];
+          } catch (_) {
+            continue;
+          }
         }
-      }
-      await influxInsert(influxPoints).catch(() => 'Error inserting periods ' + chunk);
-    };
-  }).catch(
-    err => logger.error('Error creating history: ' + err)
-  );
+        await influxInsert(influxPoints).catch(() => 'Error inserting periods ' + chunk);
+      };
+    }).catch(
+      err => logger.error('Error creating history: ' + err)
+    );
 };
 
 /**
@@ -193,35 +194,35 @@ exports.contractsContractIdCreatePointsFromListPOST = async (contractId, listDat
   if (!statusCreatePoints[contractId]) {
     statusCreatePoints[contractId] = { current: 0, total: 1 };
     logger.info('Getting the agreements from Registry with contractId = %s', contractId);
-    
+
     governify.infrastructure.getService('internal.registry').get('/api/v6/agreements' + contractId)
-    .then(async agreementRequest => {
-      const agreement = agreementRequest.data;
-      const periods = listDates.map(x => { return { from: x, to: moment(x).add(1, 'second').toISOString() }; });
-      
-      for(let chunk of chunkArray(periods, periodInserted)){
-        var influxPoints = [];
-        for(let chunkperiod of chunk){
-          statusCreatePoints[contractId] = { current: statusCreatePoints[contractId].current + 1, total: periods.length };
-          var newPoints = await callRegistryAndStorePoints('/api/v6/states/' + contractId + '/guarantees' + '?from=' + chunkperiod.from + '&to=' + chunkperiod.to + '&newPeriodsFromGuarantees=false', agreement)
-          .catch(err => {
-            logger.error(`Error getting points from period ${chunkperiod.from} to ${chunkperiod.to} ` + err)
-          });
-          try{
-            influxPoints = [...influxPoints, ...newPoints];
-          }catch(_){
-            continue;
+      .then(async agreementRequest => {
+        const agreement = agreementRequest.data;
+        const periods = listDates.map(x => { return { from: x, to: moment(x).add(1, 'second').toISOString() }; });
+
+        for (let chunk of chunkArray(periods, periodInserted)) {
+          var influxPoints = [];
+          for (let chunkperiod of chunk) {
+            statusCreatePoints[contractId] = { current: statusCreatePoints[contractId].current + 1, total: periods.length };
+            var newPoints = await callRegistryAndStorePoints('/api/v6/states/' + contractId + '/guarantees' + '?from=' + chunkperiod.from + '&to=' + chunkperiod.to + '&newPeriodsFromGuarantees=false', agreement)
+              .catch(err => {
+                logger.error(`Error getting points from period ${chunkperiod.from} to ${chunkperiod.to} ` + err)
+              });
+            try {
+              influxPoints = [...influxPoints, ...newPoints];
+            } catch (_) {
+              continue;
+            }
           }
+          await influxInsert(influxPoints).catch(() => 'Error inserting periods ' + chunk);
         }
-        await influxInsert(influxPoints).catch(() => 'Error inserting periods ' + chunk);
-      }
-      logger.info('Finished creating history for agreeement ' + contractId);
-      statusCreatePoints[contractId] = undefined;
-          
-    }).catch( err => {
-      logger.error(err);
-      statusCreatePoints[contractId] = undefined;
-    });  
+        logger.info('Finished creating history for agreeement ' + contractId);
+        statusCreatePoints[contractId] = undefined;
+
+      }).catch(err => {
+        logger.error(err);
+        statusCreatePoints[contractId] = undefined;
+      });
   }
 };
 
@@ -234,18 +235,18 @@ exports.contractsContractIdCreatePointsFromListPOST = async (contractId, listDat
 exports.contractsContractIdUpdateGET = async (contractId) => {
   const urlRegistryRequest = '/api/v6/states/' + contractId + '/guarantees' + '?from=' + new Date().toISOString() + '&to=' + moment().add(3, 'week').toISOString() + '&newPeriodsFromGuarantees=false';
   logger.info('Getting the agreements from Registry with contractId = %s', contractId);
-  
+
   governify.infrastructure.getService('internal.registry').get('/api/v6/agreements/' + contractId)
-  .then(async (agreementRequest) => {
-    const agreement = agreementRequest.data;
-    var influxPoints = await callRegistryAndStorePoints(urlRegistryRequest, agreement)
-    .catch(err => {
-      logger.error('Error getting points from period ' + err)
+    .then(async (agreementRequest) => {
+      const agreement = agreementRequest.data;
+      var influxPoints = await callRegistryAndStorePoints(urlRegistryRequest, agreement)
+        .catch(err => {
+          logger.error('Error getting points from period ' + err)
+        });
+      await influxInsert(influxPoints).catch(() => 'Error inserting points');
+    }).catch(err => {
+      logger.error('Failed requesting agreement: ', err.response ? err.response.status : -1);
     });
-    await influxInsert(influxPoints).catch(() => 'Error inserting points');
-  }).catch(err => {
-    logger.error('Failed requesting agreement: ', err.response ? err.response.status : -1);
-  });
 };
 
 exports.resetPOST = function (args, res, next) {
@@ -296,7 +297,7 @@ function callRegistryAndStorePoints(path, agreement) {
   return new Promise(async (resolve, reject) => {
     logger.info('URLRegistry: ' + path);
 
-    var timeout = setTimeout(()=>{
+    var timeout = setTimeout(() => {
       logger.error(path + ' request time out exceeded')
       resolve([])
     }, 120000)
@@ -306,43 +307,47 @@ function callRegistryAndStorePoints(path, agreement) {
         url: path,
         responseType: 'stream'
       })
-      .then( requestMetrics => {       
+      .then(requestMetrics => {
         const requestStream = requestMetrics.data;
         const influxPoints = [];
         requestStream.pipe(JSONStream.parse())
-        .on('data', guaranteeStates => {
-          logger.info('Receiving agreement states');
-          for (const i in guaranteeStates) {
-            var guaranteeResult = guaranteeStates[i];
-            const timestamp = moment(guaranteeResult.period.from).valueOf() * 1000000;
-            
-            const influxPoint = {
-              measurement: config.influx.measurement,
-              tags: {
-                agreement: guaranteeResult.agreementId,
-                id: guaranteeResult.id
-              },
-              fields: {
-                guaranteeValue: objectiveUtils.calculateObjective(agreement.terms.guarantees.find(x => x.id === guaranteeResult.id).of[0].objective, guaranteeResult.metrics).value,
-                guaranteeResult: guaranteeResult.value
-              },
-              timestamp: timestamp
-            };
-            
-            for (const [key, value] of Object.entries(guaranteeResult.metrics)) {
-              influxPoint.fields['metric_' + key] = value;
+          .on('data', guaranteeStates => {
+            logger.info('Receiving agreement states');
+            for (const i in guaranteeStates) {
+              var guaranteeResult = guaranteeStates[i];
+
+              const guaranteeResultWindow = agreement.terms.guarantees.find(x => x.id === guaranteeResult.id).of[0].window
+              guaranteeResultWindow.from = gPeriods.getDates(new Date(guaranteeResultWindow.initial), new Date(guaranteeResult.period.to), guaranteeResultWindow.period || 'monthly').at(-1);
+
+              const timestamp = moment(guaranteeResultWindow.from).valueOf() * 1000000;
+
+              const influxPoint = {
+                measurement: config.influx.measurement,
+                tags: {
+                  agreement: guaranteeResult.agreementId,
+                  id: guaranteeResult.id
+                },
+                fields: {
+                  guaranteeValue: objectiveUtils.calculateObjective(agreement.terms.guarantees.find(x => x.id === guaranteeResult.id).of[0].objective, guaranteeResult.metrics).value,
+                  guaranteeResult: guaranteeResult.value
+                },
+                timestamp: timestamp
+              };
+
+              for (const [key, value] of Object.entries(guaranteeResult.metrics)) {
+                influxPoint.fields['metric_' + key] = value;
+              }
+              for (const [key, value] of Object.entries(guaranteeResult.scope)) {
+                influxPoint.tags['scope_' + key] = value;
+              }
+              influxPoints.push(influxPoint);
             }
-            for (const [key, value] of Object.entries(guaranteeResult.scope)) {
-              influxPoint.tags['scope_' + key] = value;
-            }
-            influxPoints.push(influxPoint);
-          }
-        })
-        .on('end', () => {
-          clearTimeout(timeout)
-          resolve(influxPoints)
-        })
-        .on('error', err => reject(err));
+          })
+          .on('end', () => {
+            clearTimeout(timeout)
+            resolve(influxPoints)
+          })
+          .on('error', err => reject(err));
       })
       .catch(err => {
         logger.error('Error in registry state call: ', err);
@@ -356,12 +361,12 @@ var influxInsert = async (elements) => {
     maxRetries: 50,
     requestTimeout: 600000
   })
-  .then(() => {
-    logger.info(`Inserted ${elements.length} elements`);
-  })
-  .catch((err) => {
-    logger.info('Error Writing in db ', err);
-  });
+    .then(() => {
+      logger.info(`Inserted ${elements.length} elements`);
+    })
+    .catch((err) => {
+      logger.info('Error Writing in db ', err);
+    });
 };
 
 /**
@@ -375,34 +380,34 @@ exports.contractsContractIdCreatePointsFromPeriodsPOST = async (contractId, peri
   logger.info('Getting the agreements from Registry with contractId = %s', contractId);
 
   governify.infrastructure.getService('internal.registry').get('/api/v6/agreements/' + contractId)
-  .then(async (agreementRequest) => {
-    const agreement = agreementRequest.data;
+    .then(async (agreementRequest) => {
+      const agreement = agreementRequest.data;
 
-    for(let chunk of chunkArray(periods, periodInserted)){
-      var influxPoints = [];
-      for(let chunkperiod of chunk){
-        var newPoints = await callRegistryAndStorePoints('/api/v6/states/' + contractId + '/guarantees' + '?from=' + chunkperiod.from + '&to=' + chunkperiod.to + '&newPeriodsFromGuarantees=false', agreement)
-        .catch(err => {
-          logger.error(`Error getting points from period ${chunkperiod.from} to ${chunkperiod.to} ` + err)
-        });
-        try{
-          influxPoints = [...influxPoints, ...newPoints];
-        }catch(_){
-          continue;
+      for (let chunk of chunkArray(periods, periodInserted)) {
+        var influxPoints = [];
+        for (let chunkperiod of chunk) {
+          var newPoints = await callRegistryAndStorePoints('/api/v6/states/' + contractId + '/guarantees' + '?from=' + chunkperiod.from + '&to=' + chunkperiod.to + '&newPeriodsFromGuarantees=false', agreement)
+            .catch(err => {
+              logger.error(`Error getting points from period ${chunkperiod.from} to ${chunkperiod.to} ` + err)
+            });
+          try {
+            influxPoints = [...influxPoints, ...newPoints];
+          } catch (_) {
+            continue;
+          }
         }
+        await influxInsert(influxPoints).catch(() => 'Error inserting periods ' + chunk);
       }
-      await influxInsert(influxPoints).catch(() => 'Error inserting periods ' + chunk);
-    }
-    logger.info('Finished creating event collector metrics for agreeement ' + contractId);
-  }).catch(err => {
-    logger.error('Failed requesting agreement: ', err.response ? err.response.status : -1);
-  });
+      logger.info('Finished creating event collector metrics for agreeement ' + contractId);
+    }).catch(err => {
+      logger.error('Failed requesting agreement: ', err.response ? err.response.status : -1);
+    });
 };
 
-function chunkArray(myArray, chunk_size){
+function chunkArray(myArray, chunk_size) {
   var results = [];
   while (myArray.length) {
-      results.push(myArray.splice(0, chunk_size));
+    results.push(myArray.splice(0, chunk_size));
   }
   return results;
 }
