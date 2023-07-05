@@ -434,7 +434,8 @@ const atoms = {
       }
     ],
     timeFrom: null,
-    timeShift: null
+    timeShift: null,
+    transparent: true
   },
   gaugeLastPeriodNotZero: {
     title: 'Period mean percentage',
@@ -3203,7 +3204,7 @@ const blocks = {
     },
     panels: [
       addAtom('rowTitle'),
-      addAtom('gaugeLast5DaysNotZero', 3, 6.2),
+      addAtom('gaugeLast5DaysNotZero', 3, 6),
       addAtom('gaugeLastPeriodNotZero', 4, 9, 3),
       addAtom('timeGraphPercentNotZero', 11.5, 9, 7),
       addAtom('scatter', 5.5,9)
