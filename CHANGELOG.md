@@ -1,3 +1,13 @@
+# [2.9.0](https://github.com/governify/reporter/compare/v2.8.0...v2.9.0) (2023-07-05)
+
+
+### Features
+
+* Fixed calculation for periods ([407588c](https://github.com/governify/reporter/commit/407588cd68a72cf8575c3126795f73efff6f3f2a))
+* Transparent gauge block ([539d244](https://github.com/governify/reporter/commit/539d244cde93bb38d31de6070d0a008d092b7505))
+
+
+
 # [2.8.0](https://github.com/governify/reporter/compare/v2.7.0...v2.8.0) (2023-06-18)
 
 
