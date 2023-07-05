@@ -226,7 +226,8 @@ const atoms = {
       }
     ],
     timeFrom: null,
-    timeShift: null
+    timeShift: null,
+    transparent: true
   },
   timeGraph: {
     title: '###TIME_GRAPH.TITLE###',
