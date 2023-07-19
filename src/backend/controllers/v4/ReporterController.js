@@ -317,7 +317,8 @@ function callRegistryAndStorePoints(path, agreement) {
               var guaranteeResult = guaranteeStates[i];
 
               const guaranteeResultWindow = agreement.terms.guarantees.find(x => x.id === guaranteeResult.id).of[0].window
-              guaranteeResultWindow.from = gPeriods.getDates(new Date(guaranteeResultWindow.initial), new Date(guaranteeResult.period.to), guaranteeResultWindow.period || 'monthly').at(-1);
+              guaranteeResultWindow.from = gPeriods.getDates(new Date(guaranteeResultWindow.initial), new Date(guaranteeResult.period.to), guaranteeResultWindow.period || 'monthly');
+              guaranteeResultWindow.from = guaranteeResultWindow.from[guaranteeResultWindow.from.length - 1]
 
               const timestamp = moment(guaranteeResultWindow.from).valueOf() * 1000000;
 
