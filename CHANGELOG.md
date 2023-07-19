@@ -1,3 +1,76 @@
+# [2.9.0](https://github.com/governify/reporter/compare/v2.8.0...v2.9.0) (2023-07-05)
+
+
+### Features
+
+* Fixed calculation for periods ([407588c](https://github.com/governify/reporter/commit/407588cd68a72cf8575c3126795f73efff6f3f2a))
+* Transparent gauge block ([539d244](https://github.com/governify/reporter/commit/539d244cde93bb38d31de6070d0a008d092b7505))
+
+
+
+# [2.8.0](https://github.com/governify/reporter/compare/v2.7.0...v2.8.0) (2023-06-18)
+
+
+### Features
+
+* added new block "time-graph2-member-notZero" ([3eaa9e6](https://github.com/governify/reporter/commit/3eaa9e637a267fd4329b4c792791cf3dddd87079))
+
+
+
+# [2.7.0](https://github.com/governify/reporter/compare/v2.6.4...v2.7.0) (2023-05-30)
+
+
+### Features
+
+* Added new block for correlation by member ([ebe490d](https://github.com/governify/reporter/commit/ebe490da9500f347eb3f7041995ee461ffe81a28))
+
+
+
+## [2.6.4](https://github.com/governify/reporter/compare/v2.6.3...v2.6.4) (2023-04-27)
+
+
+### Bug Fixes
+
+* Added missing s for https protocol ([32eff62](https://github.com/governify/reporter/commit/32eff62fcd4c96bb210695c721fdfc8b152322f7))
+
+
+
+## [2.6.3](https://github.com/governify/reporter/compare/v2.6.2...v2.6.3) (2023-04-25)
+
+
+### Bug Fixes
+
+* Changed transformation for member block ([7e45516](https://github.com/governify/reporter/commit/7e45516db40a2620e909e77ab654c0837cc1a518))
+
+
+
+## [2.6.2](https://github.com/governify/reporter/compare/v2.6.1...v2.6.2) (2023-04-25)
+
+
+### Bug Fixes
+
+* Changed download states' URL and icon ([cd58ee0](https://github.com/governify/reporter/commit/cd58ee008220bafb1f3ae253d4905e8886c50a6c))
+
+
+
+## [2.6.1](https://github.com/governify/reporter/compare/v2.6.0...v2.6.1) (2023-04-21)
+
+
+### Bug Fixes
+
+* Changed transformation for renameByRegex ([efbb710](https://github.com/governify/reporter/commit/efbb710fb578d27aaf80c63c0b684f70de2945ad))
+
+
+
+# [2.6.0](https://github.com/governify/reporter/compare/v2.5.0...v2.6.0) (2023-04-21)
+
+
+### Features
+
+* Added support for PSG2-2223 ([c5ffe99](https://github.com/governify/reporter/commit/c5ffe993f91f65df5ba5f127156111d4335b00b6))
+
+
+
 # [2.5.0](https://github.com/governify/reporter/compare/v2.4.0...v2.5.0) (2023-02-12)
 
 
