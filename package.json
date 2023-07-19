@@ -1,7 +1,7 @@
 {
   "name": "governify-reporter",
   "buildOn": "2020-11-05",
-  "version": "2.9.0",
+  "version": "2.9.1",
   "description": "A reporter for Governify project",
   "homepage": "https://github.com/governify/reporter",
   "main": "index.js",

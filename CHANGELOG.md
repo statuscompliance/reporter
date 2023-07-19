@@ -1,3 +1,12 @@
+## [2.9.1](https://github.com/governify/reporter/compare/v2.9.0...v2.9.1) (2023-07-19)
+
+
+### Bug Fixes
+
+* node 14 compatibility issue ([14212e5](https://github.com/governify/reporter/commit/14212e5d250f2d29f95b584c8a7bbbd80e4ecd38))
+
+
+
 # [2.9.0](https://github.com/governify/reporter/compare/v2.8.0...v2.9.0) (2023-07-05)
 
 
