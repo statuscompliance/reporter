@@ -9,6 +9,13 @@ Please refer to  [Governify docs](https://docs.governify.io) to get the document
 In the context of the GAUSS Project  the version 1.0.0 is the latest stable version compatible.
 see [release note](http://github.com/isa-group/governify-project-gauss-reporter/releases/tag/1.0.0) for details.
 
+### Running the server
+To run the server, run:
+
+```
+npm start
+```
+
 ## Copyright notice
 
 Please refer to  [Governify License](https://docs.governify.io/about/license/) to get Copyright and License details.
