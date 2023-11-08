@@ -1,3 +1,7 @@
+## [2.9.2](https://github.com/governify/reporter/compare/v2.9.1...v2.9.2) (2023-11-08)
+
+
+
 ## [2.9.1](https://github.com/governify/reporter/compare/v2.9.0...v2.9.1) (2023-07-19)
 
 
