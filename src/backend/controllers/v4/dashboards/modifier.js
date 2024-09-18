@@ -1,21 +1,5 @@
 "use strict";
 
-// Course Dates initialization
-const courseDates = {
-  "CS169-f16": {
-    from: "2016-10-01T00:00:00.000Z",
-    to: "2016-12-31T00:00:00.000Z",
-  },
-  "CS169-f17": {
-    from: "2017-10-01T00:00:00.000Z",
-    to: "2017-12-31T00:00:00.000Z",
-  },
-  "CS169-s19": {
-    from: "2019-03-01T00:00:00.000Z",
-    to: "2019-06-01T00:00:00.000Z",
-  },
-};
-
 function modifyJSON(jsonDashboard, agreement, dashboardName) {
   // Dashboard to return
   let modifiedDashboard = { ...jsonDashboard };
@@ -96,15 +80,24 @@ function modifyJSON(jsonDashboard, agreement, dashboardName) {
   }
 
   // Adjust date range
-  const courseDate =
-    courseDates[agreement.context.definitions.scopes.development.class.default];
-  if (courseDate !== undefined) {
-    modifiedDashboard.time.from = courseDate.from;
-    modifiedDashboard.time.to = courseDate.to;
-  } else {
-    modifiedDashboard.time.from = "2017-01-01T00:00:00.000Z";
-    modifiedDashboard.time.to = new Date().toISOString();
+  const today = new Date().toISOString();
+  const defaultStartDate = "2017-10-01T00:00:00.000Z";
+  const defaultEndDate = today;
+
+  // Fetch validity dates from agreement context
+  let startDate = agreement.context.validity?.initial || defaultStartDate;
+  let endDate = agreement.context.validity?.end || defaultEndDate;
+
+  // Check the rules for end date
+  if (endDate) {
+    const currentDate = new Date().toISOString();
+    if (new Date(endDate) > new Date(currentDate)) {
+      endDate = currentDate;
+    }
   }
+
+  modifiedDashboard.time.from = startDate;
+  modifiedDashboard.time.to = endDate;
 
   // Substitute remaining attributes
   modifiedDashboard = JSON.stringify(modifiedDashboard);
